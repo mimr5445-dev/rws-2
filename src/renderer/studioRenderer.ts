@@ -6,6 +6,7 @@ import {
   clampTiltDeg,
   computeSafeFitZoom,
   computeWorldTransform,
+  frameRateIndependentEase,
   getMinAllowedZoom,
   normalizeAngleDeg,
   projectWorldToScreen,
@@ -209,6 +210,9 @@ export class StudioRenderer {
   private camX = 600;
   private camY = 400;
   private camZoom = 1;
+  private targetCamZoom = 1;
+  private zoomGlideActive = false;
+  private zoomAnchor: { sx: number; sy: number; wx: number; wy: number } | null = null;
   private camBearingDeg = 0;
   private camTiltDeg = 0;
   private targetBearingDeg = 0;
@@ -231,6 +235,11 @@ export class StudioRenderer {
   private userAdjustedCamera = false;
   private lastScreenW = 0;
   private lastScreenH = 0;
+  private hoverHighlightCacheKey = '';
+  private selectHighlightCacheKey = '';
+  private hadNavOverlay = false;
+  private hadActiveZones = false;
+  private hadActiveCraters = false;
 
   public userUnitScale = 1.0;
   public selectedEntityId: string | null = null;
@@ -342,12 +351,17 @@ export class StudioRenderer {
   private destroyed = false;
 
   async init(host: HTMLElement): Promise<void> {
+    const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
     try {
       await this.app.init({
         resizeTo: host,
         backgroundColor: 0x090f1a,
         antialias: true,
+        autoStart: false,
+        autoDensity: true,
+        resolution: dpr,
         preference: 'webgl',
+        powerPreference: 'high-performance',
         preserveDrawingBuffer: true
       });
     } catch {
@@ -355,9 +369,13 @@ export class StudioRenderer {
         resizeTo: host,
         backgroundColor: 0x090f1a,
         antialias: true,
+        autoStart: false,
+        autoDensity: true,
+        resolution: dpr,
         preserveDrawingBuffer: true
       });
     }
+    this.app.ticker?.stop();
     if (this.destroyed) return;
     this.app.canvas.style.display = 'block';
     this.app.canvas.style.width = '100%';
@@ -433,6 +451,8 @@ export class StudioRenderer {
         this.dragMoved = true;
         this.painting = false;
         this.isOrbitDragging = false;
+        this.zoomGlideActive = false;
+        this.zoomAnchor = null;
         this.lastCamSeq = this.currentTargetSeq;
         const pts = [...this.activePointers.values()];
         this.twoFingerSession = beginTwoFingerGesture(pts[0], pts[1]);
@@ -677,22 +697,29 @@ export class StudioRenderer {
         this.emitCameraAngles();
         return;
       }
-      const factor = e.deltaY < 0 ? 1.12 : 0.89;
-      const clamped = clampCameraState(
+      const normDelta = Math.max(-180, Math.min(180, e.deltaY));
+      const factor = Math.exp(-normDelta * 0.0014);
+      const baseZoom = this.zoomGlideActive ? this.targetCamZoom : this.camZoom;
+      const nextZoom = this.clampZoom(baseZoom * factor);
+
+      const rect = canvas.getBoundingClientRect();
+      const sx = ((e.clientX - rect.left) * this.app.screen.width) / Math.max(1, rect.width);
+      const sy = ((e.clientY - rect.top) * this.app.screen.height) / Math.max(1, rect.height);
+      const worldUnderCursor = unprojectScreenToWorld(
+        sx,
+        sy,
         this.camX,
         this.camY,
-        this.camZoom * factor,
-        this.mapWidth,
-        this.mapHeight,
+        this.camZoom,
         this.app.screen.width,
         this.app.screen.height,
         this.cinematicCameraEnabled,
         this.camBearingDeg,
         this.camTiltDeg
       );
-      this.camZoom = clamped.zoom;
-      this.camX = clamped.x;
-      this.camY = clamped.y;
+      this.targetCamZoom = nextZoom;
+      this.zoomAnchor = { sx, sy, wx: worldUnderCursor.x, wy: worldUnderCursor.y };
+      this.zoomGlideActive = true;
     };
 
     const onCanvasHoverMove = (e: PointerEvent) => {
@@ -773,21 +800,10 @@ export class StudioRenderer {
     this.lastCamSeq = this.currentTargetSeq;
     this.userAdjustedCamera = true;
     this.cinematicDirector.notifyUserInteraction(performance.now() / 1000, 4.0);
-    const clamped = clampCameraState(
-      this.camX,
-      this.camY,
-      this.camZoom * factor,
-      this.mapWidth,
-      this.mapHeight,
-      this.app.screen.width,
-      this.app.screen.height,
-      this.cinematicCameraEnabled,
-      this.camBearingDeg,
-      this.camTiltDeg
-    );
-    this.camZoom = clamped.zoom;
-    this.camX = clamped.x;
-    this.camY = clamped.y;
+    const baseZoom = this.zoomGlideActive ? this.targetCamZoom : this.camZoom;
+    this.targetCamZoom = this.clampZoom(baseZoom * factor);
+    this.zoomAnchor = null;
+    this.zoomGlideActive = true;
   }
 
   resetCamera(): void {
@@ -801,6 +817,9 @@ export class StudioRenderer {
     this.lastScreenW = sw;
     this.lastScreenH = sh;
     this.camZoom = computeSafeFitZoom(this.mapWidth, this.mapHeight, sw, sh, this.cinematicCameraEnabled);
+    this.targetCamZoom = this.camZoom;
+    this.zoomAnchor = null;
+    this.zoomGlideActive = false;
   }
 
   resumeCameraTracking(): void {
@@ -826,6 +845,9 @@ export class StudioRenderer {
       this.camX = clamped.x;
       this.camY = clamped.y;
       this.camZoom = targetZoom;
+      this.targetCamZoom = targetZoom;
+      this.zoomAnchor = null;
+      this.zoomGlideActive = false;
       this.lastCamSeq = engine.cameraTarget.seq;
     }
     this.particles = [];
@@ -949,6 +971,12 @@ export class StudioRenderer {
     this.currentHitTest = engine.map.hitTest;
     this.onSelectionChange?.(null);
 
+    this.hoverHighlightCacheKey = '';
+    this.selectHighlightCacheKey = '';
+    this.hadNavOverlay = false;
+    this.hadActiveZones = false;
+    this.hadActiveCraters = false;
+
     this.mapWidth = engine.map.width;
     this.mapHeight = engine.map.height;
 
@@ -974,6 +1002,9 @@ export class StudioRenderer {
     this.userAdjustedCamera = false;
     this.wasCinematicEnabled = this.cinematicCameraEnabled;
     this.camZoom = computeSafeFitZoom(engine.map.width, engine.map.height, sw, sh, this.cinematicCameraEnabled);
+    this.targetCamZoom = this.camZoom;
+    this.zoomAnchor = null;
+    this.zoomGlideActive = false;
     this.cameraStage.position.set(sw / 2, sh / 2);
     this.cameraStage.scale.set(this.camZoom, this.camZoom * tiltToScaleYRatio(this.camTiltDeg));
     this.world.position.set(0, 0);
@@ -984,8 +1015,9 @@ export class StudioRenderer {
     this.lastCamSeq = -1;
   }
 
-  render(engine: StudioEngine, alpha: number, timeSec: number, frameDt = 0.016, isPlaying = true): void {
+  render(engine: StudioEngine, alpha: number, timeSec: number, frameDt = 1 / 60, isPlaying = true): void {
     if (this.destroyed) return;
+    const safeDt = Math.max(0.0002, Math.min(0.05, Number.isFinite(frameDt) ? frameDt : 1 / 60));
     const curSw = Math.max(1, this.app.screen.width);
     const curSh = Math.max(1, this.app.screen.height);
     const cinematicToggled = this.cinematicCameraEnabled !== this.wasCinematicEnabled;
@@ -1041,9 +1073,12 @@ export class StudioRenderer {
     }
 
     if (hasScriptedCamera && engine.cameraTarget) {
+      this.zoomGlideActive = false;
+      this.zoomAnchor = null;
       const targetZoom = this.clampZoom(engine.cameraTarget.zoom);
-      const speedFactor = 1 - Math.exp((-frameDt * 3.6) / Math.max(0.25, engine.cameraTarget.durationSec));
+      const speedFactor = frameRateIndependentEase(3.6 / Math.max(0.25, engine.cameraTarget.durationSec), safeDt);
       this.camZoom = lerp(this.camZoom, targetZoom, speedFactor);
+      this.targetCamZoom = this.camZoom;
       const goalNow = this.computeClampedCameraGoal(engine.cameraTarget.x, engine.cameraTarget.y, this.camZoom);
       this.camX = lerp(this.camX, goalNow.x, speedFactor);
       this.camY = lerp(this.camY, goalNow.y, speedFactor);
@@ -1063,10 +1098,13 @@ export class StudioRenderer {
         this.onCinematicFocusChange?.('none', '');
       }
     } else if (cinCandidate) {
+      this.zoomGlideActive = false;
+      this.zoomAnchor = null;
       const targetZoom = this.clampZoom(cinCandidate.zoom);
-      const posEase = 1 - Math.exp(-frameDt * (cinCandidate.focusKind === 'explosion' ? 4.2 : 3.0));
-      const zoomEase = 1 - Math.exp(-frameDt * (cinCandidate.focusKind === 'establishing' ? 1.8 : 2.5));
+      const posEase = frameRateIndependentEase(cinCandidate.focusKind === 'explosion' ? 4.2 : 3.0, safeDt);
+      const zoomEase = frameRateIndependentEase(cinCandidate.focusKind === 'establishing' ? 1.8 : 2.5, safeDt);
       this.camZoom = lerp(this.camZoom, targetZoom, zoomEase);
+      this.targetCamZoom = this.camZoom;
       const goalNow = this.computeClampedCameraGoal(cinCandidate.x, cinCandidate.y, this.camZoom);
       this.camX = lerp(this.camX, goalNow.x, posEase);
       this.camY = lerp(this.camY, goalNow.y, posEase);
@@ -1082,6 +1120,37 @@ export class StudioRenderer {
       this.onCinematicFocusChange?.('none', '');
     }
 
+    // تنعيم تكبير/تصغير العجلة وأزرار التكبير بمعدل الشاشة الفعلي (حتى 120Hz+) مع تثبيت النقطة تحت المؤشر
+    if (this.zoomGlideActive) {
+      const zEase = frameRateIndependentEase(18, safeDt);
+      const nextZ =
+        Math.abs(this.targetCamZoom - this.camZoom) < 0.0015
+          ? this.targetCamZoom
+          : lerp(this.camZoom, this.targetCamZoom, zEase);
+      if (this.zoomAnchor && this.activePointers.size === 0) {
+        const after = unprojectScreenToWorld(
+          this.zoomAnchor.sx,
+          this.zoomAnchor.sy,
+          this.camX,
+          this.camY,
+          nextZ,
+          curSw,
+          curSh,
+          this.cinematicCameraEnabled,
+          this.camBearingDeg,
+          this.camTiltDeg
+        );
+        this.camX += this.zoomAnchor.wx - after.x;
+        this.camY += this.zoomAnchor.wy - after.y;
+      }
+      this.camZoom = nextZ;
+      if (Math.abs(this.targetCamZoom - this.camZoom) < 0.0015) {
+        this.camZoom = this.targetCamZoom;
+        this.zoomGlideActive = false;
+        this.zoomAnchor = null;
+      }
+    }
+
     // اهتزاز كاميرا خفيف لحظة الانفجارات الحية دون التأثير على camX/camY
     let shakeX = 0;
     let shakeY = 0;
@@ -1093,8 +1162,8 @@ export class StudioRenderer {
       }
     }
 
-    // تنعيم حركة زاوية الدوران والميلان نحو الهدف
-    const angleEase = 1 - Math.exp(-Math.max(0.008, frameDt) * 14);
+    // تنعيم حركة زاوية الدوران والميلان نحو الهدف بمعدل مستقل عن التردد
+    const angleEase = frameRateIndependentEase(14, safeDt);
     const diffB = shortestAngleDiffDeg(this.targetBearingDeg, this.camBearingDeg);
     if (Math.abs(diffB) < 0.05) {
       this.camBearingDeg = this.targetBearingDeg;
@@ -1178,75 +1247,108 @@ export class StudioRenderer {
       }
     }
 
-    // تمييز الدولة أو المحافظة عند التمرير والتحديد
-    this.drawRegionHighlight(this.geoHoverGraphics, engine, this.hoveredRegionId, 0x38bdf8, 0.22, 0x38bdf8, 1.9);
+    // تمييز الدولة أو المحافظة عند التمرير والتحديد (مع التخزين المؤقت لتفادي إعادة التثليث عند 120 FPS)
+    const zoomBucket = Math.round(this.camZoom * 20);
+    const hoverKey = `${engine.map.id}|${this.hoveredRegionId ?? ''}|${this.hideUIHelpers ? 1 : 0}|${zoomBucket}`;
+    if (hoverKey !== this.hoverHighlightCacheKey) {
+      this.hoverHighlightCacheKey = hoverKey;
+      this.drawRegionHighlight(this.geoHoverGraphics, engine, this.hoveredRegionId, 0x38bdf8, 0.22, 0x38bdf8, 1.9);
+    }
+
     const selHex = this.selectedRegionId ? this.countryColorMap[this.selectedRegionId] : undefined;
     const selTint = selHex ? parseInt(selHex.replace('#', ''), 16) : 0xf59e0b;
-    this.drawRegionHighlight(
-      this.geoSelectGraphics,
-      engine,
-      this.selectedRegionId,
-      Number.isFinite(selTint) ? selTint : 0xf59e0b,
-      0.3,
-      0xfbbf24,
-      2.8
-    );
+    const selectKey = `${engine.map.id}|${this.selectedRegionId ?? ''}|${selHex ?? ''}|${this.hideUIHelpers ? 1 : 0}|${zoomBucket}`;
+    if (selectKey !== this.selectHighlightCacheKey) {
+      this.selectHighlightCacheKey = selectKey;
+      this.drawRegionHighlight(
+        this.geoSelectGraphics,
+        engine,
+        this.selectedRegionId,
+        Number.isFinite(selTint) ? selTint : 0xf59e0b,
+        0.3,
+        0xfbbf24,
+        2.8
+      );
+    }
 
     // طبقة شبكة الملاحة ومسودة المناطق في وضع صانع الخرائط
-    this.navOverlay.clear();
-    if (this.editorOverlay.enabled && this.editorOverlay.showNavGrid) {
-      const m = engine.map;
-      for (let y = 0; y < m.rows; y++) {
-        for (let x = 0; x < m.cols; x++) {
-          const cell = m.navGrid[y * m.cols + x];
-          if (cell === 1) {
-            this.navOverlay
-              .rect(x * m.cellSize, y * m.cellSize, m.cellSize, m.cellSize)
-              .fill({ color: 0x38bdf8, alpha: 0.25 });
-          } else if (cell === 2) {
-            this.navOverlay
-              .rect(x * m.cellSize, y * m.cellSize, m.cellSize, m.cellSize)
-              .fill({ color: 0xef4444, alpha: 0.35 });
-          } else if (cell === 3) {
-            this.navOverlay
-              .rect(x * m.cellSize, y * m.cellSize, m.cellSize, m.cellSize)
-              .fill({ color: 0x10b981, alpha: 0.35 });
+    const showNavNow =
+      this.editorOverlay.enabled &&
+      (this.editorOverlay.showNavGrid || this.editorOverlay.draftZonePoints.length > 0);
+    if (showNavNow || this.hadNavOverlay) {
+      this.navOverlay.clear();
+      this.hadNavOverlay = showNavNow;
+      if (this.editorOverlay.enabled && this.editorOverlay.showNavGrid) {
+        const m = engine.map;
+        for (let y = 0; y < m.rows; y++) {
+          for (let x = 0; x < m.cols; x++) {
+            const cell = m.navGrid[y * m.cols + x];
+            if (cell === 1) {
+              this.navOverlay
+                .rect(x * m.cellSize, y * m.cellSize, m.cellSize, m.cellSize)
+                .fill({ color: 0x38bdf8, alpha: 0.25 });
+            } else if (cell === 2) {
+              this.navOverlay
+                .rect(x * m.cellSize, y * m.cellSize, m.cellSize, m.cellSize)
+                .fill({ color: 0xef4444, alpha: 0.35 });
+            } else if (cell === 3) {
+              this.navOverlay
+                .rect(x * m.cellSize, y * m.cellSize, m.cellSize, m.cellSize)
+                .fill({ color: 0x10b981, alpha: 0.35 });
+            }
           }
         }
       }
-    }
-    if (this.editorOverlay.enabled && this.editorOverlay.draftZonePoints.length > 0) {
-      const pts = this.editorOverlay.draftZonePoints;
-      pts.forEach((p) => this.navOverlay.circle(p.x, p.y, 5).fill({ color: 0xf472b6 }));
-      if (pts.length > 1) {
-        this.navOverlay.poly(pts.flatMap((p) => [p.x, p.y]), false).stroke({ width: 2, color: 0xf472b6 });
+      if (this.editorOverlay.enabled && this.editorOverlay.draftZonePoints.length > 0) {
+        const pts = this.editorOverlay.draftZonePoints;
+        pts.forEach((p) => this.navOverlay.circle(p.x, p.y, 5).fill({ color: 0xf472b6 }));
+        if (pts.length > 1) {
+          this.navOverlay.poly(pts.flatMap((p) => [p.x, p.y]), false).stroke({ width: 2, color: 0xf472b6 });
+        }
       }
     }
 
-    // المناطق
-    this.zoneGraphics.clear();
+    // المناطق (مع تنعيم الشفافية البيني)
+    let anyZone = false;
     for (const zState of engine.zones.values()) {
-      if (zState.opacity <= 0.01) continue;
-      const def = engine.map.zones[zState.id];
-      if (!def) continue;
-      const pts = def.polygon.flatMap((p) => [p.x, p.y]);
-      this.zoneGraphics
-        .poly(pts, true)
-        .fill({ color: zState.color, alpha: zState.opacity })
-        .stroke({ width: 2, color: zState.color, alpha: 0.85 });
+      if (zState.opacity > 0.01 || zState.targetOpacity > 0.01) {
+        anyZone = true;
+        break;
+      }
+    }
+    if (anyZone || this.hadActiveZones) {
+      this.zoneGraphics.clear();
+      this.hadActiveZones = anyZone;
+      if (anyZone) {
+        for (const zState of engine.zones.values()) {
+          const zOpacity = lerp(zState.prevOpacity, zState.opacity, alpha);
+          if (zOpacity <= 0.01) continue;
+          const def = engine.map.zones[zState.id];
+          if (!def) continue;
+          const pts = def.polygon.flatMap((p) => [p.x, p.y]);
+          this.zoneGraphics
+            .poly(pts, true)
+            .fill({ color: zState.color, alpha: zOpacity })
+            .stroke({ width: 2, color: zState.color, alpha: 0.85 });
+        }
+      }
     }
 
     // فوهات وآثار القصف الأرضية المؤقتة (تبقى قليلًا ثم تتلاشى وتختفي)
-    this.craterGraphics.clear();
-    for (const c of engine.craters) {
-      const fade = Math.max(0, Math.min(1, (c.life / Math.max(0.1, c.maxLife)) * 1.8));
-      if (fade <= 0.01) continue;
-      this.craterGraphics.circle(c.x, c.y, c.radius * 1.32).fill({ color: 0x090d16, alpha: 0.38 * fade });
-      this.craterGraphics
-        .circle(c.x, c.y, c.radius * 0.7)
-        .fill({ color: 0x1e293b, alpha: 0.72 * fade })
-        .stroke({ width: 1.8, color: 0x475569, alpha: 0.65 * fade });
-      this.craterGraphics.circle(c.x, c.y, c.radius * 0.32).fill({ color: 0x020617, alpha: 0.82 * fade });
+    if (engine.craters.length > 0 || this.hadActiveCraters) {
+      this.craterGraphics.clear();
+      this.hadActiveCraters = engine.craters.length > 0;
+      for (const c of engine.craters) {
+        const cLife = Math.max(0, lerp(c.prevLife, c.life, alpha));
+        const fade = Math.max(0, Math.min(1, (cLife / Math.max(0.1, c.maxLife)) * 1.8));
+        if (fade <= 0.01) continue;
+        this.craterGraphics.circle(c.x, c.y, c.radius * 1.32).fill({ color: 0x090d16, alpha: 0.38 * fade });
+        this.craterGraphics
+          .circle(c.x, c.y, c.radius * 0.7)
+          .fill({ color: 0x1e293b, alpha: 0.72 * fade })
+          .stroke({ width: 1.8, color: 0x475569, alpha: 0.65 * fade });
+        this.craterGraphics.circle(c.x, c.y, c.radius * 0.32).fill({ color: 0x020617, alpha: 0.82 * fade });
+      }
     }
 
     // رسم مسار A* للوحدة المحددة
@@ -1266,24 +1368,36 @@ export class StudioRenderer {
       }
     }
 
-    // الأسهم
+    // الأسهم (بتنعيم بيني 120 FPS)
     this.arrowGraphics.clear();
     for (const arr of engine.arrows.values()) {
+      const arrProg = Math.max(0, Math.min(1, lerp(arr.prevProgress, arr.progress, alpha)));
       const mx = (arr.from.x + arr.to.x) / 2;
       const my = (arr.from.y + arr.to.y) / 2 - 55;
       const steps = 24;
-      const maxStep = Math.max(1, Math.floor(steps * arr.progress));
+      const exactStep = steps * arrProg;
+      const wholeStep = Math.floor(exactStep);
+      const fracStep = exactStep - wholeStep;
       let prev = arr.from;
-      for (let i = 1; i <= maxStep; i++) {
-        const t = i / steps;
-        const x = (1 - t) * (1 - t) * arr.from.x + 2 * (1 - t) * t * mx + t * t * arr.to.x;
-        const y = (1 - t) * (1 - t) * arr.from.y + 2 * (1 - t) * t * my + t * t * arr.to.y;
+      const evalQuad = (t: number) => ({
+        x: (1 - t) * (1 - t) * arr.from.x + 2 * (1 - t) * t * mx + t * t * arr.to.x,
+        y: (1 - t) * (1 - t) * arr.from.y + 2 * (1 - t) * t * my + t * t * arr.to.y
+      });
+      for (let i = 1; i <= wholeStep; i++) {
+        const pt = evalQuad(i / steps);
         if (!arr.dashed || i % 2 === 1) {
-          this.arrowGraphics.moveTo(prev.x, prev.y).lineTo(x, y).stroke({ width: 4, color: arr.color, alpha: 0.9 });
+          this.arrowGraphics.moveTo(prev.x, prev.y).lineTo(pt.x, pt.y).stroke({ width: 4, color: arr.color, alpha: 0.9 });
         }
-        prev = { x, y };
+        prev = pt;
       }
-      if (arr.progress > 0.15) {
+      if (fracStep > 0.01 && wholeStep < steps) {
+        const tip = evalQuad(arrProg);
+        if (!arr.dashed || (wholeStep + 1) % 2 === 1) {
+          this.arrowGraphics.moveTo(prev.x, prev.y).lineTo(tip.x, tip.y).stroke({ width: 4, color: arr.color, alpha: 0.9 });
+        }
+        prev = tip;
+      }
+      if (arrProg > 0.12) {
         const ang = Math.atan2(prev.y - my, prev.x - mx);
         this.arrowGraphics
           .poly([
@@ -1298,17 +1412,18 @@ export class StudioRenderer {
       }
     }
 
-    // موجات التنبيه والمسح الراداري (Pulses)
+    // موجات التنبيه والمسح الراداري (Pulses بتنعيم 120 FPS)
     this.pulseGraphics.clear();
     for (const p of engine.pulses) {
-      const r = 10 + p.maxRadius * p.progress;
-      const a = Math.max(0, 1 - p.progress);
+      const pulseProg = Math.max(0, Math.min(1, lerp(p.prevProgress, p.progress, alpha)));
+      const r = 10 + p.maxRadius * pulseProg;
+      const a = Math.max(0, 1 - pulseProg);
       this.pulseGraphics
         .circle(p.x, p.y, r)
         .stroke({ width: 3.2, color: p.color, alpha: a * 0.9 })
         .circle(p.x, p.y, r * 0.65)
         .stroke({ width: 1.5, color: 0xe0f2fe, alpha: a * 0.55 })
-        .circle(p.x, p.y, Math.max(4, 14 * (1 - p.progress)))
+        .circle(p.x, p.y, Math.max(4, 14 * (1 - pulseProg)))
         .fill({ color: p.color, alpha: a * 0.28 });
     }
 
@@ -1372,16 +1487,17 @@ export class StudioRenderer {
         view.sprite.rotation = smoothAng;
       } else if (ent.kind === 'air') {
         view.sprite.rotation = smoothAng;
-        const bankSquash = Math.max(0.76, 1 - Math.abs(ent.bankAngle) * 0.28);
+        const smoothBank = lerp(ent.prevBankAngle, ent.bankAngle, alpha);
+        const bankSquash = Math.max(0.76, 1 - Math.abs(smoothBank) * 0.28);
         view.sprite.scale.set(view.baseSpriteScale, view.baseSpriteScale * bankSquash);
         if (view.rotor) {
           view.rotor.rotation = timeSec * (ent.isMoving || alt > 0.05 ? 24 : 7);
         }
       }
 
-      // موجات البحر وذيل الزبد للسفن المبحرة
+      // موجات البحر وذيل الزبد للسفن المبحرة (معدل توليد مستقل عن التردد)
       if (isPlaying && ent.domain === 'sea') {
-        if (ent.isMoving && Math.random() < 0.55 && this.wakeRipples.length < 140) {
+        if (ent.isMoving && Math.random() < frameRateIndependentEase(24, safeDt) && this.wakeRipples.length < 160) {
           this.wakeRipples.push({
             x: x - Math.cos(smoothAng) * (ent.radius * 0.72 * entScale),
             y: y - Math.sin(smoothAng) * (ent.radius * 0.72 * entScale),
@@ -1393,8 +1509,8 @@ export class StudioRenderer {
         }
       }
 
-      // جزيئات غبار الآليات أو عادم/تكاثف الطائرات
-      if (isPlaying && ent.isMoving && Math.random() < 0.38 && this.particles.length < 220) {
+      // جزيئات غبار الآليات أو عادم/تكاثف الطائرات (معدل توليد مستقل عن التردد)
+      if (isPlaying && ent.isMoving && Math.random() < frameRateIndependentEase(14, safeDt) && this.particles.length < 240) {
         if (ent.kind === 'air' && alt > 0.25) {
           this.particles.push({
             x: x - Math.cos(smoothAng) * (ent.radius * 0.85 * entScale),
@@ -1420,11 +1536,12 @@ export class StudioRenderer {
         }
       }
 
-      view.sprite.alpha = ent.buildProgress < 1 ? 0.35 + ent.buildProgress * 0.65 : 1;
+      const buildProg = Math.max(0, Math.min(1, lerp(ent.prevBuildProgress, ent.buildProgress, alpha)));
+      view.sprite.alpha = buildProg < 1 ? 0.35 + buildProg * 0.65 : 1;
       view.buildArc.clear();
-      if (ent.buildProgress < 1) {
+      if (buildProg < 1) {
         view.buildArc
-          .arc(0, 0, ent.radius + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ent.buildProgress)
+          .arc(0, 0, ent.radius + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * buildProg)
           .stroke({ width: 3, color: 0x38bdf8 });
       }
       view.ring.visible = !this.hideUIHelpers && this.selectedEntityId === ent.id;
@@ -1434,7 +1551,7 @@ export class StudioRenderer {
     this.wakeGraphics.clear();
     for (let i = this.wakeRipples.length - 1; i >= 0; i--) {
       const w = this.wakeRipples[i];
-      w.life -= frameDt;
+      if (isPlaying) w.life -= safeDt;
       if (w.life <= 0) {
         this.wakeRipples.splice(i, 1);
         continue;
@@ -1475,9 +1592,11 @@ export class StudioRenderer {
     this.particleGraphics.clear();
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const pt = this.particles[i];
-      pt.x += pt.vx * frameDt;
-      pt.y += pt.vy * frameDt;
-      pt.life -= frameDt;
+      if (isPlaying) {
+        pt.x += pt.vx * safeDt;
+        pt.y += pt.vy * safeDt;
+        pt.life -= safeDt;
+      }
       if (pt.life <= 0) {
         this.particles.splice(i, 1);
       } else {
@@ -1492,7 +1611,7 @@ export class StudioRenderer {
     this.projectileGraphics.clear();
 
     const spawnFxParticle = (item: FxParticle) => {
-      if (this.fxParticles.length < 520) {
+      if (this.fxParticles.length < 640) {
         this.fxParticles.push(item);
       }
     };
@@ -1542,8 +1661,9 @@ export class StudioRenderer {
         }
       }
 
-      const fAlpha = Math.max(0, 1 - mf.progress);
-      const len = (mf.kind === 'cannon' || mf.kind === 'artillery' ? 24 : 14) * (1 - mf.progress * 0.3);
+      const mfProg = Math.max(0, Math.min(1, lerp(mf.prevProgress, mf.progress, alpha)));
+      const fAlpha = Math.max(0, 1 - mfProg);
+      const len = (mf.kind === 'cannon' || mf.kind === 'artillery' ? 24 : 14) * (1 - mfProg * 0.3);
       const cos = Math.cos(mf.angle);
       const sin = Math.sin(mf.angle);
       const px = -sin;
@@ -1580,9 +1700,11 @@ export class StudioRenderer {
 
     for (const p of engine.projectiles) {
       if (p.delaySec && p.delaySec > 0) continue;
+      const pProg = Math.max(0, Math.min(1, lerp(p.prevProgress, p.progress, alpha)));
       const gx = lerp(p.prevX, p.x, alpha);
       const gy = lerp(p.prevY, p.y, alpha);
-      const arcLift = p.altitude * 48;
+      const smoothAlt = lerp(p.prevAltitude, p.altitude, alpha);
+      const arcLift = smoothAlt * 48;
       const vy = gy - arcLift;
 
       if (!this.seenProjectiles.has(p)) {
@@ -1629,8 +1751,12 @@ export class StudioRenderer {
         }
       }
 
-      // ذيل دخان متراكم أثناء طيران الصواريخ والمدفعية
-      if (isPlaying && (p.mode === 'missile' || p.mode === 'artillery' || p.mode === 'interceptor') && Math.random() < 0.72) {
+      // ذيل دخان متراكم أثناء طيران الصواريخ والمدفعية (معدل توليد مستقل عن التردد)
+      if (
+        isPlaying &&
+        (p.mode === 'missile' || p.mode === 'artillery' || p.mode === 'interceptor') &&
+        Math.random() < frameRateIndependentEase(38, safeDt)
+      ) {
         const isInt = p.mode === 'interceptor';
         spawnFxParticle({
           x: gx + (Math.random() - 0.5) * 2.5,
@@ -1651,7 +1777,7 @@ export class StudioRenderer {
       // حلقة استهداف (لغير الرصاص السريع)
       if (p.mode !== 'bullet') {
         const targetPulse = 0.65 + 0.35 * Math.sin(timeSec * 14);
-        const tr = Math.max(9, p.radius * 0.32) * (1 - p.progress * 0.4);
+        const tr = Math.max(9, p.radius * 0.32) * (1 - pProg * 0.4);
         this.projectileGraphics
           .circle(p.targetX, p.targetY, tr)
           .stroke({ width: 1.4, color: p.color, alpha: 0.6 * targetPulse })
@@ -1666,7 +1792,7 @@ export class StudioRenderer {
         const arcPeak = p.mode === 'missile' ? 1.65 : p.mode === 'artillery' ? 0.95 : 0.55;
         const steps = p.mode === 'missile' ? 10 : p.mode === 'artillery' ? 7 : 6;
         for (let s = 1; s <= steps; s++) {
-          const bt = Math.max(0, p.progress - s * 0.028);
+          const bt = Math.max(0, pProg - s * 0.028);
           const bx = p.startX + (p.targetX - p.startX) * bt;
           const bAlt = Math.sin(bt * Math.PI) * arcPeak * 48;
           const by = p.startY + (p.targetY - p.startY) * bt - bAlt;
@@ -1683,7 +1809,7 @@ export class StudioRenderer {
             .fill({ color: trailCol, alpha: Math.max(0.12, 0.72 - s * 0.07) });
         }
 
-        const nextT = Math.min(1, p.progress + 0.02);
+        const nextT = Math.min(1, pProg + 0.02);
         const nx = p.startX + (p.targetX - p.startX) * nextT;
         const ny = p.startY + (p.targetY - p.startY) * nextT - Math.sin(nextT * Math.PI) * arcPeak * 48;
         const mAng = Math.atan2(ny - vy, nx - gx);
@@ -1800,7 +1926,7 @@ export class StudioRenderer {
         const px = -sin;
         const py = cos;
         for (let s = 1; s <= 7; s++) {
-          const bt = Math.max(0, p.progress - s * 0.032);
+          const bt = Math.max(0, pProg - s * 0.032);
           const bx = p.startX + (p.targetX - p.startX) * bt;
           const by = p.startY + (p.targetY - p.startY) * bt;
           this.projectileGraphics
@@ -1982,7 +2108,7 @@ export class StudioRenderer {
         }
       }
 
-      const p = ex.progress;
+      const p = Math.max(0, Math.min(1, lerp(ex.prevProgress, ex.progress, alpha)));
       if (ex.kind === 'bullet') {
         const sparkR = Math.max(5, ex.maxRadius * 0.5);
         if (p < 0.35) {
@@ -2072,12 +2198,12 @@ export class StudioRenderer {
     for (let i = this.fxParticles.length - 1; i >= 0; i--) {
       const fp = this.fxParticles[i];
       if (isPlaying) {
-        const damp = Math.exp(-fp.drag * frameDt);
+        const damp = Math.exp(-fp.drag * safeDt);
         fp.vx *= damp;
         fp.vy *= damp;
-        fp.x += fp.vx * frameDt;
-        fp.y += (fp.vy + fp.rise) * frameDt;
-        fp.life -= frameDt;
+        fp.x += fp.vx * safeDt;
+        fp.y += (fp.vy + fp.rise) * safeDt;
+        fp.life -= safeDt;
       }
       if (fp.life <= 0) {
         this.fxParticles.splice(i, 1);
@@ -2327,6 +2453,9 @@ export class StudioRenderer {
         this.onSelectedScreenPos(null);
       }
     }
+
+    // تصيير الإطار يدوياً مرة واحدة فقط متزامنة مع حلقة 120 FPS الخارجية
+    this.app.render();
   }
 
   private drawCornerBrackets(g: Graphics, hw: number, hh: number, arm: number, color: number, width: number, alpha: number): void {

@@ -21,7 +21,9 @@ import {
   CAMERA_ANGLE_PRESETS,
   MAX_TILT_DEG,
   clampTiltDeg,
-  normalizeAngleDeg
+  computeFrameDt,
+  normalizeAngleDeg,
+  stepFixedAccumulator
 } from './core/cameraTransform';
 import { CinematicFocusKind } from './core/cinematicDirector';
 import { DT, StudioEngine, TICK_RATE } from './core/engine';
@@ -102,6 +104,8 @@ export default function App() {
   const pendingActionModeRef = useRef<'none' | 'arrow_start' | 'arrow_end' | 'pulse'>('none');
   const arrowStartPtRef = useRef<Point | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+  const accumulatorRef = useRef(0);
+  const lastAlphaRef = useRef(1);
 
   const [, setPackVersion] = useState(0);
   const [unitsOpen, setUnitsOpen] = useState(false);
@@ -116,6 +120,7 @@ export default function App() {
   const [speed, setSpeed] = useState(1);
   const [muted, setMuted] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [videoFps, setVideoFps] = useState<30 | 60 | 120>(120);
   const [unitScale, setUnitScale] = useState(1.0);
   const [activeTool, setActiveTool] = useState<string>('select');
   const [sandboxFaction, setSandboxFaction] = useState<Faction>('blue');
@@ -162,7 +167,7 @@ export default function App() {
   const [hudState, setHudState] = useState({
     simTimeSec: 0,
     tick: 0,
-    maxTicks: 600,
+    maxTicks: Math.round(20 * TICK_RATE),
     caption: '',
     entityCount: 0,
     executedSteps: 0,
@@ -258,7 +263,7 @@ export default function App() {
 
   const syncHudFromEngine = useCallback((eng: StudioEngine) => {
     const hasSteps = (eng.scenario.timeline?.length ?? 0) > 0;
-    const maxTicks = hasSteps ? Math.max(60, Math.ceil(eng.estimateDurationSec() * TICK_RATE)) : 600;
+    const maxTicks = hasSteps ? Math.max(TICK_RATE * 2, Math.ceil(eng.estimateDurationSec() * TICK_RATE)) : Math.round(20 * TICK_RATE);
     setHudState({
       simTimeSec: eng.tick * DT,
       tick: eng.tick,
@@ -315,6 +320,8 @@ export default function App() {
       const engine = new StudioEngine(map, reg.actors, blankScenario);
       attachEngineListeners(engine);
       engineRef.current = engine;
+      accumulatorRef.current = 0;
+      lastAlphaRef.current = 1;
       setActiveMap(map);
       setSelectedEntityId(null);
       setSelectedRegionId(null);
@@ -355,6 +362,8 @@ export default function App() {
         const engine = new StudioEngine(map, reg.actors, parsed);
         attachEngineListeners(engine);
         engineRef.current = engine;
+        accumulatorRef.current = 0;
+        lastAlphaRef.current = 1;
         setActiveMap(map);
         setSelectedEntityId(null);
         setSelectedRegionId(null);
@@ -414,7 +423,7 @@ export default function App() {
     [openEmptyMapBoard, showToast]
   );
 
-  // Initialize PackRegistry, PixiJS StudioRenderer, & 30 TPS loop once
+  // Initialize PackRegistry, PixiJS StudioRenderer, & decoupled 60 TPS / 120+ FPS render loop once
   useEffect(() => {
     const host = stageHostRef.current;
     if (!host) return;
@@ -478,6 +487,7 @@ export default function App() {
           color: '#f59e0b',
           dashed: true,
           progress: 0,
+          prevProgress: 0,
           rate: 0.8
         });
         rec.recordArrow(id, arrowStartPtRef.current, pt, '#f59e0b', true);
@@ -486,7 +496,7 @@ export default function App() {
         return;
       }
       if (pendingActionModeRef.current === 'pulse') {
-        eng.pulses.push({ x: pt.x, y: pt.y, color: '#ef4444', maxRadius: 70, progress: 0 });
+        eng.pulses.push({ x: pt.x, y: pt.y, color: '#ef4444', maxRadius: 70, progress: 0, prevProgress: 0 });
         rec.recordPulse(pt, '#ef4444');
         pendingActionModeRef.current = 'none';
         return;
@@ -625,6 +635,11 @@ export default function App() {
         setCinematicCamera(savedCinCam);
       }
 
+      const savedVideoFps = await studioDb.getSetting<number>('videoFps');
+      if (savedVideoFps === 30 || savedVideoFps === 60 || savedVideoFps === 120) {
+        setVideoFps(savedVideoFps);
+      }
+
       const lastScenId = await studioDb.getSetting<string>('lastScenarioId');
       setPackVersion((v) => v + 1);
 
@@ -637,7 +652,8 @@ export default function App() {
         await openEmptyMapBoard('world_live');
       }
 
-      let accumulator = 0;
+      accumulatorRef.current = 0;
+      lastAlphaRef.current = 1;
       let lastTime = performance.now();
       let lastHudTenths = -1;
       let lastHudCaption = '';
@@ -648,16 +664,20 @@ export default function App() {
 
       const loop = (now: number) => {
         if (cancelled) return;
-        const frameDt = Math.min(0.1, (now - lastTime) / 1000);
+        const frameDt = computeFrameDt(now, lastTime);
         lastTime = now;
 
         const eng = engineRef.current;
+        let alpha = lastAlphaRef.current;
         if (eng && playingRef.current) {
-          accumulator += frameDt * speedRef.current;
-          while (accumulator >= DT) {
+          // محرك المحاكاة ثابت عند 60 TPS بينما يتم حساب معامل التنعيم alpha لكل إطار عرض حتى 120Hz+
+          const stepped = stepFixedAccumulator(accumulatorRef.current, frameDt, DT, speedRef.current, 6);
+          accumulatorRef.current = stepped.nextAccumulator;
+          for (let s = 0; s < stepped.steps; s++) {
             eng.step();
-            accumulator -= DT;
           }
+          alpha = stepped.alpha;
+          lastAlphaRef.current = alpha;
         }
 
         // إلغاء التسليح تلقائيًا إذا تم تدمير الآلية المسلحة أثناء التشغيل
@@ -678,7 +698,6 @@ export default function App() {
         }
 
         if (eng) {
-          const alpha = playingRef.current ? accumulator / DT : 1;
           renderer.render(eng, alpha, now / 1000, frameDt, playingRef.current);
 
           const simSec = eng.tick * DT;
@@ -697,7 +716,7 @@ export default function App() {
             lastHudEntities = entCount;
             lastHudSteps = execSteps;
             const hasSteps = (eng.scenario.timeline?.length ?? 0) > 0;
-            const maxTicks = hasSteps ? Math.max(60, Math.ceil(eng.estimateDurationSec() * TICK_RATE)) : 600;
+            const maxTicks = hasSteps ? Math.max(TICK_RATE * 2, Math.ceil(eng.estimateDurationSec() * TICK_RATE)) : Math.round(20 * TICK_RATE);
             setHudState({
               simTimeSec: simSec,
               tick: eng.tick,
@@ -893,6 +912,8 @@ export default function App() {
   const handleRestart = () => {
     const eng = engineRef.current;
     if (!eng) return;
+    accumulatorRef.current = 0;
+    lastAlphaRef.current = 1;
     eng.reset();
     armedAbilityRef.current = null;
     setArmedAbility(null);
@@ -908,6 +929,8 @@ export default function App() {
     const eng = engineRef.current;
     if (!eng) return;
     setPlaying(false);
+    accumulatorRef.current = 0;
+    lastAlphaRef.current = 1;
     eng.seekToTick(targetTick);
     rendererRef.current?.syncCameraImmediate(eng);
     const selId = rendererRef.current?.selectedEntityId;
@@ -962,6 +985,11 @@ export default function App() {
     }
   };
 
+  const handleChangeVideoFps = (fps: 30 | 60 | 120) => {
+    setVideoFps(fps);
+    void studioDb.setSetting('videoFps', fps);
+  };
+
   const handleToggleVideoRecord = () => {
     if (recording) {
       recorderRef.current?.stop();
@@ -975,7 +1003,7 @@ export default function App() {
     }
 
     if (rendererRef.current) rendererRef.current.hideUIHelpers = true;
-    const videoStream = canvas.captureStream(30);
+    const videoStream = canvas.captureStream(videoFps);
     const tracks: MediaStreamTrack[] = [...videoStream.getVideoTracks()];
     const audioStream = soundRef.current?.getAudioStream();
     if (audioStream) {
@@ -983,7 +1011,13 @@ export default function App() {
     }
     const combinedStream = new MediaStream(tracks);
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
-    const recorder = new MediaRecorder(combinedStream, { mimeType });
+    const targetBitrate = videoFps === 120 ? 16_000_000 : videoFps === 60 ? 10_000_000 : 6_000_000;
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: targetBitrate });
+    } catch {
+      recorder = new MediaRecorder(combinedStream, { mimeType });
+    }
     const chunks: BlobPart[] = [];
 
     recorder.ondataavailable = (ev) => {
@@ -995,15 +1029,17 @@ export default function App() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `scenario-${Date.now()}.webm`;
+      a.download = `scenario-${videoFps}fps-${Date.now()}.webm`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
+      showToast(`✅ تم حفظ الفيديو (${videoFps} FPS)`);
     };
 
     recorderRef.current = recorder;
     recorder.start(250);
     setRecording(true);
     setPlaying(true);
+    showToast(`🔴 بدأ تسجيل الفيديو (${videoFps} FPS)`);
   };
 
   const reg = registryRef.current!;
@@ -1428,6 +1464,8 @@ export default function App() {
           onToggleMute={handleToggleMute}
           recordingVideo={recording}
           onToggleVideoRecord={handleToggleVideoRecord}
+          videoFps={videoFps}
+          onChangeVideoFps={handleChangeVideoFps}
           cinematicCamera={cinematicCamera}
           onToggleCinematicCamera={handleToggleCinematicCamera}
           unitScale={unitScale}

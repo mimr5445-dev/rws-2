@@ -36,6 +36,8 @@ interface ToolsDockProps {
   onToggleMute: () => void;
   recordingVideo: boolean;
   onToggleVideoRecord: () => void;
+  videoFps: 30 | 60 | 120;
+  onChangeVideoFps: (fps: 30 | 60 | 120) => void;
   cinematicCamera: boolean;
   onToggleCinematicCamera: () => void;
   unitScale: number;
@@ -89,6 +91,8 @@ export function ToolsDock({
   onToggleMute,
   recordingVideo,
   onToggleVideoRecord,
+  videoFps,
+  onChangeVideoFps,
   cinematicCamera,
   onToggleCinematicCamera,
   unitScale,
@@ -265,6 +269,7 @@ export function ToolsDock({
                 </div>
                 <button
                   type="button"
+                  id="videoRecordBtn"
                   onClick={onToggleVideoRecord}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 border whitespace-nowrap ${
                     recordingVideo
@@ -275,6 +280,30 @@ export function ToolsDock({
                   {recordingVideo ? <Download className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5 text-rose-400" />}
                   <span>{recordingVideo ? 'إيقاف وحفظ' : 'فيديو'}</span>
                 </button>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 pt-0.5">
+                <span className="text-[11px] text-slate-400 whitespace-nowrap">معدل تصدير الفيديو</span>
+                <div id="videoFpsSelector" role="group" aria-label="معدل إطارات تصدير الفيديو" className="flex items-center gap-1">
+                  {([30, 60, 120] as const).map((fps) => (
+                    <button
+                      key={fps}
+                      type="button"
+                      id={`videoFpsBtn-${fps}`}
+                      aria-pressed={videoFps === fps}
+                      disabled={recordingVideo}
+                      onClick={() => onChangeVideoFps(fps)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono tabular-nums border transition-colors ${
+                        videoFps === fps
+                          ? 'bg-rose-600 border-rose-400 text-white font-semibold'
+                          : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
+                      } disabled:opacity-50`}
+                    >
+                      {fps}
+                    </button>
+                  ))}
+                  <span className="text-[10px] font-mono text-slate-400 pr-0.5">FPS</span>
+                </div>
               </div>
 
               <button

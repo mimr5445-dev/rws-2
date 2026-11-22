@@ -488,3 +488,42 @@ export function stepTwoFingerGesture(
     panWorldDy: panDelta.dy
   };
 }
+
+export function computeFrameDt(nowMs: number, lastMs: number): number {
+  if (!Number.isFinite(nowMs) || !Number.isFinite(lastMs)) return 1 / 60;
+  const raw = (nowMs - lastMs) / 1000;
+  return Math.min(0.05, Math.max(0.0002, raw));
+}
+
+export function stepFixedAccumulator(
+  accumulatorSec: number,
+  frameDtSec: number,
+  dtSec: number,
+  speed = 1,
+  maxSubSteps = 6
+): { steps: number; nextAccumulator: number; alpha: number } {
+  const safeDt = Number.isFinite(dtSec) && dtSec > 0 ? dtSec : 1 / 60;
+  const safeFrameDt = Number.isFinite(frameDtSec) && frameDtSec > 0 ? Math.min(0.05, frameDtSec) : 0;
+  const safeSpeed = Number.isFinite(speed) && speed >= 0 ? speed : 1;
+  let acc = (Number.isFinite(accumulatorSec) && accumulatorSec >= 0 ? accumulatorSec : 0) + safeFrameDt * safeSpeed;
+  let steps = 0;
+  while (acc + 1e-9 >= safeDt && steps < maxSubSteps) {
+    acc = Math.max(0, acc - safeDt);
+    steps++;
+  }
+  if (steps >= maxSubSteps && acc >= safeDt) {
+    acc = acc % safeDt;
+  }
+  return {
+    steps,
+    nextAccumulator: acc,
+    alpha: Math.max(0, Math.min(1, acc / safeDt))
+  };
+}
+
+export function frameRateIndependentEase(ratePerSec: number, frameDtSec: number): number {
+  if (!Number.isFinite(ratePerSec) || ratePerSec <= 0) return 0;
+  if (!Number.isFinite(frameDtSec) || frameDtSec <= 0) return 0;
+  return 1 - Math.exp(-ratePerSec * Math.min(0.1, frameDtSec));
+}
+

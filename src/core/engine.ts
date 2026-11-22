@@ -30,7 +30,7 @@ function resolvePoint(map: MapPack, ref: PointRef | undefined): Point | undefine
   return undefined;
 }
 
-export const TICK_RATE = 30;
+export const TICK_RATE = 60;
 export const DT = 1 / TICK_RATE;
 
 const STRICT_SEC_RE = /^(?:\d+(?:\.\d+)?|\.\d+)(?:\s*s)?$/i;
@@ -187,7 +187,7 @@ export class StudioEngine {
     this.repathCooldownTick.clear();
     this.reservedExplicitIds = this.collectReservedExplicitIds();
     for (const z of Object.values(this.map.zones)) {
-      this.zones.set(z.id, { id: z.id, color: '#3b82f6', targetOpacity: 0, opacity: 0, rate: 0 });
+      this.zones.set(z.id, { id: z.id, color: '#3b82f6', targetOpacity: 0, opacity: 0, prevOpacity: 0, rate: 0 });
     }
     this.evaluateTimeline();
     this.processOrders();
@@ -216,21 +216,24 @@ export class StudioEngine {
       y,
       maxRadius,
       progress: 0,
+      prevProgress: 0,
       color,
       kind
     });
 
     if (kind !== 'bullet') {
-      this.pulses.push({ x, y, color, maxRadius: maxRadius * 1.25, progress: 0 });
+      this.pulses.push({ x, y, color, maxRadius: maxRadius * 1.25, progress: 0, prevProgress: 0 });
     }
 
     if (kind !== 'bullet' && kind !== 'torpedo') {
+      const craterLife = kind === 'shell' ? 5.0 : 7.5;
       this.craters.push({
         x,
         y,
         radius: Math.max(6, Math.min(28, maxRadius * (kind === 'shell' ? 0.25 : 0.34))),
-        life: kind === 'shell' ? 5.0 : 7.5,
-        maxLife: kind === 'shell' ? 5.0 : 7.5
+        life: craterLife,
+        prevLife: craterLife,
+        maxLife: craterLife
       });
       if (this.craters.length > 60) this.craters.shift();
     }
@@ -282,6 +285,8 @@ export class StudioEngine {
       e.prevY = e.y;
       e.prevAngle = e.angle;
       e.prevAltitude = e.altitude;
+      e.prevBankAngle = e.bankAngle;
+      e.prevBuildProgress = e.buildProgress;
 
       if (e.buildProgress < 1) {
         e.buildProgress = Math.min(1, e.buildProgress + e.buildRate * DT);
@@ -397,7 +402,7 @@ export class StudioEngine {
           if (!moved && e.domain !== 'air' && e.path.length > 0) {
             const cooldown = this.repathCooldownTick.get(e.id) ?? -1;
             if (this.tick >= cooldown) {
-              this.repathCooldownTick.set(e.id, this.tick + 4);
+              this.repathCooldownTick.set(e.id, this.tick + Math.max(4, Math.round(0.14 * TICK_RATE)));
               const finalGoal = e.path[e.path.length - 1];
               const freshPath = findPath(this.map, { x: e.x, y: e.y }, finalGoal, e.domain);
               if (freshPath.length > 0) {
@@ -459,7 +464,9 @@ export class StudioEngine {
               targetX: st.to.x,
               targetY: st.to.y,
               altitude: e.altitude,
+              prevAltitude: e.altitude,
               progress: 0,
+              prevProgress: 0,
               durationSec: 0.42,
               radius: st.radius,
               color: st.color,
@@ -489,7 +496,7 @@ export class StudioEngine {
       } else {
         e.isMoving = false;
         e.currentSpeed = 0;
-        e.bankAngle *= 0.85;
+        e.bankAngle *= Math.exp(-DT * 4.8);
         // هبوط الطائرة بسلاسة عند القاعدة بعد العودة
         if (e.kind === 'air' && e.altitude > 0) {
           e.altitude = Math.max(0, e.altitude - DT * 2.2);
@@ -499,12 +506,14 @@ export class StudioEngine {
 
     // تلاشي آثار وسواد القصف تدريجيًا بعد بقائها لفترة وجيزة
     for (const c of this.craters) {
+      c.prevLife = c.life;
       c.life -= DT;
     }
     this.craters = this.craters.filter((c) => c.life > 0);
 
     // تحديث فلاش الفوهات
     for (const mf of this.muzzleFlashes) {
+      mf.prevProgress = mf.progress;
       mf.progress += DT * (mf.kind === 'bullet' ? 5.5 : 4.0);
     }
     this.muzzleFlashes = this.muzzleFlashes.filter((mf) => mf.progress < 1);
@@ -519,6 +528,8 @@ export class StudioEngine {
       }
       p.prevX = p.x;
       p.prevY = p.y;
+      p.prevProgress = p.progress;
+      p.prevAltitude = p.altitude;
       p.progress = Math.min(1, p.progress + DT / Math.max(0.08, p.durationSec));
       p.x = p.startX + (p.targetX - p.startX) * p.progress;
       p.y = p.startY + (p.targetY - p.startY) * p.progress;
@@ -558,16 +569,19 @@ export class StudioEngine {
 
     // تحديث الانفجارات التفاعلية
     for (const ex of this.explosions) {
+      ex.prevProgress = ex.progress;
       const rate = ex.kind === 'bullet' ? 2.6 : ex.kind === 'shell' ? 1.55 : ex.kind === 'missile' ? 0.95 : 1.15;
       ex.progress += DT * rate;
     }
     this.explosions = this.explosions.filter((ex) => ex.progress < 1);
 
     for (const a of this.arrows.values()) {
+      a.prevProgress = a.progress;
       if (a.progress < 1) a.progress = Math.min(1, a.progress + a.rate * DT);
     }
 
     for (const z of this.zones.values()) {
+      z.prevOpacity = z.opacity;
       if (z.opacity !== z.targetOpacity) {
         const diff = z.targetOpacity - z.opacity;
         const step = z.rate * DT;
@@ -583,6 +597,7 @@ export class StudioEngine {
     }
 
     for (const p of this.pulses) {
+      p.prevProgress = p.progress;
       p.progress += DT * 0.9;
     }
     this.pulses = this.pulses.filter((p) => p.progress < 1);
@@ -720,6 +735,7 @@ export class StudioEngine {
           color: st.draw_arrow.color ?? '#ef4444',
           dashed: st.draw_arrow.dashed ?? true,
           progress: 0,
+          prevProgress: 0,
           rate: 1 / dur
         });
       }
@@ -754,7 +770,8 @@ export class StudioEngine {
           y: pt.y,
           color: st.pulse.color ?? '#ef4444',
           maxRadius: st.pulse.radius ?? 75,
-          progress: 0
+          progress: 0,
+          prevProgress: 0
         });
       }
     }
@@ -783,6 +800,7 @@ export class StudioEngine {
           altitude: 0,
           prevAltitude: 0,
           bankAngle: 0,
+          prevBankAngle: 0,
           path: [],
           speed: act.speed,
           turnRate: act.turnRate,
@@ -790,6 +808,7 @@ export class StudioEngine {
           scaleMul: ord.scale !== undefined ? Math.max(0.25, Math.min(3.5, ord.scale)) : 1,
           radius: act.radius,
           buildProgress: 1,
+          prevBuildProgress: 1,
           buildRate: 1,
           isMoving: false,
           arrivedTick: null,
@@ -819,6 +838,7 @@ export class StudioEngine {
           altitude: 0,
           prevAltitude: 0,
           bankAngle: 0,
+          prevBankAngle: 0,
           path: [],
           speed: 0,
           turnRate: 0,
@@ -826,6 +846,7 @@ export class StudioEngine {
           scaleMul: ord.scale !== undefined ? Math.max(0.25, Math.min(3.5, ord.scale)) : 1,
           radius: act.radius,
           buildProgress: 0,
+          prevBuildProgress: 0,
           buildRate: 1 / Math.max(0.2, ord.durationSec),
           isMoving: false,
           arrivedTick: null,
@@ -897,9 +918,9 @@ export class StudioEngine {
 
         if (mode === 'scan') {
           const origin = attacker ? { x: attacker.x, y: attacker.y } : ord.to;
-          this.pulses.push({ x: origin.x, y: origin.y, color, maxRadius: radius, progress: 0 });
+          this.pulses.push({ x: origin.x, y: origin.y, color, maxRadius: radius, progress: 0, prevProgress: 0 });
           if (Math.hypot(ord.to.x - origin.x, ord.to.y - origin.y) > 12) {
-            this.pulses.push({ x: ord.to.x, y: ord.to.y, color, maxRadius: radius * 0.65, progress: 0 });
+            this.pulses.push({ x: ord.to.x, y: ord.to.y, color, maxRadius: radius * 0.65, progress: 0, prevProgress: 0 });
           }
           this.emitSound('radar_ping');
         } else if (mode === 'airstrike' && attacker && attacker.kind === 'air') {
@@ -950,7 +971,9 @@ export class StudioEngine {
                 targetX: ord.to.x + jitterX,
                 targetY: ord.to.y + jitterY,
                 altitude: 0.04,
+                prevAltitude: 0.04,
                 progress: 0,
+                prevProgress: 0,
                 delaySec: b * 0.055,
                 durationSec: Math.max(0.11, Math.min(0.36, dist / 1150)),
                 radius,
@@ -965,7 +988,8 @@ export class StudioEngine {
               angle: aimAng,
               kind: 'bullet',
               color: 0xfef08a,
-              progress: 0
+              progress: 0,
+              prevProgress: 0
             });
             this.emitSound('gunfire_burst');
           } else if (mode === 'shell') {
@@ -985,7 +1009,9 @@ export class StudioEngine {
               targetX: ord.to.x,
               targetY: ord.to.y,
               altitude: 0.08,
+              prevAltitude: 0.08,
               progress: 0,
+              prevProgress: 0,
               durationSec: dur,
               radius,
               color,
@@ -997,7 +1023,8 @@ export class StudioEngine {
               angle: aimAng,
               kind: 'cannon',
               color: 0xf97316,
-              progress: 0
+              progress: 0,
+              prevProgress: 0
             });
             this.emitSound('cannon_fire');
           } else if (mode === 'artillery') {
@@ -1017,7 +1044,9 @@ export class StudioEngine {
               targetX: ord.to.x,
               targetY: ord.to.y,
               altitude: 0.1,
+              prevAltitude: 0.1,
               progress: 0,
+              prevProgress: 0,
               durationSec: dur,
               radius,
               color,
@@ -1029,7 +1058,8 @@ export class StudioEngine {
               angle: aimAng,
               kind: 'artillery',
               color: 0xfb923c,
-              progress: 0
+              progress: 0,
+              prevProgress: 0
             });
             this.emitSound('artillery_fire');
           } else if (mode === 'torpedo') {
@@ -1046,7 +1076,9 @@ export class StudioEngine {
               targetX: ord.to.x,
               targetY: ord.to.y,
               altitude: 0,
+              prevAltitude: 0,
               progress: 0,
+              prevProgress: 0,
               durationSec: dur,
               radius,
               color,
@@ -1067,7 +1099,9 @@ export class StudioEngine {
               targetX: ord.to.x,
               targetY: ord.to.y,
               altitude: 0.1,
+              prevAltitude: 0.1,
               progress: 0,
+              prevProgress: 0,
               durationSec: dur,
               radius,
               color,
@@ -1079,7 +1113,8 @@ export class StudioEngine {
               angle: aimAng,
               kind: 'cannon',
               color: 0x38bdf8,
-              progress: 0
+              progress: 0,
+              prevProgress: 0
             });
             this.emitSound('missile_launch');
           } else {
@@ -1099,7 +1134,9 @@ export class StudioEngine {
               targetX: ord.to.x,
               targetY: ord.to.y,
               altitude: 0.1,
+              prevAltitude: 0.1,
               progress: 0,
+              prevProgress: 0,
               durationSec: dur,
               radius,
               color,
@@ -1112,7 +1149,8 @@ export class StudioEngine {
                 angle: aimAng,
                 kind: 'artillery',
                 color: 0xf97316,
-                progress: 0
+                progress: 0,
+                prevProgress: 0
               });
             }
             this.emitSound(mode === 'missile' ? 'missile_launch' : 'jet_takeoff');

@@ -33,6 +33,13 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+function lerpAngle(a: number, b: number, t: number): number {
+  let d = b - a;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return a + d * t;
+}
+
 function zoomForWorldSpan(
   spanW: number,
   spanH: number,
@@ -201,8 +208,9 @@ export class CinematicDirector {
 
       const px = lerp(chosen.prevX, chosen.x, alpha);
       const py = lerp(chosen.prevY, chosen.y, alpha);
+      const pProg = lerp(chosen.prevProgress, chosen.progress, alpha);
       const remDist = Math.hypot(chosen.targetX - px, chosen.targetY - py);
-      const lookWeight = chosen.mode === 'bullet' ? 0.55 : 0.25 + chosen.progress * 0.42;
+      const lookWeight = chosen.mode === 'bullet' ? 0.55 : 0.25 + pProg * 0.42;
       const fx = lerp(px, chosen.targetX, lookWeight);
       const fy = lerp(py, chosen.targetY, lookWeight);
       const span = clamp(
@@ -304,10 +312,11 @@ export class CinematicDirector {
 
     // 5. تتبع الأسهم التكتيكية أثناء رسمها
     for (const arr of engine.arrows.values()) {
-      if (arr.progress < 0.99) {
+      const arrProg = lerp(arr.prevProgress, arr.progress, alpha);
+      if (arrProg < 0.99) {
         const mx = (arr.from.x + arr.to.x) / 2;
         const my = (arr.from.y + arr.to.y) / 2 - 55;
-        const tip = quadraticBezierPoint(arr.from, { x: mx, y: my }, arr.to, arr.progress);
+        const tip = quadraticBezierPoint(arr.from, { x: mx, y: my }, arr.to, arrProg);
         const spanW = Math.max(minMapDim * 0.45, Math.abs(tip.x - arr.from.x) + 220);
         const spanH = Math.max(minMapDim * 0.4, Math.abs(tip.y - arr.from.y) + 220);
         const cx = (arr.from.x + tip.x) / 2;
@@ -336,9 +345,10 @@ export class CinematicDirector {
       for (const m of movers) {
         const ex = lerp(m.prevX, m.x, alpha);
         const ey = lerp(m.prevY, m.y, alpha);
+        const ang = lerpAngle(m.prevAngle, m.angle, alpha);
         const lead = m.kind === 'air' ? 32 : 16;
-        const lx = ex + Math.cos(m.angle) * lead;
-        const ly = ey + Math.sin(m.angle) * lead;
+        const lx = ex + Math.cos(ang) * lead;
+        const ly = ey + Math.sin(ang) * lead;
         minX = Math.min(minX, ex, lx);
         maxX = Math.max(maxX, ex, lx);
         minY = Math.min(minY, ey, ly);

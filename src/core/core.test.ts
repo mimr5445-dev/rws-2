@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import * as yaml from 'js-yaml';
 import { findPath, isWalkable } from './pathfinding';
 import { formatYamlSyntaxErrorAr, validateScenario } from './validator';
-import { StudioEngine } from './engine';
+import { DT, StudioEngine, TICK_RATE } from './engine';
 import { buildAiScenarioPrompt, generateCatalogMarkdown } from './catalog';
 import { MapPack, NavCell, ScenarioFile } from './types';
 import { DEMO_ACTORS, DEMO_MAPS } from '../packs/demoPacks';
@@ -115,22 +115,24 @@ test('StudioEngine deterministic seekToTick, callouts, pulses, and remove work a
   const sounds: string[] = [];
   engine.onSound((s) => sounds.push(s));
 
-  // Scrub forward to 1.2s (tick 36) silently
-  engine.seekToTick(36);
-  assert.equal(engine.tick, 36);
+  // Scrub forward to 1.2s silently
+  const t12 = Math.round(1.2 * TICK_RATE);
+  engine.seekToTick(t12);
+  assert.equal(engine.tick, t12);
   assert.equal(sounds.length, 0, 'seekToTick must be silent');
   assert.ok(engine.entities.has('patrol_1'));
   assert.ok(engine.callouts.has('c_temp'));
   assert.equal(engine.pulses.length, 1, 'pulse should be active at 1.2s');
 
-  // Scrub forward to 4.5s (tick 135) -> callout expired, patrol_1 removed
-  engine.seekToTick(135);
+  // Scrub forward to 4.5s -> callout expired, patrol_1 removed
+  engine.seekToTick(Math.round(4.5 * TICK_RATE));
   assert.equal(engine.callouts.has('c_temp'), false, 'timed callout should expire after 2s');
   assert.equal(engine.entities.has('patrol_1'), false, 'patrol_1 should be removed at 4s');
 
-  // Scrub backward to 0.5s (tick 15) -> patrol_1 and c_temp restored deterministically
-  engine.seekToTick(15);
-  assert.equal(engine.tick, 15);
+  // Scrub backward to 0.5s -> patrol_1 and c_temp restored deterministically
+  const t05 = Math.round(0.5 * TICK_RATE);
+  engine.seekToTick(t05);
+  assert.equal(engine.tick, t05);
   assert.ok(engine.entities.has('patrol_1'));
   assert.ok(engine.callouts.has('c_temp'));
 });
@@ -273,7 +275,7 @@ test('ActionRecorder generates valid YAML with free PointRef coordinates that re
   assert.deepEqual(validateScenario(parsed, map, DEMO_ACTORS), [], 'recorded YAML should pass validation cleanly');
 
   const replay = new StudioEngine(map, DEMO_ACTORS, parsed);
-  replay.seekToTick(90);
+  replay.seekToTick(Math.round(3 * TICK_RATE));
   assert.ok(replay.entities.has('sb_1'), 'recorded spawned tank exists during replay');
   assert.ok(replay.entities.has('sb_2'), 'recorded constructed building exists during replay');
   assert.ok(replay.arrows.has('arr_1'), 'recorded arrow exists during replay');
@@ -339,7 +341,7 @@ test('validateScenario guards malformed timelines, invalid sound/faction/after, 
     ]
   });
   assert.equal(hinted.estimateDurationSec(), 42);
-  hinted.seekToTick(40);
+  hinted.seekToTick(Math.round(1.35 * TICK_RATE));
   assert.equal(hinted.callouts.has('c_perm'), false, 'permanent entity callout should be removed with its target entity');
 });
 
@@ -377,14 +379,14 @@ test('Upgrade 6: air_sea_strike validates, smooths paths, keeps person upright, 
   const heard: string[] = [];
   sim.onSound((s) => heard.push(s));
 
-  for (let i = 0; i < 45; i++) sim.step();
+  for (let i = 0; i < Math.round(1.5 * TICK_RATE); i++) sim.step();
   const dipMid = sim.entities.get('dip');
   const jetMid = sim.entities.get('jet');
   assert.equal(dipMid?.angle, 0, 'person angle must remain 0 so figure never flips upside-down');
   assert.ok((jetMid?.altitude ?? 0) > 0.35, 'fighter jet must climb in altitude during airstrike sortie');
   assert.ok(heard.includes('jet_takeoff'), 'airstrike should emit jet_takeoff');
 
-  for (let i = 0; i < 240; i++) sim.step();
+  for (let i = 0; i < Math.round(8 * TICK_RATE); i++) sim.step();
   assert.equal(sim.entities.has('oil'), false, 'opposing oil_facility should be destroyed by airstrike');
   assert.ok(sim.craters.length >= 1, 'explosion should leave temporary crater decal');
   assert.ok(heard.includes('explosion'), 'impact should emit explosion sound');
@@ -406,11 +408,11 @@ test('Upgrade 6: air_sea_strike validates, smooths paths, keeps person upright, 
   sim.flushOrders();
   assert.ok(heard.includes('missile_launch'), 'missile strike should emit missile_launch');
   assert.equal(sim.projectiles.length, 1);
-  for (let i = 0; i < 90; i++) sim.step();
+  for (let i = 0; i < Math.round(3 * TICK_RATE); i++) sim.step();
   assert.ok(sim.craters.length >= 1, 'missile detonation should leave crater decal');
 
   // Craters must fade out and disappear automatically after ~7.5s
-  for (let i = 0; i < 250; i++) sim.step();
+  for (let i = 0; i < Math.round(8.5 * TICK_RATE); i++) sim.step();
   assert.equal(sim.craters.length, 0, 'temporary blast craters must expire and vanish completely');
 });
 
@@ -438,7 +440,7 @@ test('Ships never climb onto land cells during curved turns and entities support
   });
 
   // Assert carrier never steps onto a land cell at any tick around the peninsula turn
-  for (let i = 0; i < 450; i++) {
+  for (let i = 0; i < Math.round(15 * TICK_RATE); i++) {
     sim.step();
     const ship = sim.entities.get('carrier');
     assert.ok(ship);
@@ -462,7 +464,7 @@ test('Ships never climb onto land cells during curved turns and entities support
   const parsed = yaml.load(rec.toYaml('resize rec')) as ScenarioFile;
   assert.deepEqual(validateScenario(parsed, map, DEMO_ACTORS), []);
   const replay = new StudioEngine(map, DEMO_ACTORS, parsed);
-  replay.seekToTick(30);
+  replay.seekToTick(Math.round(1 * TICK_RATE));
   assert.equal(replay.entities.get('c1')?.scaleMul, 0.75);
 });
 
@@ -651,7 +653,9 @@ test('TASK 0.2.1: anonymous construct reserves future explicit IDs and stays det
   assert.deepEqual(validateScenario(scenario, DEMO_MAPS.geopolitics_strait, DEMO_ACTORS), []);
 
   const engine = new StudioEngine(DEMO_MAPS.geopolitics_strait, DEMO_ACTORS, scenario);
-  for (let i = 0; i < 40; i++) engine.step();
+  const tEarly = Math.round(0.35 * TICK_RATE);
+  const tDone = Math.round(1.35 * TICK_RATE);
+  for (let i = 0; i < tDone; i++) engine.step();
 
   // First anonymous construct MUST skip reserved 'bld_1' and get 'bld_2'
   assert.ok(engine.entities.has('bld_2'), 'first anonymous construct should skip reserved bld_1 and receive bld_2');
@@ -662,12 +666,12 @@ test('TASK 0.2.1: anonymous construct reserves future explicit IDs and stays det
 
   // Verify deterministic IDs on seekToTick and full reset/restart
   const snapshotRun1 = [...engine.entities.keys()].sort();
-  engine.seekToTick(10);
-  engine.seekToTick(40);
+  engine.seekToTick(tEarly);
+  engine.seekToTick(tDone);
   assert.deepEqual([...engine.entities.keys()].sort(), snapshotRun1);
 
   engine.reset();
-  for (let i = 0; i < 40; i++) engine.step();
+  for (let i = 0; i < tDone; i++) engine.step();
   assert.deepEqual([...engine.entities.keys()].sort(), snapshotRun1);
 
   // Also test multiple anonymous constructs with no explicit bld_* IDs
@@ -679,11 +683,12 @@ test('TASK 0.2.1: anonymous construct reserves future explicit IDs and stays det
       { at: '1s', construct: { actor: 'military_base', at: 'peninsula_center', duration: '1s' } }
     ]
   };
+  const tMulti = Math.round(1.5 * TICK_RATE);
   const eng2 = new StudioEngine(DEMO_MAPS.geopolitics_strait, DEMO_ACTORS, multiAnon);
-  eng2.seekToTick(45);
+  eng2.seekToTick(tMulti);
   assert.deepEqual([...eng2.entities.keys()].sort(), ['bld_1', 'bld_2', 'bld_3']);
   eng2.reset();
-  eng2.seekToTick(45);
+  eng2.seekToTick(tMulti);
   assert.deepEqual([...eng2.entities.keys()].sort(), ['bld_1', 'bld_2', 'bld_3']);
 });
 
@@ -704,28 +709,30 @@ test('TASK 0.2.1: .built trigger fires once upon construct completion while .arr
     if (s === 'alert_ping') alertCount++;
   });
 
-  // Before 2s completion (tick 58 ~ 1.93s): must NOT trigger prematurely
-  for (let i = 0; i < 58; i++) eng.step();
+  // Before 2s completion (~1.9s): must NOT trigger prematurely
+  const tBeforeBuilt = Math.round(1.9 * TICK_RATE);
+  const tAfterBuilt = Math.round(2.4 * TICK_RATE);
+  for (let i = 0; i < tBeforeBuilt; i++) eng.step();
   assert.equal(eng.caption, '', 'after: radar_1.built must NOT fire before construction completes');
   assert.equal(alertCount, 0);
 
   // Advance past 2s completion: must fire exactly once
-  for (let i = 0; i < 15; i++) eng.step();
+  for (let i = tBeforeBuilt; i < tAfterBuilt; i++) eng.step();
   assert.equal(eng.caption, 'الرادار مكتمل');
   assert.equal(alertCount, 1, 'after: radar_1.built must fire exactly once');
   assert.ok((eng.entities.get('radar_1')?.builtTick ?? 0) > 0);
 
   // Continue advancing: must NOT re-trigger
-  for (let i = 0; i < 60; i++) eng.step();
+  for (let i = 0; i < Math.round(2 * TICK_RATE); i++) eng.step();
   assert.equal(alertCount, 1, 'after: radar_1.built must never repeat');
 
   // Verify seekToTick & reset match exact state
-  eng.seekToTick(58);
+  eng.seekToTick(tBeforeBuilt);
   assert.equal(eng.caption, '');
-  eng.seekToTick(73);
+  eng.seekToTick(tAfterBuilt);
   assert.equal(eng.caption, 'الرادار مكتمل');
   eng.reset();
-  eng.seekToTick(73);
+  eng.seekToTick(tAfterBuilt);
   assert.equal(eng.caption, 'الرادار مكتمل');
 
   // 2. Reject impossible triggers by creation kind / actor capability
@@ -780,7 +787,7 @@ test('TASK 0.2.1: .built trigger fires once upon construct completion while .arr
   shipEng.onSound((s) => {
     if (s === 'alert_ping') arrivedAlerts++;
   });
-  for (let i = 0; i < 400; i++) shipEng.step();
+  for (let i = 0; i < Math.round(14 * TICK_RATE); i++) shipEng.step();
   assert.equal(shipEng.caption, 'وصلت الدورية');
   assert.equal(arrivedAlerts, 1, 'after: ship_1.arrived must fire exactly once');
 });
@@ -802,26 +809,27 @@ test('TASK 0.2.1: seekToTick restores previous silent state via try/finally when
   const heard: string[] = [];
   engine.onSound((s) => heard.push(s));
 
-  // Inject a deliberate throw when step() hits tick 6 (0.2s move -> isWorldPointWalkable / findPath reads anchors or navGrid)
+  // Inject a deliberate throw when step() hits 0.2s move -> isWorldPointWalkable / findPath reads anchors or navGrid
   const origNavGrid = faultyMap.navGrid;
+  const moveTick = Math.round(0.2 * TICK_RATE);
   Object.defineProperty(faultyMap, 'navGrid', {
     configurable: true,
     get() {
-      if (engine.tick === 6) {
+      if (engine.tick === moveTick) {
         throw new Error('simulated pathfinding failure');
       }
       return origNavGrid;
     }
   });
 
-  assert.throws(() => engine.seekToTick(15), /simulated pathfinding failure/);
+  assert.throws(() => engine.seekToTick(Math.round(0.5 * TICK_RATE)), /simulated pathfinding failure/);
 
-  // Restore navGrid and verify silent was restored to false (future step at tick 30 still emits alert_ping)
+  // Restore navGrid and verify silent was restored to false (future step at 1s still emits alert_ping)
   Object.defineProperty(faultyMap, 'navGrid', {
     configurable: true,
     value: origNavGrid
   });
-  while (engine.tick < 35) engine.step();
+  while (engine.tick < Math.round(1.2 * TICK_RATE)) engine.step();
   assert.ok(heard.includes('alert_ping'), 'silent flag must be restored to false in finally block after seekToTick throws');
 });
 
@@ -1247,7 +1255,7 @@ test('Ships traverse narrow straits, canal bends (cell=3), and island obstacles 
               { at: '0.1s', move: { entity: 'ship', to } }
             ]
           });
-          for (let t = 0; t < 1500; t++) {
+          for (let t = 0; t < Math.round(50 * TICK_RATE); t++) {
             eng.step();
             const ship = eng.entities.get('ship')!;
             const gx = Math.floor(ship.x / cellSize);
@@ -1306,7 +1314,7 @@ test('Ships traverse narrow straits, canal bends (cell=3), and island obstacles 
       { at: '0.1s', move: { entity: 'fleet', to: { x: 4 * cs + 4, y: 8 * cs + 4 } } }
     ]
   });
-  for (let t = 0; t < 1500; t++) {
+  for (let t = 0; t < Math.round(50 * TICK_RATE); t++) {
     islandSim.step();
     const fleet = islandSim.entities.get('fleet')!;
     const gx = Math.floor(fleet.x / cs);
@@ -1353,7 +1361,7 @@ test('StudioUnits distinct weapon ballistics: straight shell, rapid bullet burst
   assert.equal(sim.projectiles[0].mode, 'shell');
   assert.ok(sim.projectiles[0].altitude <= 0.1, 'tank shell trajectory must stay flat/straight');
 
-  for (let i = 0; i < 15; i++) sim.step();
+  for (let i = 0; i < Math.round(0.5 * TICK_RATE); i++) sim.step();
   assert.equal(sim.entities.has('enemy_1'), false, 'enemy tank should be destroyed by direct shell impact');
 
   // 2. Infantry bullet burst: 5 staggered tracer rounds, gunfire_burst sound, no crater left behind
@@ -1363,7 +1371,7 @@ test('StudioUnits distinct weapon ballistics: straight shell, rapid bullet burst
   assert.ok(heard.includes('gunfire_burst'), 'infantry fire must emit gunfire_burst');
   assert.equal(sim.projectiles.filter((p) => p.mode === 'bullet').length, 5, 'bullet mode spawns 5 staggered tracer rounds');
 
-  for (let i = 0; i < 30; i++) sim.step();
+  for (let i = 0; i < Math.round(1.0 * TICK_RATE); i++) sim.step();
   assert.equal(sim.entities.has('enemy_2'), false, 'enemy squad hit by bullet burst should be eliminated');
   assert.equal(sim.craters.length, cratersBeforeBullets, 'bullet burst must not leave artillery craters');
 
@@ -1459,7 +1467,7 @@ test('CinematicDirector: tracks moving units, projectiles, prioritizes explosion
   assert.ok(projEarly);
   assert.equal(projEarly.focusKind, 'projectile');
 
-  for (let i = 0; i < 20; i++) sim.step();
+  for (let i = 0; i < Math.round(0.67 * TICK_RATE); i++) sim.step();
   const projLate = director.evaluate(sim, 1.8, vp);
   assert.ok(projLate);
   assert.equal(projLate.focusKind, 'projectile');
@@ -1479,7 +1487,7 @@ test('CinematicDirector: tracks moving units, projectiles, prioritizes explosion
   assert.notEqual(director.evaluate(sim, 3.5, vp), null);
 
   // 6. Once explosions/projectiles finish and linger expires, director pulls back to 'establishing'
-  for (let i = 0; i < 90; i++) sim.step();
+  for (let i = 0; i < Math.round(3 * TICK_RATE); i++) sim.step();
   const estShot = director.evaluate(sim, 10.0, vp);
   assert.ok(estShot);
   assert.equal(estShot.focusKind, 'establishing');
@@ -1584,7 +1592,7 @@ test('world_live Sinai land bridge connects Riyadh & Jordan to Cairo/Egypt while
   eng.onMoveBlocked(() => {
     blockedCount++;
   });
-  for (let t = 0; t < 1800; t++) {
+  for (let t = 0; t < Math.round(60 * TICK_RATE); t++) {
     eng.step();
     const armor = eng.entities.get('armor_1');
     const fleet = eng.entities.get('fleet_red');
@@ -1941,6 +1949,144 @@ test('two-finger gesture arbitrates pinch -> horizontal bearing -> vertical tilt
   }
   assert.ok(staggeredBearing > 10, `staggered per-finger right slide after pinch must rotate bearing cleanly, got ${staggeredBearing}`);
 });
+
+test('120 FPS high-refresh timing preserves 1:1 simulation pace, alpha interpolation, and framerate-independent easing', async () => {
+  const { computeFrameDt, stepFixedAccumulator, frameRateIndependentEase } = await import('./cameraTransform');
+
+  // 1. Engine physics tick rate upgraded cleanly to 60 TPS
+  assert.equal(TICK_RATE, 60);
+  assert.ok(Math.abs(DT - 1 / 60) < 1e-12);
+
+  // 2. computeFrameDt preserves 120Hz (8.33ms), 144Hz (6.94ms), and 240Hz (4.16ms) intervals without clipping
+  const dt120 = computeFrameDt(1000 + 1000 / 120, 1000);
+  const dt144 = computeFrameDt(1000 + 1000 / 144, 1000);
+  const dt240 = computeFrameDt(1000 + 1000 / 240, 1000);
+  assert.ok(Math.abs(dt120 - 1 / 120) < 1e-6);
+  assert.ok(Math.abs(dt144 - 1 / 144) < 1e-6);
+  assert.ok(Math.abs(dt240 - 1 / 240) < 1e-6);
+  assert.equal(computeFrameDt(5000, 1000), 0.05, 'tab-switch delta must be clamped to prevent spiral of death');
+
+  // 3. Simulating 10.0s across 60Hz, 120Hz, and 240Hz executes identical 600 simulation ticks
+  const runDisplayLoop = (fps: number, durationSec: number) => {
+    const totalFrames = Math.round(fps * durationSec);
+    let lastMs = 0;
+    let acc = 0;
+    let totalSteps = 0;
+    const alphas: number[] = [];
+    for (let f = 1; f <= totalFrames; f++) {
+      const nowMs = (f * 1000) / fps;
+      const frameDt = computeFrameDt(nowMs, lastMs);
+      lastMs = nowMs;
+      const res = stepFixedAccumulator(acc, frameDt, DT, 1, 6);
+      acc = res.nextAccumulator;
+      totalSteps += res.steps;
+      alphas.push(res.alpha);
+    }
+    return { totalSteps, simSec: totalSteps * DT, alphas };
+  };
+
+  const r60 = runDisplayLoop(60, 10);
+  const r120 = runDisplayLoop(120, 10);
+  const r240 = runDisplayLoop(240, 10);
+
+  assert.equal(r60.totalSteps, 600);
+  assert.equal(r120.totalSteps, 600);
+  assert.equal(r240.totalSteps, 600);
+  assert.ok(Math.abs(r120.simSec - 10.0) < 1e-6);
+
+  // At 120 FPS with 60 TPS, alternating frames produce smooth ~0.5 sub-tick alpha values
+  const midAlphas = r120.alphas.filter((a) => a > 0.25 && a < 0.75);
+  assert.ok(midAlphas.length >= 500, `120Hz render must interpolate sub-tick frames smoothly, got ${midAlphas.length}`);
+
+  // 4. Frame-rate-independent exponential easing is identical across 60Hz and 120Hz
+  const e60 = frameRateIndependentEase(12, 1 / 60);
+  const e120 = frameRateIndependentEase(12, 1 / 120);
+  const remainAfter1Frame60 = 1 - e60;
+  const remainAfter2Frames120 = (1 - e120) * (1 - e120);
+  assert.ok(
+    Math.abs(remainAfter1Frame60 - remainAfter2Frames120) < 1e-12,
+    `easing must be framerate independent: ${remainAfter1Frame60} vs ${remainAfter2Frames120}`
+  );
+
+  // 5. Aircraft bankAngle decay is consistent over 0.5s regardless of DT
+  const sim = new StudioEngine(DEMO_MAPS.geopolitics_strait, DEMO_ACTORS, {
+    meta: { title: 'bank decay test', map: 'geopolitics_strait' },
+    timeline: [{ at: '0s', spawn: [{ id: 'jet', actor: 'fighter_jet', at: 'capital_north', faction: 'blue' }] }]
+  });
+  const jet = sim.entities.get('jet')!;
+  jet.bankAngle = 0.4;
+  for (let i = 0; i < Math.round(0.5 * TICK_RATE); i++) sim.step();
+  const expectedBank = 0.4 * Math.exp(-0.5 * 4.8);
+  assert.ok(Math.abs(jet.bankAngle - expectedBank) < 1e-4, `bankAngle ${jet.bankAngle} should match exp decay ${expectedBank}`);
+});
+
+test('120Hz entity, projectile, and effect prev->curr alpha linear interpolation stays phase-locked at 60 TPS', async () => {
+  const { CinematicDirector } = await import('./cinematicDirector');
+  const map = DEMO_MAPS.geopolitics_strait;
+  const sim = new StudioEngine(map, DEMO_ACTORS, {
+    meta: { title: 'alpha lerp snapshot test', map: 'geopolitics_strait' },
+    timeline: [
+      {
+        at: '0s',
+        spawn: [{ id: 'ship', actor: 'naval_corvette', at: 'port_south', faction: 'blue' }],
+        construct: { id: 'rad', actor: 'radar_outpost', at: 'capital_north', faction: 'blue', duration: '2s' },
+        draw_arrow: { id: 'arr', from: 'port_south', to: 'strait_gate', duration: '2s' },
+        zone: { id: 'corridor_south', color: '#38bdf8', opacity: 0.6, duration: '2s' },
+        pulse: { at: 'strait_gate', radius: 70 }
+      },
+      {
+        at: '0.05s',
+        move: { entity: 'ship', to: 'strait_gate' },
+        strike: { mode: 'missile', from: { x: 200, y: 200 }, to: { x: 600, y: 300 }, radius: 75 }
+      }
+    ]
+  });
+
+  // Advance past 0.05s trigger so all systems are actively moving/animating
+  for (let i = 0; i < Math.round(0.25 * TICK_RATE); i++) sim.step();
+
+  const ship = sim.entities.get('ship')!;
+  const rad = sim.entities.get('rad')!;
+  const arr = sim.arrows.get('arr')!;
+  const zone = sim.zones.get('corridor_south')!;
+  const pulse = sim.pulses[0]!;
+  const proj = sim.projectiles[0]!;
+  const flash = sim.muzzleFlashes[0]!;
+
+  // Entity position & build progress advance strictly from prev -> curr
+  assert.ok(ship.x !== ship.prevX || ship.y !== ship.prevY, 'moving ship must record distinct prevX/prevY');
+  assert.ok(rad.buildProgress > rad.prevBuildProgress, 'constructing building must record prevBuildProgress');
+  assert.ok(arr.progress > arr.prevProgress, 'arrow must record prevProgress');
+  assert.ok(zone.opacity > zone.prevOpacity, 'zone must record prevOpacity');
+  assert.ok(pulse.progress > pulse.prevProgress, 'pulse must record prevProgress');
+  assert.ok(flash.progress > flash.prevProgress, 'muzzle flash must record prevProgress');
+  assert.ok(proj.progress > proj.prevProgress, 'projectile must record prevProgress');
+  assert.ok(proj.altitude > proj.prevAltitude, 'rising ballistic projectile must record prevAltitude');
+
+  // Verify phase-locked midpoint interpolation at alpha = 0.5 matches projectile progress midpoint
+  const midX = proj.prevX + (proj.x - proj.prevX) * 0.5;
+  const midProg = proj.prevProgress + (proj.progress - proj.prevProgress) * 0.5;
+  const expectedMidX = proj.startX + (proj.targetX - proj.startX) * midProg;
+  assert.ok(Math.abs(midX - expectedMidX) < 1e-9, 'projectile gx/gy lerp and pProg lerp must be 100% phase-locked');
+
+  // CinematicDirector.evaluate respects alpha smoothly between prev and curr positions
+  const director = new CinematicDirector();
+  const vp = { width: 1280, height: 800 };
+  const shot0 = director.evaluate(sim, 1.0, vp, 0)!;
+  const shotHalf = director.evaluate(sim, 1.0, vp, 0.5)!;
+  const shot1 = director.evaluate(sim, 1.0, vp, 1)!;
+  assert.ok(Math.abs(shotHalf.x - (shot0.x + shot1.x) * 0.5) < 0.25, 'director alpha=0.5 should track projectile midpoint cleanly');
+
+  // Advance until impact spawns explosion and crater, verify both record prev* monotonically
+  while (sim.explosions.length === 0) sim.step();
+  sim.step();
+  const ex = sim.explosions[0]!;
+  const cr = sim.craters[0]!;
+  assert.ok(ex.progress > ex.prevProgress, 'explosion must record prevProgress');
+  assert.ok(cr.life < cr.prevLife, 'crater must record prevLife');
+});
+
+
 
 
 

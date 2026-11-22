@@ -161,6 +161,7 @@ export interface EntityState {
   altitude: number; // 0 = على الأرض/المدرج، 1 = التحليق
   prevAltitude: number;
   bankAngle: number;
+  prevBankAngle: number;
   path: Point[];
   speed: number;
   turnRate: number;
@@ -168,6 +169,7 @@ export interface EntityState {
   scaleMul: number;
   radius: number;
   buildProgress: number; // 0..1 (1 = مكتمل)
+  prevBuildProgress: number;
   buildRate: number;
   isMoving: boolean;
   arrivedTick: number | null;
@@ -195,7 +197,9 @@ export interface ProjectileState {
   targetX: number;
   targetY: number;
   altitude: number; // ارتفاع القوس الباليستي / السقوط
+  prevAltitude: number;
   progress: number; // 0..1
+  prevProgress: number;
   delaySec?: number; // تأخير إطلاق الرشقات المتتابعة
   durationSec: number;
   radius: number;
@@ -211,6 +215,7 @@ export interface MuzzleFlashState {
   kind: 'cannon' | 'bullet' | 'missile' | 'artillery';
   color: number;
   progress: number;
+  prevProgress: number;
 }
 
 export interface ExplosionState {
@@ -219,6 +224,7 @@ export interface ExplosionState {
   y: number;
   maxRadius: number;
   progress: number; // 0..1
+  prevProgress: number;
   color: string;
   kind: 'airstrike' | 'missile' | 'shell' | 'bullet' | 'artillery' | 'interceptor' | 'torpedo';
 }
@@ -228,6 +234,7 @@ export interface CraterDecal {
   y: number;
   radius: number;
   life: number;
+  prevLife: number;
   maxLife: number;
 }
 
@@ -238,6 +245,7 @@ export interface ArrowState {
   color: string;
   dashed: boolean;
   progress: number;
+  prevProgress: number;
   rate: number;
 }
 
@@ -246,6 +254,7 @@ export interface ZoneVisualState {
   color: string;
   targetOpacity: number;
   opacity: number;
+  prevOpacity: number;
   rate: number;
 }
 
@@ -263,6 +272,7 @@ export interface PulseState {
   color: string;
   maxRadius: number;
   progress: number; // 0..1
+  prevProgress: number;
 }
 
 export interface CameraTarget {
