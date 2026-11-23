@@ -1,0 +1,24 @@
+{
+  "id": "tank_m1",
+  "label": "دبابة أبرامز M1",
+  "extends": "_vehicle",
+  "domain": "land",
+  "kind": "vehicle",
+  "speed": 84,
+  "turnRate": 2.7,
+  "scale": 48,
+  "radius": 22,
+  "sprite": "sprite.svg",
+  "sounds": {
+    "fire": "tank.fire",
+    "move": "move_order"
+  },
+  "ability": {
+    "mode": "shell",
+    "label": "قذيفة 120 ملم",
+    "shortLabel": "قذيفة",
+    "category": "armor",
+    "accentColor": "#f59e0b",
+    "radius": 34
+  }
+}

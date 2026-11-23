@@ -17,6 +17,7 @@ export class PackRegistry {
   public maps: Record<string, MapPack> = {};
   public actors: Record<string, ActorPack> = {};
   public scenarios: SavedScenarioRecord[] = [];
+  public actorOverrides = new Set<string>();
 
   constructor(private useStorage = true) {
     if (typeof document !== 'undefined') {
@@ -24,7 +25,7 @@ export class PackRegistry {
       this.maps[worldMap.id] = worldMap;
     }
     for (const [k, a] of Object.entries(STUDIO_ACTORS)) {
-      this.actors[k] = { ...a };
+      this.actors[k] = { ...a, ability: a.ability ? { ...a.ability } : undefined };
     }
   }
 
@@ -44,6 +45,18 @@ export class PackRegistry {
     for (const m of savedMaps) {
       if (m.geoLevel === 'country') {
         this.maps[m.id] = m;
+      }
+    }
+
+    // تحميل تخصيصات وإضافات الآليات والمباني المحفوظة في قاعدة البيانات
+    const savedActors = await studioDb.loadAllActors();
+    for (const a of savedActors) {
+      if (a && typeof a.id === 'string' && typeof a.svg === 'string') {
+        this.actors[a.id] = {
+          ...a,
+          ability: a.ability ? { ...a.ability } : undefined
+        };
+        this.actorOverrides.add(a.id);
       }
     }
 
@@ -67,16 +80,48 @@ export class PackRegistry {
     }
   }
 
+  isBuiltInActor(id: string): boolean {
+    return Object.prototype.hasOwnProperty.call(STUDIO_ACTORS, id);
+  }
+
+  hasActorOverride(id: string): boolean {
+    return this.actorOverrides.has(id);
+  }
+
   async saveCustomActor(
     actor: Partial<ActorPack> & { id: string; label: string; svg: string }
   ): Promise<ActorPack> {
+    const existing = this.actors[actor.id];
     const tpl = actor.extends ? ACTOR_TEMPLATES[actor.extends] : ACTOR_TEMPLATES._person;
-    const resolved: ActorPack = { ...(tpl ?? ACTOR_TEMPLATES._person), ...actor };
+    const base = existing ?? tpl ?? ACTOR_TEMPLATES._person;
+    const resolved: ActorPack = {
+      ...base,
+      ...actor,
+      ability: actor.ability ? { ...actor.ability } : existing?.ability ? { ...existing.ability } : undefined
+    };
     this.actors[resolved.id] = resolved;
+    this.actorOverrides.add(resolved.id);
     if (this.useStorage) {
       await studioDb.saveActor(resolved);
     }
     return resolved;
+  }
+
+  async resetOrDeleteActor(id: string): Promise<'reset' | 'deleted' | 'none'> {
+    if (this.useStorage) {
+      await studioDb.deleteActor(id);
+    }
+    this.actorOverrides.delete(id);
+    if (this.isBuiltInActor(id)) {
+      const def = STUDIO_ACTORS[id];
+      this.actors[id] = { ...def, ability: def.ability ? { ...def.ability } : undefined };
+      return 'reset';
+    }
+    if (this.actors[id]) {
+      delete this.actors[id];
+      return 'deleted';
+    }
+    return 'none';
   }
 
   async saveScenarioRecord(rec: SavedScenarioRecord): Promise<void> {

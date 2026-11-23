@@ -305,3 +305,76 @@ export interface ValidationIssue {
   field: string;
   message: string;
 }
+
+export type SoundEventKind = 'spawn' | 'move' | 'strike' | 'build' | 'explosion' | 'script';
+
+export interface SoundEventMeta {
+  actorId?: string;
+  eventKind?: SoundEventKind;
+}
+
+export interface SoundBindingTarget {
+  source: 'synth' | 'clip';
+  synthId?: SoundId;
+  clipId?: string;
+  volume: number; // 0..1.5
+  pitch: number; // 0.5..2.0
+  enabled: boolean;
+}
+
+export interface StoredAudioClip {
+  id: string;
+  name: string;
+  mimeType: string;
+  dataUrl: string;
+  durationSec?: number;
+  createdAt: number;
+}
+
+export interface ActorSoundBindings {
+  spawn?: SoundBindingTarget;
+  move?: SoundBindingTarget;
+  strike?: SoundBindingTarget;
+  build?: SoundBindingTarget;
+}
+
+export interface SoundConfigState {
+  masterVolume: number; // 0..1.5
+  eventBindings: Partial<Record<SoundId, SoundBindingTarget>>;
+  actorBindings: Record<string, ActorSoundBindings>;
+}
+
+export interface CameraMotionSettings {
+  bearingDeg: number;
+  tiltDeg: number;
+  defaultZoom: number;
+  posSmoothing: number;
+  zoomSmoothing: number;
+  minZoomMul: number;
+  maxZoomMul: number;
+  aftermathHoldSec: number;
+  leadWeight: number;
+  manualPauseSec: number;
+  shakeIntensity: number;
+}
+
+export interface CameraPresetRecord {
+  id: string;
+  name: string;
+  description: string;
+  source: 'builtin' | 'user' | 'script';
+  settings: CameraMotionSettings;
+  scriptId?: string;
+  updatedAt: number;
+}
+
+export interface CameraBehaviorScriptRecord {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  defaultSettings: CameraMotionSettings;
+  createdAt: number;
+  updatedAt: number;
+}
+

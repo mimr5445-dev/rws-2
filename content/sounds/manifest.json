@@ -1,0 +1,7 @@
+{
+  "tank.fire": {
+    "files": ["vehicles/tank_fire_01.ogg"],
+    "volume": 0.85,
+    "fallbackSynthId": "cannon_fire"
+  }
+}

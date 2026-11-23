@@ -18,6 +18,7 @@ import {
   PulseState,
   ScenarioFile,
   ScenarioStep,
+  SoundEventMeta,
   SoundId,
   StrikeMode,
   ZoneVisualState
@@ -78,7 +79,7 @@ export class StudioEngine {
 
   private executedSteps = new Set<number>();
   private orderQueue: Order[] = [];
-  private soundListeners: Array<(id: SoundId) => void> = [];
+  private soundListeners: Array<(id: SoundId, meta?: SoundEventMeta) => void> = [];
   private blockedListeners: Array<(entity: EntityState) => void> = [];
   private autoCounter = 0;
   private constructAutoSeq = 0;
@@ -95,7 +96,7 @@ export class StudioEngine {
     this.reset();
   }
 
-  onSound(cb: (id: SoundId) => void): () => void {
+  onSound(cb: (id: SoundId, meta?: SoundEventMeta) => void): () => void {
     this.soundListeners.push(cb);
     return () => {
       this.soundListeners = this.soundListeners.filter((l) => l !== cb);
@@ -109,9 +110,9 @@ export class StudioEngine {
     };
   }
 
-  private emitSound(id: SoundId): void {
+  private emitSound(id: SoundId, meta?: SoundEventMeta): void {
     if (this.silent) return;
-    this.soundListeners.forEach((cb) => cb(id));
+    this.soundListeners.forEach((cb) => cb(id, meta));
   }
 
   get executedStepCount(): number {
@@ -239,7 +240,7 @@ export class StudioEngine {
     }
 
     if (kind !== 'bullet') {
-      this.emitSound('explosion');
+      this.emitSound('explosion', { eventKind: 'explosion' });
     }
 
     if (!dealDamage) return;
@@ -293,7 +294,7 @@ export class StudioEngine {
         if (e.buildProgress >= 1) {
           e.buildProgress = 1;
           e.builtTick = this.tick;
-          this.emitSound('build_complete');
+          this.emitSound('build_complete', { actorId: e.actorId, eventKind: 'build' });
         }
         continue;
       }
@@ -637,7 +638,7 @@ export class StudioEngine {
 
   private executeStep(st: ScenarioStep): void {
     if (st.caption) this.caption = st.caption.text;
-    if (st.sound) this.emitSound(st.sound);
+    if (st.sound) this.emitSound(st.sound, { eventKind: 'script' });
 
     if (st.camera) {
       const anchor = resolvePoint(this.map, st.camera.focus);
@@ -817,7 +818,7 @@ export class StudioEngine {
           homeY: ord.at.y,
           pendingStrike: null
         });
-        this.emitSound('spawn_pop');
+        this.emitSound('spawn_pop', { actorId: ord.actorId, eventKind: 'spawn' });
       } else if (ord.type === 'construct') {
         if (!ord.id || typeof ord.id !== 'string' || !ord.id.trim() || this.entities.has(ord.id)) continue;
         const act = this.actors[ord.actorId];
@@ -874,9 +875,9 @@ export class StudioEngine {
         if (ent.kind === 'air') {
           ent.homeX = ord.to.x;
           ent.homeY = ord.to.y;
-          this.emitSound('jet_takeoff');
-        } else if (ent.kind === 'ship') this.emitSound('ship_horn');
-        else this.emitSound('move_order');
+          this.emitSound('jet_takeoff', { actorId: ent.actorId, eventKind: 'move' });
+        } else if (ent.kind === 'ship') this.emitSound('ship_horn', { actorId: ent.actorId, eventKind: 'move' });
+        else this.emitSound('move_order', { actorId: ent.actorId, eventKind: 'move' });
       } else if (ord.type === 'strike') {
         const mode: StrikeMode = ord.mode ?? 'missile';
         const defaultRadius =
@@ -922,7 +923,7 @@ export class StudioEngine {
           if (Math.hypot(ord.to.x - origin.x, ord.to.y - origin.y) > 12) {
             this.pulses.push({ x: ord.to.x, y: ord.to.y, color, maxRadius: radius * 0.65, progress: 0, prevProgress: 0 });
           }
-          this.emitSound('radar_ping');
+          this.emitSound('radar_ping', { actorId: attacker?.actorId, eventKind: 'strike' });
         } else if (mode === 'airstrike' && attacker && attacker.kind === 'air') {
           if (attacker.altitude < 0.15) {
             attacker.homeX = attacker.x;
@@ -937,7 +938,7 @@ export class StudioEngine {
             returnTo: { x: attacker.homeX, y: attacker.homeY }
           };
           attacker.path = [{ ...ord.to }];
-          this.emitSound('jet_takeoff');
+          this.emitSound('jet_takeoff', { actorId: attacker.actorId, eventKind: 'strike' });
         } else {
           const launchPt =
             ord.from ??
@@ -991,7 +992,7 @@ export class StudioEngine {
               progress: 0,
               prevProgress: 0
             });
-            this.emitSound('gunfire_burst');
+            this.emitSound('gunfire_burst', { actorId: attacker?.actorId, eventKind: 'strike' });
           } else if (mode === 'shell') {
             const muzzleDist = attacker ? Math.min(34, attacker.radius * 1.05) : 0;
             const sx = launchPt.x + Math.cos(aimAng) * muzzleDist;
@@ -1026,7 +1027,7 @@ export class StudioEngine {
               progress: 0,
               prevProgress: 0
             });
-            this.emitSound('cannon_fire');
+            this.emitSound('cannon_fire', { actorId: attacker?.actorId, eventKind: 'strike' });
           } else if (mode === 'artillery') {
             const muzzleDist = attacker ? Math.min(34, attacker.radius * 1.05) : 0;
             const sx = launchPt.x + Math.cos(aimAng) * muzzleDist;
@@ -1061,7 +1062,7 @@ export class StudioEngine {
               progress: 0,
               prevProgress: 0
             });
-            this.emitSound('artillery_fire');
+            this.emitSound('artillery_fire', { actorId: attacker?.actorId, eventKind: 'strike' });
           } else if (mode === 'torpedo') {
             const dur = Math.max(0.45, Math.min(1.85, dist / 310));
             this.projectiles.push({
@@ -1084,7 +1085,7 @@ export class StudioEngine {
               color,
               faction
             });
-            this.emitSound('torpedo_launch');
+            this.emitSound('torpedo_launch', { actorId: attacker?.actorId, eventKind: 'strike' });
           } else if (mode === 'interceptor') {
             const dur = Math.max(0.28, Math.min(1.15, dist / 580));
             this.projectiles.push({
@@ -1116,7 +1117,7 @@ export class StudioEngine {
               progress: 0,
               prevProgress: 0
             });
-            this.emitSound('missile_launch');
+            this.emitSound('missile_launch', { actorId: attacker?.actorId, eventKind: 'strike' });
           } else {
             const dur =
               mode === 'missile'
@@ -1153,7 +1154,10 @@ export class StudioEngine {
                 prevProgress: 0
               });
             }
-            this.emitSound(mode === 'missile' ? 'missile_launch' : 'jet_takeoff');
+            this.emitSound(mode === 'missile' ? 'missile_launch' : 'jet_takeoff', {
+              actorId: attacker?.actorId,
+              eventKind: 'strike'
+            });
           }
         }
       } else if (ord.type === 'remove') {

@@ -1,6 +1,7 @@
+import { DEFAULT_CAMERA_MOTION_SETTINGS, sanitizeCameraMotionSettings } from './cameraBehaviorRuntime';
 import { computeSafeFitZoom, getSafeViewportFrame } from './cameraTransform';
 import { StudioEngine } from './engine';
-import { EntityState, ExplosionState, Point, ProjectileState } from './types';
+import { CameraMotionSettings, EntityState, ExplosionState, Point, ProjectileState } from './types';
 
 export type CinematicFocusKind =
   | 'none'
@@ -98,6 +99,15 @@ export class CinematicDirector {
   private trackedProjectileId: string | null = null;
   private trackedExplosionId: string | null = null;
   private trackedStrikerId: string | null = null;
+  private behaviorSettings: CameraMotionSettings = { ...DEFAULT_CAMERA_MOTION_SETTINGS };
+
+  setBehaviorSettings(partial?: Partial<CameraMotionSettings> | null): void {
+    this.behaviorSettings = sanitizeCameraMotionSettings(partial);
+  }
+
+  getBehaviorSettings(): CameraMotionSettings {
+    return { ...this.behaviorSettings };
+  }
 
   reset(): void {
     this.manualPauseUntilSec = -1;
@@ -115,8 +125,9 @@ export class CinematicDirector {
     this.trackedStrikerId = null;
   }
 
-  notifyUserInteraction(nowSec: number, pauseDurationSec = 4.0): void {
-    this.manualPauseUntilSec = Math.max(this.manualPauseUntilSec, nowSec + Math.max(0, pauseDurationSec));
+  notifyUserInteraction(nowSec: number, pauseDurationSec?: number): void {
+    const dur = pauseDurationSec ?? this.behaviorSettings.manualPauseSec;
+    this.manualPauseUntilSec = Math.max(this.manualPauseUntilSec, nowSec + Math.max(0, dur));
   }
 
   resumeImmediately(): void {
@@ -169,11 +180,14 @@ export class CinematicDirector {
           minMapDim * 0.36,
           minMapDim * 0.78
         );
-        const zoom = zoomForWorldSpan(span, span, mapW, mapH, viewport, 1.0, 2.25);
-        this.recordEvent(bestEx.x, bestEx.y, span * 1.12, nowSec + (isBullet ? 0.6 : 1.55));
+        const minZM = this.behaviorSettings.minZoomMul;
+        const maxZM = this.behaviorSettings.maxZoomMul;
+        const aftermathHold = this.behaviorSettings.aftermathHoldSec;
+        const zoom = zoomForWorldSpan(span, span, mapW, mapH, viewport, minZM, maxZM);
+        this.recordEvent(bestEx.x, bestEx.y, span * 1.12, nowSec + (isBullet ? 0.6 : Math.max(0.6, aftermathHold + 0.1)));
         if (!isBullet) {
-          this.aftermathUntilSec = Math.max(this.aftermathUntilSec, nowSec + 1.45);
-          this.shotMinHoldUntilSec = Math.max(this.shotMinHoldUntilSec, nowSec + 1.0);
+          this.aftermathUntilSec = Math.max(this.aftermathUntilSec, nowSec + aftermathHold);
+          this.shotMinHoldUntilSec = Math.max(this.shotMinHoldUntilSec, nowSec + Math.min(1.2, aftermathHold));
         }
         this.activeFocusKind = 'explosion';
         this.lastShotZoom = zoom;
@@ -210,7 +224,7 @@ export class CinematicDirector {
       const py = lerp(chosen.prevY, chosen.y, alpha);
       const pProg = lerp(chosen.prevProgress, chosen.progress, alpha);
       const remDist = Math.hypot(chosen.targetX - px, chosen.targetY - py);
-      const lookWeight = chosen.mode === 'bullet' ? 0.55 : 0.25 + pProg * 0.42;
+      const lookWeight = chosen.mode === 'bullet' ? 0.55 : 0.25 + pProg * this.behaviorSettings.leadWeight;
       const fx = lerp(px, chosen.targetX, lookWeight);
       const fy = lerp(py, chosen.targetY, lookWeight);
       const span = clamp(
@@ -218,7 +232,15 @@ export class CinematicDirector {
         minMapDim * 0.36,
         minMapDim * 0.88
       );
-      let zoom = zoomForWorldSpan(span, span, mapW, mapH, viewport, 1.0, 2.3);
+      let zoom = zoomForWorldSpan(
+        span,
+        span,
+        mapW,
+        mapH,
+        viewport,
+        this.behaviorSettings.minZoomMul,
+        Math.max(this.behaviorSettings.maxZoomMul, 2.3)
+      );
       if (this.activeFocusKind === 'projectile' && this.lastShotZoom > 0) {
         zoom = Math.max(zoom, this.lastShotZoom);
       }
@@ -360,7 +382,15 @@ export class CinematicDirector {
       const cy = movers.length === 1 ? sumY : (minY + maxY) / 2;
       const spanW = Math.max(minMapDim * 0.48, maxX - minX + 260);
       const spanH = Math.max(minMapDim * 0.42, maxY - minY + 240);
-      const zoom = zoomForWorldSpan(spanW, spanH, mapW, mapH, viewport, 1.0, 2.05);
+      const zoom = zoomForWorldSpan(
+        spanW,
+        spanH,
+        mapW,
+        mapH,
+        viewport,
+        this.behaviorSettings.minZoomMul,
+        Math.min(this.behaviorSettings.maxZoomMul, 2.5)
+      );
       this.recordEvent(cx, cy, Math.max(spanW, spanH), nowSec + 1.0);
       this.activeFocusKind = 'movement';
       return {

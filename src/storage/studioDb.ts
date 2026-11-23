@@ -1,8 +1,17 @@
-import { ActorPack, GeoRegionItem, MapPack, Point, SavedScenarioRecord } from '../core/types';
+import {
+  ActorPack,
+  CameraBehaviorScriptRecord,
+  CameraPresetRecord,
+  GeoRegionItem,
+  MapPack,
+  Point,
+  SavedScenarioRecord,
+  StoredAudioClip
+} from '../core/types';
 import { CountryProfile } from '../countries/countryTypes';
 
 const DB_NAME = 'rw_studio_db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 function pointInPoly(pt: Point, poly: Point[]): boolean {
   let inside = false;
@@ -58,6 +67,9 @@ class StudioDatabase {
         if (!db.objectStoreNames.contains('world_entities')) db.createObjectStore('world_entities', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('world_relationships')) db.createObjectStore('world_relationships', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('world_events')) db.createObjectStore('world_events', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('audio_clips')) db.createObjectStore('audio_clips', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('camera_presets')) db.createObjectStore('camera_presets', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('camera_scripts')) db.createObjectStore('camera_scripts', { keyPath: 'id' });
       };
       req.onsuccess = () => {
         const db = req.result;
@@ -130,6 +142,10 @@ class StudioDatabase {
     await this.put('actors', actor);
   }
 
+  async deleteActor(id: string): Promise<void> {
+    await this.del('actors', id);
+  }
+
   async loadAllScenarios(): Promise<SavedScenarioRecord[]> {
     const list = await this.getAll<SavedScenarioRecord>('scenarios');
     return list.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -168,6 +184,45 @@ class StudioDatabase {
 
   async deleteCountry(id: string): Promise<void> {
     await this.del('countries', id);
+  }
+
+  async loadAllAudioClips(): Promise<StoredAudioClip[]> {
+    const list = await this.getAll<StoredAudioClip>('audio_clips');
+    return list.sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  async saveAudioClip(clip: StoredAudioClip): Promise<void> {
+    await this.put('audio_clips', clip);
+  }
+
+  async deleteAudioClip(id: string): Promise<void> {
+    await this.del('audio_clips', id);
+  }
+
+  async loadAllCameraPresets(): Promise<CameraPresetRecord[]> {
+    const list = await this.getAll<CameraPresetRecord>('camera_presets');
+    return list.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+
+  async saveCameraPreset(preset: CameraPresetRecord): Promise<void> {
+    await this.put('camera_presets', preset);
+  }
+
+  async deleteCameraPreset(id: string): Promise<void> {
+    await this.del('camera_presets', id);
+  }
+
+  async loadAllCameraScripts(): Promise<CameraBehaviorScriptRecord[]> {
+    const list = await this.getAll<CameraBehaviorScriptRecord>('camera_scripts');
+    return list.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+
+  async saveCameraScript(script: CameraBehaviorScriptRecord): Promise<void> {
+    await this.put('camera_scripts', script);
+  }
+
+  async deleteCameraScript(id: string): Promise<void> {
+    await this.del('camera_scripts', id);
   }
 }
 

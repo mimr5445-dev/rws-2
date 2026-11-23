@@ -1,10 +1,97 @@
-import { SoundId } from '../core/types';
+import {
+  SoundBindingTarget,
+  SoundConfigState,
+  SoundEventMeta,
+  SoundId,
+  StoredAudioClip
+} from '../core/types';
+
+export interface SoundCatalogItem {
+  id: SoundId;
+  labelAr: string;
+  category: 'weapon' | 'unit' | 'system';
+}
+
+export const SOUND_EVENT_CATALOG: SoundCatalogItem[] = [
+  { id: 'explosion', labelAr: 'انفجار وتدمير', category: 'weapon' },
+  { id: 'missile_launch', labelAr: 'إطلاق صاروخ', category: 'weapon' },
+  { id: 'jet_takeoff', labelAr: 'إقلاع / تحليق طائرة', category: 'unit' },
+  { id: 'cannon_fire', labelAr: 'دوي مدفع دبابة', category: 'weapon' },
+  { id: 'gunfire_burst', labelAr: 'رشقة رصاص سريعة', category: 'weapon' },
+  { id: 'artillery_fire', labelAr: 'قصف مدفعي بعيد', category: 'weapon' },
+  { id: 'torpedo_launch', labelAr: 'إطلاق طوربيد بحري', category: 'weapon' },
+  { id: 'ship_horn', labelAr: 'بوق سفينة / حاملة', category: 'unit' },
+  { id: 'radar_ping', labelAr: 'نبضة رادار ومسح', category: 'system' },
+  { id: 'spawn_pop', labelAr: 'إنزال وحدة جديدة', category: 'unit' },
+  { id: 'move_order', labelAr: 'أمر تحرك بري', category: 'unit' },
+  { id: 'build_complete', labelAr: 'اكتمال بناء منشأة', category: 'unit' },
+  { id: 'alert_ping', labelAr: 'تنبيه تكتيكي', category: 'system' }
+];
+
+export const DEFAULT_SOUND_CONFIG: SoundConfigState = {
+  masterVolume: 1.0,
+  eventBindings: {},
+  actorBindings: {}
+};
+
+function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer | null {
+  try {
+    const commaIdx = dataUrl.indexOf(',');
+    if (commaIdx === -1) return null;
+    const base64 = dataUrl.slice(commaIdx + 1);
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) {
+      bytes[i] = bin.charCodeAt(i);
+    }
+    return bytes.buffer;
+  } catch {
+    return null;
+  }
+}
 
 export class SoundSynth {
   private ctx: AudioContext | null = null;
+  private masterGain: GainNode | null = null;
   private recordDest: MediaStreamAudioDestinationNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
+  private soundConfig: SoundConfigState = {
+    masterVolume: 1.0,
+    eventBindings: {},
+    actorBindings: {}
+  };
+  private clips = new Map<string, StoredAudioClip>();
+  private decodedBuffers = new Map<string, AudioBuffer>();
+  private decodingPromises = new Map<string, Promise<AudioBuffer | null>>();
   public muted = false;
+
+  setSoundConfig(cfg?: SoundConfigState | null): void {
+    this.soundConfig = cfg
+      ? {
+          masterVolume: typeof cfg.masterVolume === 'number' && Number.isFinite(cfg.masterVolume) ? Math.max(0, Math.min(1.5, cfg.masterVolume)) : 1.0,
+          eventBindings: { ...(cfg.eventBindings ?? {}) },
+          actorBindings: { ...(cfg.actorBindings ?? {}) }
+        }
+      : { masterVolume: 1.0, eventBindings: {}, actorBindings: {} };
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setValueAtTime(this.soundConfig.masterVolume, this.ctx.currentTime);
+    }
+  }
+
+  getSoundConfig(): SoundConfigState {
+    return this.soundConfig;
+  }
+
+  setClips(clipList: StoredAudioClip[]): void {
+    const nextIds = new Set(clipList.map((c) => c.id));
+    for (const key of this.decodedBuffers.keys()) {
+      if (!nextIds.has(key)) this.decodedBuffers.delete(key);
+    }
+    this.clips.clear();
+    for (const clip of clipList) {
+      this.clips.set(clip.id, clip);
+    }
+  }
 
   ensureReady(): AudioContext | null {
     if (this.muted || typeof window === 'undefined') return null;
@@ -13,8 +100,12 @@ export class SoundSynth {
     if (!AudioCtx) return null;
     if (!this.ctx) {
       this.ctx = new AudioCtx();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(this.soundConfig.masterVolume, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
       if (typeof this.ctx.createMediaStreamDestination === 'function') {
         this.recordDest = this.ctx.createMediaStreamDestination();
+        this.masterGain.connect(this.recordDest);
       }
       this.noiseBuffer = this.createNoiseBuffer(this.ctx, 1.5);
     }
@@ -36,13 +127,105 @@ export class SoundSynth {
   }
 
   private connectOutput(ctx: AudioContext, node: AudioNode): void {
-    node.connect(ctx.destination);
-    if (this.recordDest) node.connect(this.recordDest);
+    if (this.masterGain) {
+      node.connect(this.masterGain);
+    } else {
+      node.connect(ctx.destination);
+      if (this.recordDest) node.connect(this.recordDest);
+    }
   }
 
   getAudioStream(): MediaStream | null {
     this.ensureReady();
     return this.recordDest?.stream ?? null;
+  }
+
+  private async decodeClipBuffer(ctx: AudioContext, clip: StoredAudioClip): Promise<AudioBuffer | null> {
+    const cached = this.decodedBuffers.get(clip.id);
+    if (cached) return cached;
+    const inflight = this.decodingPromises.get(clip.id);
+    if (inflight) return inflight;
+
+    const task = (async () => {
+      try {
+        const ab = dataUrlToArrayBuffer(clip.dataUrl);
+        if (!ab) return null;
+        const decoded = await ctx.decodeAudioData(ab.slice(0));
+        this.decodedBuffers.set(clip.id, decoded);
+        return decoded;
+      } catch {
+        return null;
+      } finally {
+        this.decodingPromises.delete(clip.id);
+      }
+    })();
+
+    this.decodingPromises.set(clip.id, task);
+    return task;
+  }
+
+  private playClipBuffer(ctx: AudioContext, clip: StoredAudioClip, volume = 1, pitch = 1): void {
+    const safeVol = Math.max(0, Math.min(1.5, volume));
+    const safePitch = Math.max(0.4, Math.min(2.2, pitch));
+    const cached = this.decodedBuffers.get(clip.id);
+    if (cached) {
+      try {
+        const src = ctx.createBufferSource();
+        src.buffer = cached;
+        src.playbackRate.value = safePitch;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(safeVol, ctx.currentTime);
+        src.connect(g);
+        this.connectOutput(ctx, g);
+        src.start(ctx.currentTime);
+      } catch {
+        // Ignore playback failure
+      }
+      return;
+    }
+
+    void this.decodeClipBuffer(ctx, clip).then((decoded) => {
+      if (!decoded || this.muted || !this.ctx) return;
+      try {
+        const src = this.ctx.createBufferSource();
+        src.buffer = decoded;
+        src.playbackRate.value = safePitch;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(safeVol, this.ctx.currentTime);
+        src.connect(g);
+        this.connectOutput(this.ctx, g);
+        src.start(this.ctx.currentTime);
+      } catch {
+        // Ignore playback failure
+      }
+    });
+  }
+
+  previewClip(clipId: string, volume = 1, pitch = 1): void {
+    const ctx = this.ensureReady();
+    if (!ctx) return;
+    const clip = this.clips.get(clipId);
+    if (clip) {
+      this.playClipBuffer(ctx, clip, volume, pitch);
+    }
+  }
+
+  previewBinding(binding: SoundBindingTarget | undefined, fallbackId: SoundId): void {
+    if (!binding) {
+      this.playSynth(fallbackId, 1);
+      return;
+    }
+    if (!binding.enabled) return;
+    const ctx = this.ensureReady();
+    if (!ctx) return;
+    if (binding.source === 'clip' && binding.clipId) {
+      const clip = this.clips.get(binding.clipId);
+      if (clip) {
+        this.playClipBuffer(ctx, clip, binding.volume, binding.pitch);
+        return;
+      }
+    }
+    this.playSynth(binding.synthId ?? fallbackId, binding.volume);
   }
 
   playLockTone(locked: boolean): void {
@@ -77,9 +260,52 @@ export class SoundSynth {
     }
   }
 
-  play(id: SoundId): void {
+  play(id: SoundId, meta?: SoundEventMeta): void {
+    const actorMap = meta?.actorId ? this.soundConfig.actorBindings[meta.actorId] : undefined;
+    const actorKey =
+      meta?.eventKind === 'spawn' ||
+      meta?.eventKind === 'move' ||
+      meta?.eventKind === 'strike' ||
+      meta?.eventKind === 'build'
+        ? meta.eventKind
+        : undefined;
+    const actorBinding = actorKey ? actorMap?.[actorKey] : undefined;
+    const binding = actorBinding ?? this.soundConfig.eventBindings[id];
+
+    if (binding) {
+      if (!binding.enabled) return;
+      const ctx = this.ensureReady();
+      if (!ctx) return;
+      if (binding.source === 'clip' && binding.clipId) {
+        const clip = this.clips.get(binding.clipId);
+        if (clip) {
+          this.playClipBuffer(ctx, clip, binding.volume, binding.pitch);
+          return;
+        }
+      }
+      this.playSynth(binding.synthId ?? id, binding.volume);
+      return;
+    }
+
+    this.playSynth(id, 1.0);
+  }
+
+  playSynth(id: SoundId, gainMul = 1.0): void {
     const ctx = this.ensureReady();
     if (!ctx) return;
+    const safeMul = Math.max(0, Math.min(1.5, gainMul));
+    const connectScaled = (c: AudioContext, node: AudioNode) => {
+      if (Math.abs(safeMul - 1.0) < 0.01) {
+        this.connectOutput(c, node);
+        return;
+      }
+      const g = c.createGain();
+      g.gain.setValueAtTime(safeMul, c.currentTime);
+      node.connect(g);
+      this.connectOutput(c, g);
+    };
+    const origConnect = this.connectOutput.bind(this);
+    this.connectOutput = connectScaled;
     try {
       const now = ctx.currentTime;
 
@@ -380,6 +606,8 @@ export class SoundSynth {
       }
     } catch {
       // Ignore audio errors in restricted headless environments
+    } finally {
+      this.connectOutput = origConnect;
     }
   }
 }
