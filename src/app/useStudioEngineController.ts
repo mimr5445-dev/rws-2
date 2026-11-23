@@ -11,6 +11,7 @@ import { DT, StudioEngine, TICK_RATE } from '../engine/engine';
 import { buildCountryProvincesMapPack } from '../maps/worldGeoEngine';
 import { PackRegistry } from '../packs/packRegistry';
 import { SoundSynth } from '../renderer/soundSynth';
+import { getBundledSoundBank } from '../content/bundledSounds';
 import { StudioRenderer } from '../renderer/studioRenderer';
 import { studioDb } from '../storage/studioDb';
 import { validateScenario, formatYamlSyntaxErrorAr } from '../validation/validator';
@@ -117,6 +118,7 @@ export function useStudioEngineController(input: StudioEngineControllerInput) {
   const attachEngineListeners = useCallback(
     (eng: StudioEngine) => {
       if (soundRef.current) {
+        soundRef.current.setBundledSounds(getBundledSoundBank());
         eng.onSound((id) => soundRef.current?.play(id));
       }
       eng.onMoveBlocked((ent) => {

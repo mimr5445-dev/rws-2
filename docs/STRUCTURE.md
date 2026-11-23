@@ -14,7 +14,7 @@
 | `src/countries/` | بيانات الدول وتعريفاتها واختيارها. بذور الدول مقسّمة إلى `countrySeed.ts` و`countrySeedB.ts` و`countrySeedHelpers.ts` |
 | `src/maps/` | محرك الخرائط الجغرافية `worldGeoEngine.ts` مقسماً مع `worldGeoGeometry.ts` و`worldGeoCorridors.ts` |
 | `src/storage/` | قاعدة بيانات IndexedDB |
-| `src/content/` | محمّل المحتوى ومخطط التحقق منه (ينتظر TASK 1.2 ليُربط بالتطبيق) |
+| `src/content/` | محمّل المحتوى ومخطط التحقق منه. `soundResolver.ts` منطق الأصوات بلا `node:fs`، و`bundledSounds.ts` محمّل الأصوات للمتصفح عبر Vite |
 | `src/scenarios/` | سيناريوهات YAML المدمجة (تُنقل إلى `content/` في TASK 1.4) |
 | `src/index.css`، `src/main.tsx`، `src/types-external.d.ts` | نقطة الدخول والأنماط وأنواع خارجية |
 

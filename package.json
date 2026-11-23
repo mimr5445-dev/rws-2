@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "tsx --test src/core/core.test.ts src/packs/packSchema.test.ts src/countries/countries.test.ts src/content/loader.test.ts src/core/cameraBehaviorRuntime.test.ts"
+    "test": "tsx --test src/core/core.test.ts src/packs/packSchema.test.ts src/countries/countries.test.ts src/content/loader.test.ts src/content/soundResolver.test.ts src/core/cameraBehaviorRuntime.test.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
