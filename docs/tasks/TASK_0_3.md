@@ -1,0 +1,30 @@
+# TASK 0.3 — تثبيت الأساس
+
+**المرحلة:** 0 | **الفرع:** `task/0-3-foundation` | **المنفّذ:** وكيل Arena أو Google AI Studio
+
+## الهدف
+جعل المشروع يُبنى ويُختبر بنجاح، وإزالة التناقضات الموثّقة في `HANDOFF.md`.
+
+## المطلوب
+1. تشغيل `bun install --frozen-lockfile` و`bun run lint` و`bun run test` و`bun run build`، وتسجيل النتائج كما هي.
+2. التحقق من أن ملفات `public/assets/aistudio/Paste_*` غير مستخدمة (بحث في الكود)، ثم حذفها.
+3. حسم `express` و`@google/genai` وسكربت `clean` الذي يشير إلى `server.js`: إما إزالتها، وإما توثيق سبب بقائها في التقرير. لا تُضاف أي ميزة Gemini في هذه المهمة.
+4. توحيد عدد الخطوات في الثانية في `index.html`، و`metadata.json`، والتوثيق، مع القيمة الفعلية في `src/core/engine.ts`.
+5. التحقق من أن `docs/` يحتوي `PLAN.md` و`ROADMAP.md` و`HANDOFF.md` و`tasks/`.
+
+## الملفات المسموح بتعديلها
+- `package.json`، و`bun.lock` (فقط إذا تغيّرت الحزم)
+- `index.html`، و`metadata.json`
+- `public/assets/aistudio/*`
+- `docs/**`
+- `src/core/engine.ts` (تعديل تعليقات أو ثوابت فقط)
+
+## الممنوع
+- أي تغيير في الواجهة أو الرسم أو الفيزياء أو A*.
+- إضافة لغات أو مكتبات جديدة.
+- الدمج في `main` قبل نجاح الفحوص الأربعة.
+
+## معايير القبول
+- الفحوص الأربعة خضراء.
+- تقرير `docs/tasks/TASK_0_3_REPORT.md` يذكر الأوامر والنتائج وما لم يُنجز.
+- `HANDOFF.md` محدّث بالمهمة التالية.
