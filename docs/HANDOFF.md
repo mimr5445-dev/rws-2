@@ -10,7 +10,7 @@
 
 ## ما يلي
 1. `TASK 0.4` (عاجلة): إغلاق ثغرة تنفيذ الكود في `cameraBehaviorRuntime.ts`. البطاقة: `docs/tasks/TASK_0_4.md`، والمراجعة: `docs/tasks/REVIEW_ce446ac.md`.
-2. بطاقة `TASK 1.2` التالية، تُكتب بعد مراجعة `TASK 1.1`.
+2. البطاقات من `TASK 1.2` حتى `TASK 7.2` مكتوبة كمسودات في `docs/tasks/`، ومرتبة في `docs/ROADMAP.md`.
 
 ## تغيير اسم المستودع
 - الاسم الحالي: `rws-2`، والقديم: `rws2-java`.
