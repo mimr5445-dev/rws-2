@@ -1,6 +1,6 @@
 import { DEFAULT_CAMERA_MOTION_SETTINGS, sanitizeCameraMotionSettings } from './cameraBehaviorRuntime';
 import { computeSafeFitZoom, getSafeViewportFrame } from './cameraTransform';
-import { StudioEngine } from './engine';
+import { StudioEngine } from '../engine/engine';
 import { CameraMotionSettings, EntityState, ExplosionState, Point, ProjectileState } from './types';
 
 export type CinematicFocusKind =

@@ -1,4 +1,4 @@
-import { Domain, MapPack, NavCell, Point } from './types';
+import { Domain, MapPack, NavCell, Point } from '../core/types';
 
 export function isWalkable(cell: NavCell, domain: Domain): boolean {
   if (domain === 'air') return true;

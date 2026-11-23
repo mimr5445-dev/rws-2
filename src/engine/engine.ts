@@ -22,7 +22,7 @@ import {
   SoundId,
   StrikeMode,
   ZoneVisualState
-} from './types';
+} from '../core/types';
 
 function resolvePoint(map: MapPack, ref: PointRef | undefined): Point | undefined {
   if (!ref) return undefined;

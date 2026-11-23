@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Download, Globe2, Plus, Search, Upload, X } from 'lucide-react';
 import { CountryProfile } from '../countries/countryTypes';
-import { CountryFlagView } from './CountryFlagView';
+import { CountryFlagView } from '../panels/CountryFlagView';
 
 interface CountryDirectoryModalProps {
   open: boolean;

@@ -17,7 +17,7 @@ import {
   unprojectScreenToWorld
 } from '../core/cameraTransform';
 import { CinematicDirector, CinematicFocusKind } from '../core/cinematicDirector';
-import { StudioEngine, normalizeAngleDiff } from '../core/engine';
+import { StudioEngine, normalizeAngleDiff } from '../engine/engine';
 import {
   LOCK_MOVE_TOLERANCE_PX,
   StrikeLockPhase,

@@ -26,8 +26,8 @@ import {
   stepFixedAccumulator
 } from './core/cameraTransform';
 import { CinematicFocusKind } from './core/cinematicDirector';
-import { DT, StudioEngine, TICK_RATE } from './core/engine';
-import { isPointNearWalkable } from './core/pathfinding';
+import { DT, StudioEngine, TICK_RATE } from './engine/engine';
+import { isPointNearWalkable } from './engine/pathfinding';
 import { StrikeLockPhase, computeLockedStrikeRadius } from './core/targetingLock';
 import {
   ActorPack,
@@ -39,7 +39,7 @@ import {
   StrikeMode,
   ValidationIssue
 } from './core/types';
-import { formatYamlSyntaxErrorAr, validateScenario } from './core/validator';
+import { formatYamlSyntaxErrorAr, validateScenario } from './validation/validator';
 import { CountryRegistry } from './countries/countryRegistry';
 import { buildRegionColorMap } from './countries/countrySelection';
 import { buildCountryProvincesMapPack } from './maps/worldGeoEngine';
@@ -47,10 +47,10 @@ import { PackRegistry } from './packs/packRegistry';
 import { SoundSynth } from './renderer/soundSynth';
 import { StudioRenderer } from './renderer/studioRenderer';
 import { studioDb } from './storage/studioDb';
-import { SpecModal } from './components/SpecModal';
-import { ToolsDock } from './components/ToolsDock';
-import { UnitActionBar } from './components/UnitActionBar';
-import { UnitsDock } from './components/UnitsDock';
+import { SpecModal } from './modals/SpecModal';
+import { ToolsDock } from './panels/ToolsDock';
+import { UnitActionBar } from './panels/UnitActionBar';
+import { UnitsDock } from './panels/UnitsDock';
 
 interface ArmedAbilityState {
   entityId: string;

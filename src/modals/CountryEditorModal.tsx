@@ -10,7 +10,7 @@ import {
   normalizeIso3,
   validateCountryProfile
 } from '../countries/countryTypes';
-import { CountryFlagView, LeaderPortraitView } from './CountryFlagView';
+import { CountryFlagView, LeaderPortraitView } from '../panels/CountryFlagView';
 
 interface CountryEditorModalProps {
   open: boolean;

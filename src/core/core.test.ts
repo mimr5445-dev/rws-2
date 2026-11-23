@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as yaml from 'js-yaml';
-import { findPath, isWalkable } from './pathfinding';
-import { formatYamlSyntaxErrorAr, validateScenario } from './validator';
-import { DT, StudioEngine, TICK_RATE } from './engine';
+import { findPath, isWalkable } from '../engine/pathfinding';
+import { formatYamlSyntaxErrorAr, validateScenario } from '../validation/validator';
+import { DT, StudioEngine, TICK_RATE } from '../engine/engine';
 import { buildAiScenarioPrompt, generateCatalogMarkdown } from './catalog';
 import { MapPack, NavCell, ScenarioFile } from './types';
 import { DEMO_ACTORS, DEMO_MAPS } from '../packs/demoPacks';
@@ -586,7 +586,7 @@ test('P0 Hardening: post-remove and out-of-order entity lifecycle rules work acc
 });
 
 test('P0 Hardening: strict timing, at+after conflict, map bounds, and numeric limits are enforced', async () => {
-  const { parseStrictSec } = await import('./engine');
+  const { parseStrictSec } = await import('../engine/engine');
   assert.equal(parseStrictSec('0s'), 0);
   assert.equal(parseStrictSec('2.5s'), 2.5);
   assert.equal(parseStrictSec(1.5), 1.5);

@@ -1,5 +1,5 @@
-import { DT, parseStrictSec } from './engine';
-import { ActorPack, MapPack, PointRef, ScenarioFile, ScenarioStep, ValidationIssue } from './types';
+import { DT, parseStrictSec } from '../engine/engine';
+import { ActorPack, MapPack, PointRef, ScenarioFile, ScenarioStep, ValidationIssue } from '../core/types';
 
 function closestKey(target: string, keys: string[]): string | null {
   let best: string | null = null;
