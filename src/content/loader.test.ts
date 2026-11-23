@@ -305,10 +305,11 @@ test('resolveSoundEvent uses manifest file when present and falls back to SoundS
   assert.equal(playedFallbackIds.length, 0);
 
   // Absent from manifest -> falls back cleanly to SoundSynth
-  const miss = resolveSoundEvent(loaded.sounds, 'explosion', synth, 'alert_ping');
+  // 'radar_ping' is intentionally absent from the manifest (it was 'explosion' before that event got a file).
+  const miss = resolveSoundEvent(loaded.sounds, 'radar_ping', synth, 'alert_ping');
   assert.equal(miss.source, 'synth_fallback');
   if (miss.source === 'synth_fallback') {
-    assert.equal(miss.synthId, 'explosion');
+    assert.equal(miss.synthId, 'radar_ping');
   }
-  assert.deepEqual(playedFallbackIds, ['explosion']);
+  assert.deepEqual(playedFallbackIds, ['radar_ping']);
 });

@@ -3,5 +3,10 @@
     "files": ["vehicles/tank_fire_01.ogg"],
     "volume": 0.85,
     "fallbackSynthId": "cannon_fire"
+  },
+  "explosion": {
+    "files": ["missiles/ballistic_impact_01.mp3"],
+    "volume": 0.9,
+    "fallbackSynthId": "explosion"
   }
 }
