@@ -13,4 +13,5 @@
 ## سجل المرحلة
 - (يُضاف هنا تاريخ كل إغلاق مهمة وما تغيّر، بسطر واحد لكل مهمة.)
 - 2026-11-23 — TASK 0.4: إزالة `new Function` و`validateAndCompileCameraScript` من `src/core/cameraBehaviorRuntime.ts`، وإضافة `cameraBehaviorRuntime.test.ts` وتوثيق `PackRegistry` في `docs/PLAN.md` (التقرير: `docs/tasks/TASK_0_4_REPORT.md`، دُمجت على `main` في `a0e4f29` واعتُمدت في `REVIEW_TASK_0_4_and_1_1.md`).
-| TASK 0.5B | تقسيم الملفات الكبيرة | مسودة، تُنفَّذ بعد 0.5 | [البطاقة](../tasks/TASK_0_5B.md) | [التقرير](../tasks/TASK_0_5B_REPORT.md) |
+| TASK 0.5B | تقسيم الملفات الكبيرة (وحدات ودول) | منجزة جزئياً | [البطاقة](../tasks/TASK_0_5B.md) | [التقرير](../tasks/TASK_0_5B_REPORT.md) |
+| TASK 0.5C | إكمال تقسيم الملفات الكبيرة | مسودة، تُنفَّذ بعد 0.5B | [البطاقة](../tasks/TASK_0_5C.md) | [التقرير](../tasks/TASK_0_5C_REPORT.md) |
