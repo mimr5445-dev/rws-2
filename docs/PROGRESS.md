@@ -13,3 +13,4 @@
 | 2026-11-24 | مراجعة TASK 0.4 و1.1 | 0.4 مُعتمدة، 1.1 مُعتمدة كبنية تحتية، وتبيّن أن المحمّل يستورد `node:fs` ولا يعمل في المتصفح | `docs/review-0-4-and-1-1` |
 | 2026-11-24 | TASK 0.5 | نقل الملفات إلى مجلدات panels وmodals وengine وvalidation، وتحديث الاستيرادات (منجزة جزئياً) | `task/0-5` |
 | 2026-11-24 | TASK 0.5B | تقسيم studioUnits وcountrySeed إلى ملفات أصغر، مع تحقق من تطابق المعرّفات والترتيب (منجزة جزئياً) | `task/0-5b` |
+| 2026-11-24 | TASK 0.5C | إكمال تقسيم الملفات فوق 800 سطر (`studioRenderer`، `App`، `engine`، `validator`، `CountryEditorModal`، `StudioSidebar`، `worldGeoEngine`) والتحقق بالمتصفح (62/62) | `task/0-5c` |
