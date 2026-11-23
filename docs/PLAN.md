@@ -75,4 +75,5 @@ content/
 - الدول: 14 ملف تجريبي.
 - التصدير: `MediaRecorder` بصيغة WebM فقط.
 - الحفظ: IndexedDB داخل المتصفح، وليس ملف مشروع.
+- سلوك `PackRegistry` (`src/packs/packRegistry.ts`): عند التهيئة `init()` يحمّل السجل الوحدات المحفوظة في IndexedDB (`studioDb.loadAllActors`) ويتجاوز بها الوحدات المدمجة في `STUDIO_ACTORS` التي تحمل المعرّف نفسه (مع تتبّعها في `actorOverrides`). الحفظ عبر `saveCustomActor` يدمج مع القالب/الوحدة الحالية ويخزّنها في `studioDb`، بينما `resetOrDeleteActor(id)` يحذف التعديل من `studioDb` ويعيد الوحدة المدمجة إلى أصلها (`'reset'`) أو يحذف الوحدة المضافة (`'deleted'`).
 - ملاحظات: لا يوجد كود Gemini ولا ملف خادم رغم وجود `express` و`@google/genai` و`server.js` في السكربتات. الوصف يذكر 30 خطوة/ثانية والكود 60. خمسة ملفات `Paste_*` غير مستخدمة. `App.tsx` 1697 سطراً و`studioRenderer.ts` 2540 سطراً.

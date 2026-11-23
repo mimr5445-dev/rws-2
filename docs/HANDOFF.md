@@ -1,24 +1,26 @@
 # ملف التسليم
 
-**اقرأ أولاً `docs/START_HERE.md`.**
+**اقرأ هذا الملف أولاً، ثم `docs/PLAN.md` و`docs/ROADMAP.md`.**
 
 ## الحالة الآن
-- المرحلة الحالية: **0 (التثبيت وتنظيم المشروع)**.
-- المهمة التالية: **TASK 0.4** (عاجلة) ثم **TASK 0.5**.
-- TASK 0.4 تغلق ثغرة تنفيذ الكود في `src/core/cameraBehaviorRuntime.ts`. البطاقة: `docs/tasks/TASK_0_4.md`.
-- TASK 1.1 منجزة على `main` ولم تُراجع بعد. يجب كتابة تقرير مراجعة لها قبل البدء بـ 1.2.
+- المرحلة: 0 (التثبيت) — `TASK 0.3` و`0.3-FIX` منجزتان، `TASK 0.4` منجزة محلياً وتنتظر الدفع إلى GitHub، وبقيت `TASK 0.5` (تقسيم المجلدات) كمسودة في `docs/tasks/TASK_0_5.md`.
+- `TASK 0.3`: تقريرها السابق صُحح في `docs/tasks/TASK_0_3_FIX_REPORT.md`.
+- `TASK 0.4`: منجزة في بيئة AI Studio (أُزيل `new Function` و`validateAndCompileCameraScript` من `src/core/cameraBehaviorRuntime.ts`، وأُبقيت قراءة JSON فقط مع اختبارات `cameraBehaviorRuntime.test.ts` و`studioDb` v4 وتوثيق `PackRegistry` في `docs/PLAN.md`). التقرير: `docs/tasks/TASK_0_4_REPORT.md`.
+- `TASK 1.1`: منفّذة (`src/content/*` + `content/*` + `docs/tasks/TASK_1_1_REPORT.md`)، وتنتظر المراجعة المنطقية وإغلاق `TASK 0.4` على GitHub.
+- الفحوص الأربعة ناجحة بعد `TASK 0.4`: `bun install --frozen-lockfile` (`Exit 0`) و`bun run lint` (`Exit 0`) و`bun run test` (`62/62` نجاح) و`bun run build` (`Exit 0`).
 
-## ما هو منجز ومعتمد
-- TASK 0.3-FIX: منجزة، وتقريرها في `docs/tasks/TASK_0_3_FIX_REPORT.md`.
-- الفحوص الأربعة ناجحة على `main`: install وlint وtest (57/57) وbuild.
+## ما يلي
+1. دفع تغييرات `TASK 0.4` إلى الفرع `task/0-4-security` ودمجها في `main` بعد المراجعة.
+2. مراجعة `TASK 1.1` (`docs/tasks/TASK_1_1_REPORT.md`) ومراجعة مسودة `TASK 0.5` (`docs/tasks/TASK_0_5.md`) لاعتمادها وتنفيذها قبل `TASK 1.2` (إذ أصبحت `TASK 1.2` تعتمد على `TASK 1.1` و`TASK 0.5`).
+3. البطاقات `TASK 0.5` ومن `TASK 1.2` حتى `TASK 7.2` مكتوبة كمسودات في `docs/tasks/`، ومرتبة في `docs/ROADMAP.md`.
 
-## ما يجب تذكره
-- التغييرات في `ce446ac` خارج النطاق، وتم تحليلها في `docs/tasks/REVIEW_ce446ac.md`.
-- الملفات الكبيرة (`App.tsx` و`studioRenderer.ts`) تنتظر TASK 0.5.
+## تغيير اسم المستودع
+- الاسم الحالي: `rws-2`، والقديم: `rws2-java`.
+- بعد التغيير، يحدّث المستودع المحلي:
+  `git remote set-url origin https://github.com/mimr5445-dev/rws-2.git`
 
-## كيف تستأنف
+## كيف تستأنف العمل
 1. `git checkout main && git pull`
-2. اقرأ `docs/START_HERE.md` ثم هذا الملف.
-3. أنشئ فرع المهمة وفق البطاقة، ونفّذ البطاقة فقط.
-4. عند الإغلاق: اكتب التقرير، وحدّث `ROADMAP.md`، و`PROGRESS.md`، وملف المرحلة، ثم `HANDOFF.md`.
-5. عند نفاد الوقت: ادفع الفرع، واكتب في `HANDOFF.md` ما أنجزته وأين توقفت.
+2. اقرأ `docs/HANDOFF.md` ثم البطاقة النشطة.
+3. أنشئ فرع `task/<id>-<slug>` ونفّذ البطاقة فقط.
+4. شغّل الفحوص، واكتب التقرير، وحدّث هذا الملف قبل إنهاء الجلسة.
