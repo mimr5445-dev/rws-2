@@ -9,7 +9,7 @@
 - الفحوص الأربعة ناجحة على الفرع `task/0-3-fix`: install وlint وtest (57/57) وbuild.
 
 ## ما يلي
-1. مراجعة تغييرات `ce446ac` خارج النطاق (`cameraBehaviorRuntime.ts` وغيره) في مهمة منفصلة.
+1. `TASK 0.4` (عاجلة): إغلاق ثغرة تنفيذ الكود في `cameraBehaviorRuntime.ts`. البطاقة: `docs/tasks/TASK_0_4.md`، والمراجعة: `docs/tasks/REVIEW_ce446ac.md`.
 2. بطاقة `TASK 1.2` التالية، تُكتب بعد مراجعة `TASK 1.1`.
 
 ## تغيير اسم المستودع
