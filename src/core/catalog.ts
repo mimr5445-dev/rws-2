@@ -38,7 +38,7 @@ export function buildAiScenarioPrompt(
 "${topic}"
 
 التزم التزامًا صارمًا بهذه القواعد فقط:
-- الأوامر المسموحة في timeline: at, after ("<id>.arrived"), camera {focus, zoom, duration}, caption {text}, sound ("build_complete"|"alert_ping"|"move_order"|"spawn_pop"|"jet_takeoff"|"missile_launch"|"explosion"|"ship_horn"), spawn [{id, actor, at, faction, scale?}], move {entity, to}, construct {id, actor, at, faction, duration, scale?}, resize {entity, scale}, remove {entity}, strike {attacker?, mode ("airstrike"|"missile"), from?, to, radius?, color?}, draw_arrow {id, from, to, color, dashed, duration}, zone {id, color, opacity, duration}, callout {id, target, text, color, duration}, pulse {at, color, radius}.
+- الأوامر المسموحة في timeline: at, after ("<id>.arrived"), camera {focus, zoom, duration}, caption {text}, sound ("build_complete"|"alert_ping"|"move_order"|"spawn_pop"|"jet_takeoff"|"missile_launch"|"explosion"|"ship_horn"|"cannon_fire"|"gunfire_burst"|"artillery_fire"|"torpedo_launch"|"radar_ping"), spawn [{id, actor, at, faction, scale?}], move {entity, to}, construct {id, actor, at, faction, duration, scale?}, resize {entity, scale}, remove {entity}, strike {attacker?, mode ("airstrike"|"missile"), from?, to, radius?, color?}, draw_arrow {id, from, to, color, dashed, duration}, zone {id, color, opacity, duration}, callout {id, target, text, color, duration}, pulse {at, color, radius}.
 - لا تخترع أسماء مراسي أو مناطق أو كيانات خارج الفهرس أدناه.
 - أخرج كود YAML فقط دون شرح إضافي.
 

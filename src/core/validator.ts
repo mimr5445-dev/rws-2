@@ -1,4 +1,4 @@
-import { parseStrictSec } from './engine';
+import { DT, parseStrictSec } from './engine';
 import { ActorPack, MapPack, PointRef, ScenarioFile, ScenarioStep, ValidationIssue } from './types';
 
 function closestKey(target: string, keys: string[]): string | null {
@@ -348,7 +348,7 @@ export function validateScenario(
   //   - triggerMinSec: earliest time an event can possibly fire (lower bound; for arrived, > min motion start)
   //   - triggerMaxSec: latest time an event is guaranteed to have fired (upper bound; Infinity for arrived!)
   //   - triggerAncestors: triggers guaranteed to have ALREADY fired strictly before this event
-  const DT_APPROX = 1 / 30;
+  const DT_APPROX = DT;
   const achievableBuilt = new Set<string>();
   const achievableArrived = new Set<string>();
   const builtMinSec = new Map<string, number>();

@@ -14,7 +14,7 @@
 ## الأوامر المتاحة داخل كل خطوة
 - `camera`: `{ focus: "<anchor_id> | {x,y}", zoom: number (0.25..4), duration?: "<sec>s" (>= 0) }`
 - `caption`: `{ text: string }`
-- `sound`: `"build_complete" | "alert_ping" | "move_order" | "spawn_pop" | "jet_takeoff" | "missile_launch" | "explosion" | "ship_horn"`
+- `sound`: `"build_complete" | "alert_ping" | "move_order" | "spawn_pop" | "jet_takeoff" | "missile_launch" | "explosion" | "ship_horn" | "cannon_fire" | "gunfire_burst" | "artillery_fire" | "torpedo_launch" | "radar_ping"`
 - `spawn`: `[{ id, actor, at: "<anchor_id> | {x,y}", faction?: "blue"|"red"|"neutral", scale?: number (0.2..4) }]`
 - `move`: `{ entity: "<entity_id>", to: "<anchor_id> | {x,y}" }`
 - `resize`: `{ entity: "<entity_id>", scale: number (0.2..4) }`
