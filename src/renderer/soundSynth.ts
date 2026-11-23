@@ -1,3 +1,4 @@
+import { LoadedSounds, resolveSoundEvent } from '../content/soundResolver';
 import {
   SoundBindingTarget,
   SoundConfigState,
@@ -5,6 +6,12 @@ import {
   SoundId,
   StoredAudioClip
 } from '../core/types';
+
+// مصدر أصوات مضمّنة (من محمّل المحتوى). لا يستورد SoundSynth أي شيء من Vite مباشرة، ليبقى قابلاً للاختبار في Node.
+export interface BundledSoundSource {
+  sounds: LoadedSounds | null;
+  urlFor(relativeFile: string): string | null;
+}
 
 export interface SoundCatalogItem {
   id: SoundId;
@@ -63,6 +70,10 @@ export class SoundSynth {
   private clips = new Map<string, StoredAudioClip>();
   private decodedBuffers = new Map<string, AudioBuffer>();
   private decodingPromises = new Map<string, Promise<AudioBuffer | null>>();
+  private bundled: BundledSoundSource | null = null;
+  private bundledBuffers = new Map<string, AudioBuffer>();
+  private bundledPending = new Map<string, Promise<AudioBuffer | null>>();
+  private warnedBundled = new Set<string>();
   public muted = false;
 
   setSoundConfig(cfg?: SoundConfigState | null): void {
@@ -287,7 +298,69 @@ export class SoundSynth {
       return;
     }
 
+    if (this.playBundled(id)) return;
     this.playSynth(id, 1.0);
+  }
+
+  setBundledSounds(source: BundledSoundSource | null): void {
+    this.bundled = source;
+  }
+
+  // يشغّل ملفاً مضمّناً إن كان الحدث موجوداً في المانيفست وملفه محمّلاً.
+  // إن لم يكن الملف قد فُكّ بعد، يبدأ فكّه ويُرجع false ليشغّل المولّد الاحتياطي الآن.
+  private playBundled(id: SoundId): boolean {
+    const src = this.bundled;
+    if (!src || !src.sounds) return false;
+    const picked = resolveSoundEvent(src.sounds, id, undefined, id, Math.floor(Math.random() * 1000));
+    if (picked.source !== 'manifest') return false;
+    const url = src.urlFor(picked.chosenFile);
+    if (!url) {
+      if (!this.warnedBundled.has(picked.chosenFile)) {
+        this.warnedBundled.add(picked.chosenFile);
+        console.warn(`[sound] ملف غير موجود للحدث "${id}": ${picked.chosenFile}`);
+      }
+      return false;
+    }
+    const ctx = this.ensureReady();
+    if (!ctx) return false;
+    const buffer = this.bundledBuffers.get(url);
+    if (!buffer) {
+      this.decodeBundled(ctx, url);
+      return false;
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = picked.volume;
+    source.connect(gain);
+    this.connectOutput(ctx, gain);
+    source.start();
+    return true;
+  }
+
+  private decodeBundled(ctx: AudioContext, url: string): void {
+    if (this.bundledPending.has(url)) return;
+    const task = fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.arrayBuffer();
+      })
+      .then((ab) => ctx.decodeAudioData(ab))
+      .then((buf) => {
+        this.bundledBuffers.set(url, buf);
+        return buf;
+      })
+      .catch(() => {
+        if (!this.warnedBundled.has(url)) {
+          this.warnedBundled.add(url);
+          console.warn(`[sound] تعذّر تحميل الملف: ${url}`);
+        }
+        return null;
+      })
+      .finally(() => {
+        this.bundledPending.delete(url);
+      });
+    this.bundledPending.set(url, task);
   }
 
   playSynth(id: SoundId, gainMul = 1.0): void {

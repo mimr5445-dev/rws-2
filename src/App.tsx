@@ -1,48 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import * as yaml from 'js-yaml';
-import {
-  ChevronDown,
-  ChevronUp,
-  Clapperboard,
-  Clock,
-  Compass,
-  Crosshair,
-  Eye,
-  EyeOff,
-  Globe2,
-  Maximize2,
-  RotateCcw,
-  X,
-  ZoomIn,
-  ZoomOut
-} from 'lucide-react';
 import { ActionRecorder } from './core/actionRecorder';
-import {
-  CAMERA_ANGLE_PRESETS,
-  MAX_TILT_DEG,
-  clampTiltDeg,
-  computeFrameDt,
-  normalizeAngleDeg,
-  stepFixedAccumulator
-} from './core/cameraTransform';
 import { CinematicFocusKind } from './core/cinematicDirector';
-import { DT, StudioEngine, TICK_RATE } from './engine/engine';
-import { isPointNearWalkable } from './engine/pathfinding';
-import { StrikeLockPhase, computeLockedStrikeRadius } from './core/targetingLock';
-import {
-  ActorPack,
-  Faction,
-  MapPack,
-  Point,
-  SavedScenarioRecord,
-  ScenarioFile,
-  StrikeMode,
-  ValidationIssue
-} from './core/types';
-import { formatYamlSyntaxErrorAr, validateScenario } from './validation/validator';
+import { StudioEngine, TICK_RATE } from './engine/engine';
+import { StrikeLockPhase } from './core/targetingLock';
+import { ActorPack, Faction, MapPack, Point, ValidationIssue } from './core/types';
 import { CountryRegistry } from './countries/countryRegistry';
-import { buildRegionColorMap } from './countries/countrySelection';
-import { buildCountryProvincesMapPack } from './maps/worldGeoEngine';
 import { PackRegistry } from './packs/packRegistry';
 import { SoundSynth } from './renderer/soundSynth';
 import { StudioRenderer } from './renderer/studioRenderer';
@@ -51,30 +13,12 @@ import { SpecModal } from './modals/SpecModal';
 import { ToolsDock } from './panels/ToolsDock';
 import { UnitActionBar } from './panels/UnitActionBar';
 import { UnitsDock } from './panels/UnitsDock';
-
-interface ArmedAbilityState {
-  entityId: string;
-  mode: StrikeMode;
-  radius: number;
-  color: string;
-  label: string;
-  shortLabel: string;
-}
-
-const FACTION_HEX: Record<Faction, string> = {
-  blue: '#38bdf8',
-  red: '#ef4444',
-  neutral: '#f59e0b'
-};
-
-const DEFAULT_EMPTY_YAML = `meta:
-  title: "سيناريو عالمي جديد"
-  map: world_live
-timeline:
-  - at: "0s"
-    caption:
-      text: "بداية العرض التكتيكي"
-`;
+import { StudioBottomOverlays } from './app/StudioBottomOverlays';
+import { StudioTopHud } from './app/StudioTopHud';
+import { ArmedAbilityState, DEFAULT_EMPTY_YAML, INITIAL_HUD_STATE } from './app/studioAppTypes';
+import { createScenarioActionHandlers } from './app/useScenarioActions';
+import { useStudioEngineController } from './app/useStudioEngineController';
+import { toggleStudioVideoRecord } from './app/useVideoRecording';
 
 export default function App() {
   const registryRef = useRef<PackRegistry | null>(null);
@@ -93,7 +37,6 @@ export default function App() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const actionRecorderRef = useRef<ActionRecorder>(new ActionRecorder());
 
-  // Refs synced for 60fps loop and Pixi callbacks
   const playingRef = useRef(true);
   const speedRef = useRef(1);
   const activeToolRef = useRef<string>('select');
@@ -157,22 +100,11 @@ export default function App() {
     h: typeof window !== 'undefined' ? window.innerHeight : 720
   }));
 
-  // Live ActionRecorder UI state
   const [actionRecording, setActionRecording] = useState(false);
   const [recStats, setRecStats] = useState({ clockSec: 0, stepCount: 0 });
   const [pendingSaveMode, setPendingSaveMode] = useState<'recorded' | 'code' | null>(null);
   const [saveDraftTitle, setSaveDraftTitle] = useState('');
-
-  // Throttled HUD & scrubber readouts
-  const [hudState, setHudState] = useState({
-    simTimeSec: 0,
-    tick: 0,
-    maxTicks: Math.round(20 * TICK_RATE),
-    caption: '',
-    entityCount: 0,
-    executedSteps: 0,
-    totalSteps: 0
-  });
+  const [hudState, setHudState] = useState(INITIAL_HUD_STATE);
 
   useEffect(() => {
     playingRef.current = playing;
@@ -265,7 +197,7 @@ export default function App() {
     const hasSteps = (eng.scenario.timeline?.length ?? 0) > 0;
     const maxTicks = hasSteps ? Math.max(TICK_RATE * 2, Math.ceil(eng.estimateDurationSec() * TICK_RATE)) : Math.round(20 * TICK_RATE);
     setHudState({
-      simTimeSec: eng.tick * DT,
+      simTimeSec: eng.tick / TICK_RATE,
       tick: eng.tick,
       maxTicks,
       caption: eng.caption,
@@ -275,486 +207,57 @@ export default function App() {
     });
   }, []);
 
-  const attachEngineListeners = useCallback(
-    (eng: StudioEngine) => {
-      if (soundRef.current) {
-        eng.onSound((id) => soundRef.current?.play(id));
-      }
-      eng.onMoveBlocked((ent) => {
-        showToast(
-          ent.domain === 'land'
-            ? '⚠️ لا يوجد مسار بري متصل — الدبابات والمشاة لا تعبر البحر!'
-            : '⚠️ لا يوجد مسار بحري متصل — السفن لا تعبر اليابسة!'
-        );
-      });
-    },
-    [showToast]
-  );
-
-  const cancelActiveActionRecording = useCallback(() => {
-    if (actionRecorderRef.current.isRecording) {
-      actionRecorderRef.current.stop();
-      setActionRecording(false);
-    }
-    pendingActionModeRef.current = 'none';
-    arrowStartPtRef.current = null;
-  }, []);
-
-  const openEmptyMapBoard = useCallback(
-    async (mapId: string, preserveRecording = false) => {
-      const reg = registryRef.current!;
-      const map = reg.maps[mapId] ?? reg.maps.world_live;
-      if (!map) return;
-
-      if (!preserveRecording) cancelActiveActionRecording();
-      setIssues([]);
-      setYamlSyntaxError(null);
-      setStatusNotice(null);
-      armedAbilityRef.current = null;
-      setArmedAbility(null);
-
-      const blankScenario: ScenarioFile = {
-        meta: { title: map.title, map: map.id },
-        timeline: []
-      };
-      const engine = new StudioEngine(map, reg.actors, blankScenario);
-      attachEngineListeners(engine);
-      engineRef.current = engine;
-      accumulatorRef.current = 0;
-      lastAlphaRef.current = 1;
-      setActiveMap(map);
-      setSelectedEntityId(null);
-      setSelectedRegionId(null);
-      sandboxCounterRef.current = 1;
-
-      if (rendererRef.current) {
-        await rendererRef.current.loadEngineAssets(engine);
-        rendererRef.current.setCountryColorMap(buildRegionColorMap(map, countryRegistryRef.current!));
-      }
-
-      syncHudFromEngine(engine);
-      await studioDb.setSetting('lastMapId', map.id);
-      await studioDb.setSetting('lastScenarioId', '');
-    },
-    [attachEngineListeners, cancelActiveActionRecording, syncHudFromEngine]
-  );
-
-  const loadScenario = useCallback(
-    async (rawYaml: string, noticeText: string | null = null, savedScenarioId?: string): Promise<boolean> => {
-      const reg = registryRef.current!;
-      cancelActiveActionRecording();
-      setIssues([]);
-      setYamlSyntaxError(null);
-      setStatusNotice(null);
-      armedAbilityRef.current = null;
-      setArmedAbility(null);
-
-      try {
-        const parsed = yaml.load(rawYaml) as ScenarioFile;
-        const map = reg.maps[parsed?.meta?.map];
-        const foundIssues = validateScenario(parsed, map, reg.actors);
-        if (foundIssues.length > 0) {
-          setPlaying(false);
-          setIssues(foundIssues);
-          return false;
-        }
-
-        const engine = new StudioEngine(map, reg.actors, parsed);
-        attachEngineListeners(engine);
-        engineRef.current = engine;
-        accumulatorRef.current = 0;
-        lastAlphaRef.current = 1;
-        setActiveMap(map);
-        setSelectedEntityId(null);
-        setSelectedRegionId(null);
-
-        if (rendererRef.current) {
-          await rendererRef.current.loadEngineAssets(engine);
-          rendererRef.current.setCountryColorMap(buildRegionColorMap(map, countryRegistryRef.current!));
-        }
-
-        syncHudFromEngine(engine);
-        await studioDb.setSetting('lastMapId', map.id);
-        if (savedScenarioId !== undefined) {
-          await studioDb.setSetting('lastScenarioId', savedScenarioId);
-        }
-        if (noticeText) {
-          setStatusNotice(noticeText);
-        }
-        return true;
-      } catch (err) {
-        setPlaying(false);
-        setYamlSyntaxError(formatYamlSyntaxErrorAr(err));
-        return false;
-      }
-    },
-    [attachEngineListeners, cancelActiveActionRecording, syncHudFromEngine]
-  );
-
-  const enterCountryProvinces = useCallback(
-    async (regionId: string) => {
-      const eng = engineRef.current;
-      const renderer = rendererRef.current;
-      const reg = registryRef.current!;
-      const regMap = eng?.map.regions?.[regionId];
-      if (!eng || !renderer || !regMap?.iso3) return;
-
-      const title = regMap.nameAr ? `${regMap.nameAr} (${regMap.name})` : regMap.name;
-      setGeoLoadingMsg(`⏳ جاري تحميل محافظات ${title}...`);
-      renderer.focusRegion(eng, regionId);
-
-      try {
-        const cachedId = `country_${regMap.iso3.toLowerCase()}`;
-        let countryMap = reg.maps[cachedId];
-        if (!countryMap) {
-          countryMap = await buildCountryProvincesMapPack(regMap.iso3, title);
-          await reg.saveCustomMap(countryMap);
-        }
-        setPackVersion((v) => v + 1);
-        setPlaying(true);
-        await openEmptyMapBoard(countryMap.id);
-        showToast(`خريطة محافظات ${title}`);
-      } catch (err) {
-        showToast((err as Error).message);
-      } finally {
-        setGeoLoadingMsg(null);
-      }
-    },
-    [openEmptyMapBoard, showToast]
-  );
-
-  // Initialize PackRegistry, PixiJS StudioRenderer, & decoupled 60 TPS / 120+ FPS render loop once
-  useEffect(() => {
-    const host = stageHostRef.current;
-    if (!host) return;
-
-    let cancelled = false;
-    let rafId = 0;
-
-    const sound = new SoundSynth();
-    soundRef.current = sound;
-
-    const renderer = new StudioRenderer();
-    rendererRef.current = renderer;
-
-    renderer.onSelectionChange = (id) => {
-      setSelectedEntityId(id);
-      const ent = id ? engineRef.current?.entities.get(id) : undefined;
-      setSelectedEntityScale(ent?.scaleMul ?? 1.0);
-    };
-    renderer.onRegionDoubleClick = (id) => {
-      if (engineRef.current?.map.geoLevel === 'world') {
-        void enterCountryProvinces(id);
-      }
-    };
-
-    renderer.onStrikeLockChange = (phase) => {
-      setStrikeLockPhase(phase);
-      if (phase === 'locking') {
-        sound.playLockTone(false);
-      } else if (phase === 'locked') {
-        sound.playLockTone(true);
-      }
-    };
-
-    renderer.onCinematicFocusChange = (kind, labelAr) => {
-      setCinematicFocus({ kind, labelAr });
-    };
-
-    renderer.onCameraAnglesChange = (angles) => {
-      setCameraAngles(angles);
-    };
-
-    renderer.onMapClick = (pt: Point, hitId: string | null, shiftKey = false, lockPhase: StrikeLockPhase = 'idle') => {
-      const eng = engineRef.current;
-      const reg = registryRef.current;
-      const rec = actionRecorderRef.current;
-      if (!eng || !reg) return;
-
-      // 1. وضع التسجيل اليدوي للأسهم أو الموجات
-      if (pendingActionModeRef.current === 'arrow_start') {
-        arrowStartPtRef.current = pt;
-        pendingActionModeRef.current = 'arrow_end';
-        showToast('اضغط نقطة نهاية السهم على الخريطة');
-        return;
-      }
-      if (pendingActionModeRef.current === 'arrow_end' && arrowStartPtRef.current) {
-        const id = `arr_${Date.now()}`;
-        eng.arrows.set(id, {
-          id,
-          from: arrowStartPtRef.current,
-          to: pt,
-          color: '#f59e0b',
-          dashed: true,
-          progress: 0,
-          prevProgress: 0,
-          rate: 0.8
-        });
-        rec.recordArrow(id, arrowStartPtRef.current, pt, '#f59e0b', true);
-        pendingActionModeRef.current = 'none';
-        arrowStartPtRef.current = null;
-        return;
-      }
-      if (pendingActionModeRef.current === 'pulse') {
-        eng.pulses.push({ x: pt.x, y: pt.y, color: '#ef4444', maxRadius: 70, progress: 0, prevProgress: 0 });
-        rec.recordPulse(pt, '#ef4444');
-        pendingActionModeRef.current = 'none';
-        return;
-      }
-
-      // 2. وضع الإطلاق المستمر المسلّح لآلية محددة (يبقى مفعلاً عبر ضربات متتالية حتى يوقفه المستخدم)
-      const armed = armedAbilityRef.current;
-      if (armed) {
-        const attacker = eng.entities.get(armed.entityId);
-        if (!attacker) {
-          armedAbilityRef.current = null;
-          if (rendererRef.current) rendererRef.current.strikeModeConfig = null;
-          setArmedAbility(null);
-          setStrikeLockPhase('idle');
-        } else {
-          const strikeRadius = computeLockedStrikeRadius(armed.radius, lockPhase);
-          const strikeColor = lockPhase === 'locked' ? '#ff1e42' : armed.color;
-          eng.dispatchOrder({
-            type: 'strike',
-            attackerId: attacker.id,
-            mode: armed.mode,
-            to: pt,
-            radius: strikeRadius,
-            color: strikeColor,
-            faction: attacker.faction
-          });
-          eng.flushOrders();
-          rec.recordStrike(armed.mode, pt, attacker.id, undefined, strikeRadius, strikeColor);
-          setStrikeLockPhase('idle');
-          syncHudFromEngine(eng);
-          return;
-        }
-      }
-
-      // 3. اختصار Shift+Click لإطلاق قدرة الوحدة المحددة بسرعة
-      if (shiftKey && renderer.selectedEntityId) {
-        const selected = eng.entities.get(renderer.selectedEntityId);
-        const actor = selected ? reg.actors[selected.actorId] : undefined;
-        if (selected && actor?.ability) {
-          eng.dispatchOrder({
-            type: 'strike',
-            attackerId: selected.id,
-            mode: actor.ability.mode,
-            to: pt,
-            radius: actor.ability.radius,
-            color: actor.ability.accentColor,
-            faction: selected.faction
-          });
-          eng.flushOrders();
-          rec.recordStrike(
-            actor.ability.mode,
-            pt,
-            selected.id,
-            undefined,
-            actor.ability.radius,
-            actor.ability.accentColor
-          );
-          syncHudFromEngine(eng);
-          return;
-        }
-      }
-
-      // 4. أداة التحديد/التحريك أو إنزال آلية/منشأة
-      const tool = activeToolRef.current;
-      if (tool === 'select') {
-        if (hitId) {
-          renderer.selectedEntityId = hitId;
-          setSelectedEntityId(hitId);
-          setSelectedEntityScale(eng.entities.get(hitId)?.scaleMul ?? 1.0);
-        } else if (renderer.selectedEntityId) {
-          const sel = eng.entities.get(renderer.selectedEntityId);
-          if (sel && sel.kind !== 'building') {
-            eng.dispatchOrder({ type: 'move', entityId: renderer.selectedEntityId, to: pt });
-            eng.flushOrders();
-            rec.recordMove(renderer.selectedEntityId, pt);
-            syncHudFromEngine(eng);
-          } else {
-            renderer.selectedEntityId = null;
-            setSelectedEntityId(null);
-          }
-        } else {
-          const regionHit = eng.map.hitTest?.(pt) ?? null;
-          renderer.selectedRegionId = regionHit;
-          setSelectedRegionId(regionHit);
-        }
-      } else {
-        const actor = reg.actors[tool];
-        if (!actor) return;
-        if (!isPointNearWalkable(eng.map, pt, actor.domain, 2)) {
-          showToast(
-            actor.domain === 'land'
-              ? '⚠️ لا يمكن وضع أو بناء وحدة برية في وسط البحر!'
-              : '⚠️ لا يمكن وضع وحدة بحرية فوق اليابسة!'
-          );
-          return;
-        }
-        const id = `sb_${sandboxCounterRef.current++}`;
-        const faction = sandboxFactionRef.current;
-        const spawnScale = toolScalesRef.current[actor.id] ?? 1.0;
-        if (actor.kind === 'building') {
-          eng.dispatchOrder({ type: 'construct', id, actorId: actor.id, at: pt, faction, durationSec: 1.5, scale: spawnScale });
-          rec.recordConstruct(id, actor.id, pt, faction, 1.5, spawnScale);
-          renderer.selectedEntityId = id;
-          setSelectedEntityId(id);
-          setSelectedEntityScale(spawnScale);
-          setActiveTool('select');
-        } else {
-          eng.dispatchOrder({ type: 'spawn', id, actorId: actor.id, at: pt, faction, scale: spawnScale });
-          rec.recordSpawn(id, actor.id, pt, faction, spawnScale);
-          renderer.selectedEntityId = id;
-          setSelectedEntityId(id);
-          setSelectedEntityScale(spawnScale);
-          setActiveTool('select');
-        }
-        eng.flushOrders();
-        syncHudFromEngine(eng);
-      }
-    };
-
-    const boot = async () => {
-      const reg = registryRef.current!;
-      const countryReg = countryRegistryRef.current!;
-      await Promise.all([reg.init([]), countryReg.init()]);
-      await renderer.init(host);
-      if (cancelled) return;
-
-      const savedScale = await studioDb.getSetting<number>('unitScale');
-      if (savedScale && Number.isFinite(savedScale)) {
-        renderer.userUnitScale = savedScale;
-        setUnitScale(savedScale);
-      }
-
-      const savedCinCam = await studioDb.getSetting<boolean>('cinematicCamera');
-      if (typeof savedCinCam === 'boolean') {
-        renderer.cinematicCameraEnabled = savedCinCam;
-        setCinematicCamera(savedCinCam);
-      }
-
-      const savedVideoFps = await studioDb.getSetting<number>('videoFps');
-      if (savedVideoFps === 30 || savedVideoFps === 60 || savedVideoFps === 120) {
-        setVideoFps(savedVideoFps);
-      }
-
-      const lastScenId = await studioDb.getSetting<string>('lastScenarioId');
-      setPackVersion((v) => v + 1);
-
-      const userScen = lastScenId ? reg.scenarios.find((s) => s.id === lastScenId) : undefined;
-      if (userScen && reg.maps[(() => { try { return (yaml.load(userScen.yaml) as ScenarioFile)?.meta?.map; } catch { return ''; } })()]) {
-        setSelectedScenarioId(userScen.id);
-        setYamlText(userScen.yaml);
-        await loadScenario(userScen.yaml, null, userScen.id);
-      } else {
-        await openEmptyMapBoard('world_live');
-      }
-
-      accumulatorRef.current = 0;
-      lastAlphaRef.current = 1;
-      let lastTime = performance.now();
-      let lastHudTenths = -1;
-      let lastHudCaption = '';
-      let lastHudEntities = -1;
-      let lastHudSteps = -1;
-      let lastRecTenths = -1;
-      let lastRecCount = -1;
-
-      const loop = (now: number) => {
-        if (cancelled) return;
-        const frameDt = computeFrameDt(now, lastTime);
-        lastTime = now;
-
-        const eng = engineRef.current;
-        let alpha = lastAlphaRef.current;
-        if (eng && playingRef.current) {
-          // محرك المحاكاة ثابت عند 60 TPS بينما يتم حساب معامل التنعيم alpha لكل إطار عرض حتى 120Hz+
-          const stepped = stepFixedAccumulator(accumulatorRef.current, frameDt, DT, speedRef.current, 6);
-          accumulatorRef.current = stepped.nextAccumulator;
-          for (let s = 0; s < stepped.steps; s++) {
-            eng.step();
-          }
-          alpha = stepped.alpha;
-          lastAlphaRef.current = alpha;
-        }
-
-        // إلغاء التسليح تلقائيًا إذا تم تدمير الآلية المسلحة أثناء التشغيل
-        if (eng && armedAbilityRef.current && !eng.entities.has(armedAbilityRef.current.entityId)) {
-          armedAbilityRef.current = null;
-          setArmedAbility(null);
-        }
-
-        const rec = actionRecorderRef.current;
-        if (rec.isRecording) {
-          const recSec = rec.elapsedSec();
-          const recTenths = Math.floor(recSec * 10);
-          if (recTenths !== lastRecTenths || rec.steps.length !== lastRecCount) {
-            lastRecTenths = recTenths;
-            lastRecCount = rec.steps.length;
-            setRecStats({ clockSec: recSec, stepCount: rec.steps.length });
-          }
-        }
-
-        if (eng) {
-          renderer.render(eng, alpha, now / 1000, frameDt, playingRef.current);
-
-          const simSec = eng.tick * DT;
-          const tenths = Math.floor(simSec * 10);
-          const entCount = eng.entities.size;
-          const execSteps = eng.executedStepCount;
-
-          if (
-            tenths !== lastHudTenths ||
-            eng.caption !== lastHudCaption ||
-            entCount !== lastHudEntities ||
-            execSteps !== lastHudSteps
-          ) {
-            lastHudTenths = tenths;
-            lastHudCaption = eng.caption;
-            lastHudEntities = entCount;
-            lastHudSteps = execSteps;
-            const hasSteps = (eng.scenario.timeline?.length ?? 0) > 0;
-            const maxTicks = hasSteps ? Math.max(TICK_RATE * 2, Math.ceil(eng.estimateDurationSec() * TICK_RATE)) : Math.round(20 * TICK_RATE);
-            setHudState({
-              simTimeSec: simSec,
-              tick: eng.tick,
-              maxTicks,
-              caption: eng.caption,
-              entityCount: entCount,
-              executedSteps: execSteps,
-              totalSteps: eng.totalStepCount
-            });
-          }
-        }
-
-        rafId = requestAnimationFrame(loop);
-      };
-
-      rafId = requestAnimationFrame(loop);
-    };
-
-    void boot();
-
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(rafId);
-      if (recorderRef.current && recorderRef.current.state === 'recording') {
-        recorderRef.current.stop();
-      }
-      if (toastTimerRef.current !== null) {
-        window.clearTimeout(toastTimerRef.current);
-      }
-      renderer.destroy();
-    };
-  }, [enterCountryProvinces, loadScenario, openEmptyMapBoard, showToast, syncHudFromEngine]);
+  const { openEmptyMapBoard, loadScenario, enterCountryProvinces } = useStudioEngineController({
+    stageHostRef,
+    registryRef,
+    countryRegistryRef,
+    rendererRef,
+    engineRef,
+    soundRef,
+    recorderRef,
+    actionRecorderRef,
+    playingRef,
+    speedRef,
+    activeToolRef,
+    sandboxFactionRef,
+    sandboxCounterRef,
+    toolScalesRef,
+    armedAbilityRef,
+    pendingActionModeRef,
+    arrowStartPtRef,
+    toastTimerRef,
+    accumulatorRef,
+    lastAlphaRef,
+    showToast,
+    syncHudFromEngine,
+    setPackVersion,
+    setSelectedScenarioId,
+    setYamlText,
+    setPlaying,
+    setUnitScale,
+    setCinematicCamera,
+    setVideoFps,
+    setActiveTool,
+    setSelectedEntityId,
+    setSelectedEntityScale,
+    setArmedAbility,
+    setStrikeLockPhase,
+    setIssues,
+    setYamlSyntaxError,
+    setStatusNotice,
+    setCinematicFocus,
+    setCameraAngles,
+    setActiveMap,
+    setSelectedRegionId,
+    setGeoLoadingMsg,
+    setActionRecording,
+    setRecStats,
+    setHudState
+  });
 
   const handleChangeUnitScale = async (nextScale: number) => {
     setUnitScale(nextScale);
-    if (rendererRef.current) {
-      rendererRef.current.userUnitScale = nextScale;
-    }
+    if (rendererRef.current) rendererRef.current.userUnitScale = nextScale;
     await studioDb.setSetting('unitScale', nextScale);
   };
 
@@ -793,121 +296,31 @@ export default function App() {
     syncHudFromEngine(eng);
   };
 
-  // Live ActionRecorder handlers
-  const handleStartActionRecord = async () => {
-    const eng = engineRef.current;
-    const renderer = rendererRef.current;
-    if (!eng || !renderer) return;
-    await openEmptyMapBoard(eng.map.id, true);
-    setPlaying(true);
-    actionRecorderRef.current.start(eng.map.id, renderer.getCameraState());
-    setPendingSaveMode(null);
-    setActionRecording(true);
-    setRecStats({ clockSec: 0, stepCount: actionRecorderRef.current.steps.length });
-  };
-
-  const handleRequestStopActionRecord = () => {
-    actionRecorderRef.current.stop();
-    setActionRecording(false);
-    pendingActionModeRef.current = 'none';
-    setSaveDraftTitle(`سيناريو مسجّل (${activeMap.title})`);
-    setPendingSaveMode('recorded');
-  };
-
-  const handleRequestSaveYaml = async () => {
-    const ok = await loadScenario(yamlText);
-    if (!ok) return;
-    const parsed = yaml.load(yamlText) as ScenarioFile;
-    setSaveDraftTitle(parsed?.meta?.title || `سيناريو (${activeMap.title})`);
-    setPendingSaveMode('code');
-  };
-
-  const handleConfirmSaveScenario = async () => {
-    const reg = registryRef.current!;
-    const title = saveDraftTitle.trim() || `سيناريو (${activeMap.title})`;
-    if (pendingSaveMode === 'recorded') {
-      const generatedYaml = actionRecorderRef.current.toYaml(title);
-      setYamlText(generatedYaml);
-      const rec: SavedScenarioRecord = {
-        id: `rec_${Date.now()}`,
-        title,
-        mapId: actionRecorderRef.current.mapId || activeMap.id,
-        yaml: generatedYaml,
-        source: 'recorded',
-        updatedAt: Date.now()
-      };
-      await reg.saveScenarioRecord(rec);
-      setSelectedScenarioId(rec.id);
-      setPackVersion((v) => v + 1);
-      setPendingSaveMode(null);
-      setPlaying(true);
-      await loadScenario(generatedYaml, `تم حفظ "${title}" (${actionRecorderRef.current.steps.length} خطوة)`, rec.id);
-    } else if (pendingSaveMode === 'code') {
-      const parsed = yaml.load(yamlText) as ScenarioFile;
-      const rec: SavedScenarioRecord = {
-        id: `scen_${Date.now()}`,
-        title,
-        mapId: parsed?.meta?.map ?? activeMap.id,
-        yaml: yamlText,
-        source: 'code',
-        updatedAt: Date.now()
-      };
-      await reg.saveScenarioRecord(rec);
-      setSelectedScenarioId(rec.id);
-      setPackVersion((v) => v + 1);
-      setPendingSaveMode(null);
-      await studioDb.setSetting('lastScenarioId', rec.id);
-      setStatusNotice(`تم حفظ "${title}"`);
-    }
-  };
-
-  const handleLoadSelectedScenario = async () => {
-    const rec = registryRef.current!.scenarios.find((s) => s.id === selectedScenarioId);
-    if (!rec) return;
-    setYamlText(rec.yaml);
-    setPlaying(true);
-    await loadScenario(rec.yaml, `تم تشغيل "${rec.title}"`, rec.id);
-  };
-
-  const handleDeleteSelectedScenario = async () => {
-    if (!selectedScenarioId) return;
-    const deletedId = selectedScenarioId;
-    const reg = registryRef.current!;
-    await reg.deleteScenarioRecord(deletedId);
-    setPackVersion((v) => v + 1);
-    const nextId = reg.scenarios[0]?.id ?? '';
-    setSelectedScenarioId(nextId);
-    const storedLastId = await studioDb.getSetting<string>('lastScenarioId');
-    if (storedLastId === deletedId) {
-      await studioDb.setSetting('lastScenarioId', nextId);
-    }
-    setStatusNotice('تم حذف السيناريو');
-  };
-
-  const handleRecCamera = () => {
-    const renderer = rendererRef.current;
-    if (!renderer) return;
-    const c = renderer.getCameraState();
-    actionRecorderRef.current.recordCamera(c.x, c.y, c.zoom);
-    showToast('📷 تم تسجيل لقطة الكاميرا');
-  };
-
-  const handleRecCaptionSubmit = (text: string) => {
-    if (!engineRef.current) return;
-    engineRef.current.caption = text;
-    actionRecorderRef.current.recordCaption(text);
-    syncHudFromEngine(engineRef.current);
-  };
-
-  const handleRecArrow = () => {
-    pendingActionModeRef.current = 'arrow_start';
-    showToast('اضغط نقطة بداية السهم ثم نقطة نهايته');
-  };
-
-  const handleRecPulse = () => {
-    pendingActionModeRef.current = 'pulse';
-    showToast('اضغط على الخريطة لوضع موجة تنبيه');
-  };
+  const scenarioActions = createScenarioActionHandlers({
+    activeMap,
+    yamlText,
+    selectedScenarioId,
+    pendingSaveMode,
+    saveDraftTitle,
+    registryRef,
+    engineRef,
+    rendererRef,
+    actionRecorderRef,
+    pendingActionModeRef,
+    openEmptyMapBoard,
+    loadScenario,
+    syncHudFromEngine,
+    showToast,
+    setPlaying,
+    setYamlText,
+    setPendingSaveMode,
+    setActionRecording,
+    setRecStats,
+    setSaveDraftTitle,
+    setSelectedScenarioId,
+    setPackVersion,
+    setStatusNotice
+  });
 
   const handleRestart = () => {
     const eng = engineRef.current;
@@ -935,8 +348,7 @@ export default function App() {
     rendererRef.current?.syncCameraImmediate(eng);
     const selId = rendererRef.current?.selectedEntityId;
     if (selId) {
-      const selEnt = eng.entities.get(selId);
-      setSelectedEntityScale(selEnt?.scaleMul ?? 1.0);
+      setSelectedEntityScale(eng.entities.get(selId)?.scaleMul ?? 1.0);
     }
     syncHudFromEngine(eng);
   };
@@ -960,9 +372,7 @@ export default function App() {
         rendererRef.current.cinematicCameraEnabled = next;
         if (next) rendererRef.current.resumeCinematicDirector();
       }
-      if (!next) {
-        setCinematicFocus({ kind: 'none', labelAr: '' });
-      }
+      if (!next) setCinematicFocus({ kind: 'none', labelAr: '' });
       void studioDb.setSetting('cinematicCamera', next);
       showToast(next ? '🎬 تم تفعيل الكاميرا السينمائية الآلية مع الأحداث' : 'تم إيقاف الكاميرا السينمائية الآلية');
       return next;
@@ -991,61 +401,21 @@ export default function App() {
   };
 
   const handleToggleVideoRecord = () => {
-    if (recording) {
-      recorderRef.current?.stop();
-      setRecording(false);
-      return;
-    }
-    const canvas = rendererRef.current?.app?.canvas;
-    if (!canvas || typeof MediaRecorder === 'undefined') {
-      showToast('تصوير WebM غير مدعوم في هذا المتصفح');
-      return;
-    }
-
-    if (rendererRef.current) rendererRef.current.hideUIHelpers = true;
-    const videoStream = canvas.captureStream(videoFps);
-    const tracks: MediaStreamTrack[] = [...videoStream.getVideoTracks()];
-    const audioStream = soundRef.current?.getAudioStream();
-    if (audioStream) {
-      audioStream.getAudioTracks().forEach((t) => tracks.push(t));
-    }
-    const combinedStream = new MediaStream(tracks);
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
-    const targetBitrate = videoFps === 120 ? 16_000_000 : videoFps === 60 ? 10_000_000 : 6_000_000;
-    let recorder: MediaRecorder;
-    try {
-      recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: targetBitrate });
-    } catch {
-      recorder = new MediaRecorder(combinedStream, { mimeType });
-    }
-    const chunks: BlobPart[] = [];
-
-    recorder.ondataavailable = (ev) => {
-      if (ev.data.size > 0) chunks.push(ev.data);
-    };
-    recorder.onstop = () => {
-      if (rendererRef.current) rendererRef.current.hideUIHelpers = false;
-      const blob = new Blob(chunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `scenario-${videoFps}fps-${Date.now()}.webm`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
-      showToast(`✅ تم حفظ الفيديو (${videoFps} FPS)`);
-    };
-
-    recorderRef.current = recorder;
-    recorder.start(250);
-    setRecording(true);
-    setPlaying(true);
-    showToast(`🔴 بدأ تسجيل الفيديو (${videoFps} FPS)`);
+    toggleStudioVideoRecord({
+      recording,
+      videoFps,
+      recorderRef,
+      rendererRef,
+      soundRef,
+      setRecording,
+      setPlaying,
+      showToast
+    });
   };
 
   const reg = registryRef.current!;
   const actorsList: ActorPack[] = Object.values(reg.actors);
   const selectedRegionObj = selectedRegionId ? activeMap.regions?.[selectedRegionId] : undefined;
-
   const selectedEntity = selectedEntityId ? engineRef.current?.entities.get(selectedEntityId) : undefined;
   const selectedActor = selectedEntity ? reg.actors[selectedEntity.actorId] : undefined;
   const placementActor = activeTool !== 'select' ? reg.actors[activeTool] : undefined;
@@ -1055,7 +425,6 @@ export default function App() {
       dir="rtl"
       className="fixed inset-0 h-[100dvh] w-screen bg-[#090f1a] text-slate-100 overflow-hidden select-none"
     >
-      {/* المسرح التفاعلي بكامل حجم الشاشة */}
       <main
         className="relative w-full h-full overflow-hidden"
         onDragOver={(e) => {
@@ -1073,7 +442,6 @@ export default function App() {
           aria-label="مسرح الخريطة التفاعلية"
         />
 
-        {/* إيحاء الإطار السينمائي العلوي والسفلي دون حجب الأزرار */}
         {cinematicCamera && (
           <div
             aria-hidden="true"
@@ -1086,332 +454,53 @@ export default function App() {
           </div>
         )}
 
-        {/* الشريط العلوي القابل للطي فوق الخريطة (خالي تمامًا من النصوص الإرشادية وملفات الدول) */}
-        <div className="pointer-events-none fixed top-2 left-2 right-2 z-30 flex flex-col items-center gap-1.5">
-          <div className="pointer-events-auto flex items-center gap-1.5 bg-slate-950/90 border border-slate-700/90 rounded-xl px-2 py-1 shadow-xl backdrop-blur-md max-w-full">
-            <button
-              type="button"
-              id="topHudCollapseBtn"
-              aria-expanded={topHudExpanded}
-              onClick={() =>
-                setTopHudExpanded((v) => {
-                  const next = !v;
-                  if (next) {
-                    setAnglesOpen(false);
-                    if (viewportSize.w < 640) {
-                      setUnitsOpen(false);
-                      setToolsOpen(false);
-                    }
-                  }
-                  return next;
-                })
+        <StudioTopHud
+          activeMap={activeMap}
+          topHudExpanded={topHudExpanded}
+          onToggleTopHud={() =>
+            setTopHudExpanded((v) => {
+              const next = !v;
+              if (next) {
+                setAnglesOpen(false);
+                if (viewportSize.w < 640) {
+                  setUnitsOpen(false);
+                  setToolsOpen(false);
+                }
               }
-              className="min-h-[36px] px-2 rounded-lg flex items-center gap-1.5 text-xs font-semibold text-sky-300 hover:bg-slate-900 whitespace-nowrap"
-            >
-              <Globe2 className="w-4 h-4 shrink-0" />
-              <span className="truncate max-w-[115px] sm:max-w-[240px]">
-                {activeMap.geoLevel === 'country'
-                  ? activeMap.title.replace(' — المحافظات', '')
-                  : 'خريطة العالم'}
-              </span>
-              {topHudExpanded ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
-            </button>
-
-            <button
-              type="button"
-              id="cinematicCamBtn"
-              aria-pressed={cinematicCamera}
-              aria-label="كاميرا سينمائية آلية مع الأحداث"
-              title="كاميرا سينمائية آلية مع الأحداث"
-              onClick={handleToggleCinematicCamera}
-              className={`min-h-[34px] px-2 rounded-lg text-xs font-semibold border flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors ${
-                cinematicCamera
-                  ? 'bg-amber-600/95 hover:bg-amber-500 border-amber-300 text-white shadow-md shadow-amber-950/50'
-                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300'
-              }`}
-            >
-              <Clapperboard className={`w-3.5 h-3.5 shrink-0 ${cinematicCamera ? 'text-white' : 'text-amber-400'}`} />
-              <span className="hidden sm:inline">سينمائية</span>
-            </button>
-
-            <button
-              type="button"
-              id="cameraAngleBtn"
-              aria-expanded={anglesOpen}
-              aria-label="زوايا الكاميرا والمنظور"
-              title="زوايا الكاميرا والمنظور"
-              onClick={() =>
-                setAnglesOpen((v) => {
-                  const next = !v;
-                  if (next) {
-                    setTopHudExpanded(false);
-                    if (viewportSize.w < 640) {
-                      setUnitsOpen(false);
-                      setToolsOpen(false);
-                    }
-                  }
-                  return next;
-                })
+              return next;
+            })
+          }
+          cinematicCamera={cinematicCamera}
+          onToggleCinematicCamera={handleToggleCinematicCamera}
+          cinematicFocus={cinematicFocus}
+          anglesOpen={anglesOpen}
+          onToggleAngles={() =>
+            setAnglesOpen((v) => {
+              const next = !v;
+              if (next) {
+                setTopHudExpanded(false);
+                if (viewportSize.w < 640) {
+                  setUnitsOpen(false);
+                  setToolsOpen(false);
+                }
               }
-              className={`min-h-[34px] px-2 rounded-lg text-xs font-semibold border flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-colors ${
-                anglesOpen || Math.abs(cameraAngles.bearingDeg) >= 1 || cameraAngles.tiltDeg >= 1
-                  ? 'bg-sky-600/95 hover:bg-sky-500 border-sky-300 text-white shadow-md shadow-sky-950/50'
-                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300'
-              }`}
-            >
-              <Compass className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden sm:inline">الزاوية</span>
-              {(Math.abs(cameraAngles.bearingDeg) >= 1 || cameraAngles.tiltDeg >= 1) && (
-                <span className="font-mono tabular-nums text-[10px] opacity-90">
-                  {Math.round(cameraAngles.tiltDeg)}°
-                </span>
-              )}
-            </button>
+              return next;
+            })
+          }
+          onCloseAngles={() => setAnglesOpen(false)}
+          cameraAngles={cameraAngles}
+          selectedRegionId={selectedRegionId}
+          selectedRegionObj={selectedRegionObj}
+          onEnterCountryProvinces={(id) => void enterCountryProvinces(id)}
+          onBackToWorld={() => void openEmptyMapBoard('world_live')}
+          hudState={hudState}
+          showAnchors={showAnchors}
+          onToggleAnchors={handleToggleAnchors}
+          geoLoadingMsg={geoLoadingMsg}
+          toastMsg={toastMsg}
+          rendererRef={rendererRef}
+        />
 
-            {activeMap.geoLevel === 'world' && selectedRegionId && selectedRegionObj?.iso3 && (
-              <button
-                type="button"
-                id="drillDownBtn"
-                onClick={() => void enterCountryProvinces(selectedRegionId)}
-                className="min-h-[34px] px-2.5 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-500 text-white border border-sky-400 whitespace-nowrap shrink-0"
-              >
-                محافظات {selectedRegionObj.nameAr ?? selectedRegionObj.name} ↗
-              </button>
-            )}
-
-            {activeMap.geoLevel === 'country' && (
-              <button
-                type="button"
-                id="backWorldBtn"
-                onClick={() => void openEmptyMapBoard('world_live')}
-                className="min-h-[34px] px-2.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-600 whitespace-nowrap shrink-0"
-              >
-                ↩ خريطة العالم
-              </button>
-            )}
-          </div>
-
-          {cinematicCamera && (
-            <div
-              id="cinematicStatusPill"
-              className={`pointer-events-none max-w-[calc(100vw-116px)] sm:max-w-[75vw] px-2.5 py-0.5 rounded-lg border text-[11px] font-semibold flex items-center gap-1.5 shadow-lg backdrop-blur-md ${
-                cinematicFocus.kind !== 'none'
-                  ? 'bg-amber-950/90 border-amber-400/80 text-amber-100'
-                  : 'bg-slate-950/85 border-slate-700/80 text-slate-300'
-              }`}
-            >
-              <span
-                className={`w-2 h-2 rounded-full shrink-0 ${
-                  cinematicFocus.kind !== 'none' ? 'bg-amber-400 animate-pulse' : 'bg-slate-500'
-                }`}
-              />
-              <span className="truncate">
-                {cinematicFocus.labelAr ? `كاميرا سينمائية: ${cinematicFocus.labelAr}` : 'كاميرا سينمائية: بانتظار حدث'}
-              </span>
-            </div>
-          )}
-
-          {anglesOpen && (
-            <div
-              id="cameraAnglesPanel"
-              aria-label="خيارات زوايا الكاميرا"
-              className="pointer-events-auto w-[min(370px,calc(100vw-116px))] sm:w-[400px] bg-slate-950/95 border border-slate-700/90 rounded-xl p-2 sm:p-2.5 shadow-2xl backdrop-blur-md text-xs space-y-2 overflow-hidden"
-            >
-              <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
-                <div className="flex items-center gap-1.5 font-bold text-slate-100">
-                  <Compass className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                  <span>زوايا الكاميرا</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    id="resetCameraAngleBtn"
-                    onClick={() => rendererRef.current?.resetCameraAngles()}
-                    className="px-2 py-1 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[11px] text-slate-200 flex items-center gap-1"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>تصفير</span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="إغلاق لوحة الزوايا"
-                    onClick={() => setAnglesOpen(false)}
-                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* زوايا جاهزة سريعة */}
-              <div className="flex flex-wrap gap-1">
-                {CAMERA_ANGLE_PRESETS.map((preset) => {
-                  const isActive =
-                    Math.abs(cameraAngles.bearingDeg - preset.bearingDeg) < 2 &&
-                    Math.abs(cameraAngles.tiltDeg - preset.tiltDeg) < 2;
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      id={`anglePreset_${preset.id}`}
-                      data-angle-preset={preset.id}
-                      aria-pressed={isActive}
-                      onClick={() => rendererRef.current?.setCameraAngles(preset.bearingDeg, preset.tiltDeg)}
-                      className={`px-2 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors whitespace-nowrap ${
-                        isActive
-                          ? 'bg-sky-600 border-sky-300 text-white'
-                          : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200'
-                      }`}
-                    >
-                      {preset.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* تحكم دقيق بالدوران والميلان */}
-              <div className="space-y-1.5 pt-0.5">
-                <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-                  <span className="w-9 sm:w-12 text-[11px] text-slate-300 shrink-0">الدوران</span>
-                  <button
-                    type="button"
-                    aria-label="تدوير لليسار"
-                    onClick={() =>
-                      rendererRef.current?.setCameraAngles(
-                        normalizeAngleDeg(cameraAngles.bearingDeg - 15),
-                        cameraAngles.tiltDeg
-                      )
-                    }
-                    className="px-1 sm:px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] sm:text-[11px] font-mono shrink-0"
-                  >
-                    -15°
-                  </button>
-                  <input
-                    id="cameraBearingSlider"
-                    type="range"
-                    aria-label="زاوية دوران الكاميرا"
-                    min={-180}
-                    max={180}
-                    step={1}
-                    value={Math.round(cameraAngles.bearingDeg)}
-                    onChange={(e) =>
-                      rendererRef.current?.setCameraAngles(parseFloat(e.target.value), cameraAngles.tiltDeg, true)
-                    }
-                    className="flex-1 min-w-0 accent-sky-400 cursor-pointer"
-                  />
-                  <button
-                    type="button"
-                    aria-label="تدوير لليمين"
-                    onClick={() =>
-                      rendererRef.current?.setCameraAngles(
-                        normalizeAngleDeg(cameraAngles.bearingDeg + 15),
-                        cameraAngles.tiltDeg
-                      )
-                    }
-                    className="px-1 sm:px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] sm:text-[11px] font-mono shrink-0"
-                  >
-                    +15°
-                  </button>
-                  <span className="w-8 sm:w-10 text-left font-mono tabular-nums text-[11px] text-sky-300 shrink-0">
-                    {Math.round(cameraAngles.bearingDeg)}°
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1 sm:gap-2 min-w-0">
-                  <span className="w-9 sm:w-12 text-[11px] text-slate-300 shrink-0">الميلان</span>
-                  <input
-                    id="cameraTiltSlider"
-                    type="range"
-                    aria-label="زاوية ميلان الكاميرا"
-                    min={0}
-                    max={MAX_TILT_DEG}
-                    step={1}
-                    value={Math.round(cameraAngles.tiltDeg)}
-                    onChange={(e) =>
-                      rendererRef.current?.setCameraAngles(
-                        cameraAngles.bearingDeg,
-                        clampTiltDeg(parseFloat(e.target.value)),
-                        true
-                      )
-                    }
-                    className="flex-1 min-w-0 accent-amber-400 cursor-pointer"
-                  />
-                  <span className="w-8 sm:w-10 text-left font-mono tabular-nums text-[11px] text-amber-300 shrink-0">
-                    {Math.round(cameraAngles.tiltDeg)}°
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-[10px] text-slate-400 leading-snug">
-                اللمس بإصبعين: تقريب/تبعيد • سحب يمين/يسار للدوران • أعلى/أسفل للميلان (أو زر الفأرة الأيمن)
-              </p>
-            </div>
-          )}
-
-          {topHudExpanded && (
-            <div
-              id="topHudControls"
-              className="pointer-events-auto max-w-[calc(100vw-116px)] sm:max-w-full flex flex-wrap items-center justify-center gap-1.5 bg-slate-950/92 border border-slate-700/90 rounded-xl px-2.5 py-1.5 shadow-xl backdrop-blur-md text-xs"
-            >
-              <span className="font-mono tabular-nums text-sky-300 px-1.5">
-                {hudState.simTimeSec.toFixed(1)}s
-              </span>
-              <span className="text-slate-500">|</span>
-              <span className="text-slate-300 px-1">{hudState.entityCount} وحدة</span>
-              <button
-                type="button"
-                onClick={() => rendererRef.current?.zoomBy(1.22)}
-                aria-label="تكبير الخريطة"
-                className="min-h-[36px] min-w-[36px] rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 flex items-center justify-center"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => rendererRef.current?.zoomBy(0.82)}
-                aria-label="تصغير الخريطة"
-                className="min-h-[36px] min-w-[36px] rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 flex items-center justify-center"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                id="fitMapBtn"
-                onClick={() => rendererRef.current?.resetCamera()}
-                aria-label="ملاءمة الخريطة"
-                className="min-h-[36px] min-w-[36px] rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 flex items-center justify-center"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleToggleAnchors}
-                aria-label={showAnchors ? 'إخفاء المراسي' : 'إظهار المراسي'}
-                className="min-h-[36px] min-w-[36px] rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 flex items-center justify-center"
-              >
-                {showAnchors ? <Eye className="w-4 h-4 text-amber-300" /> : <EyeOff className="w-4 h-4" />}
-              </button>
-            </div>
-          )}
-
-          {geoLoadingMsg && (
-            <div className="pointer-events-auto max-w-[calc(100vw-116px)] sm:max-w-[80vw] bg-sky-950/95 border border-sky-400 text-sky-100 px-3 py-1 rounded-lg text-xs font-medium shadow-lg text-center">
-              {geoLoadingMsg}
-            </div>
-          )}
-
-          {toastMsg && (
-            <div
-              id="toastBar"
-              role="alert"
-              className="pointer-events-none max-w-[calc(100vw-116px)] sm:max-w-[85vw] bg-slate-950/95 border border-amber-400/80 text-slate-100 px-3.5 py-1.5 rounded-lg text-xs font-medium text-center shadow-xl"
-            >
-              {toastMsg}
-            </div>
-          )}
-        </div>
-
-        {/* أيقونة ومستطيل الآليات والمعدات - الزاوية اليسرى */}
         <UnitsDock
           open={unitsOpen}
           onToggleOpen={() => {
@@ -1441,7 +530,6 @@ export default function App() {
           onChangeToolScale={handleChangeToolScale}
         />
 
-        {/* أيقونة ومستطيل الأدوات - الزاوية اليمنى */}
         <ToolsDock
           open={toolsOpen}
           onToggleOpen={() => {
@@ -1479,12 +567,12 @@ export default function App() {
           onClearBoard={() => void openEmptyMapBoard(activeMap.id)}
           actionRecording={actionRecording}
           recStats={recStats}
-          onStartActionRecord={() => void handleStartActionRecord()}
-          onStopActionRecord={handleRequestStopActionRecord}
-          onRecCamera={handleRecCamera}
-          onRecCaptionSubmit={handleRecCaptionSubmit}
-          onRecArrow={handleRecArrow}
-          onRecPulse={handleRecPulse}
+          onStartActionRecord={() => void scenarioActions.handleStartActionRecord()}
+          onStopActionRecord={scenarioActions.handleRequestStopActionRecord}
+          onRecCamera={scenarioActions.handleRecCamera}
+          onRecCaptionSubmit={scenarioActions.handleRecCaptionSubmit}
+          onRecArrow={scenarioActions.handleRecArrow}
+          onRecPulse={scenarioActions.handleRecPulse}
           onRecDeleteUnit={() => {
             if (selectedEntityId) handleDeleteEntity(selectedEntityId);
           }}
@@ -1492,20 +580,20 @@ export default function App() {
           pendingSaveMode={pendingSaveMode}
           saveDraftTitle={saveDraftTitle}
           onChangeSaveDraftTitle={setSaveDraftTitle}
-          onConfirmSaveScenario={() => void handleConfirmSaveScenario()}
+          onConfirmSaveScenario={() => void scenarioActions.handleConfirmSaveScenario()}
           onCancelSaveScenario={() => setPendingSaveMode(null)}
           userScenarios={reg.scenarios}
           selectedScenarioId={selectedScenarioId}
           onSelectScenarioId={setSelectedScenarioId}
-          onLoadSelectedScenario={() => void handleLoadSelectedScenario()}
-          onDeleteSelectedScenario={() => void handleDeleteSelectedScenario()}
+          onLoadSelectedScenario={() => void scenarioActions.handleLoadSelectedScenario()}
+          onDeleteSelectedScenario={() => void scenarioActions.handleDeleteSelectedScenario()}
           yamlText={yamlText}
           onChangeYamlText={setYamlText}
           onRunYaml={async () => {
             const ok = await loadScenario(yamlText, 'تم تشغيل السيناريو');
             setPlaying(ok);
           }}
-          onRequestSaveYaml={() => void handleRequestSaveYaml()}
+          onRequestSaveYaml={() => void scenarioActions.handleRequestSaveYaml()}
           onUploadYamlFile={(f) => void handleUploadYamlFile(f)}
           onOpenSpecModal={() => setSpecOpen(true)}
           issues={issues}
@@ -1513,7 +601,6 @@ export default function App() {
           statusNotice={statusNotice}
         />
 
-        {/* شريط القدرة وإطلاق النار الثابت في أسفل الشاشة (غير معلق على الآلية) */}
         {selectedEntity && selectedActor?.ability && (
           <UnitActionBar
             entityId={selectedEntity.id}
@@ -1569,120 +656,26 @@ export default function App() {
           />
         )}
 
-        {/* مؤشر وضع الإنزال أو وضع الضربات المتتالية في حال عدم إظهار شريط الآلية */}
-        {(placementActor || (armedAbility && armedAbility.entityId !== selectedEntity?.id)) && (
-          <div
-            id="placementModeBanner"
-            className={`pointer-events-auto fixed left-1/2 -translate-x-1/2 z-25 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/92 border border-sky-500/70 shadow-xl backdrop-blur-md text-xs ${
-              cinematicCamera || timelineOpen ? 'bottom-18' : 'bottom-13'
-            }`}
-          >
-            <Crosshair className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="text-slate-100 font-medium whitespace-nowrap">
-              {armedAbility
-                ? `مفعّل: ${armedAbility.label} — اضغط أهدافًا متتالية`
-                : `اضغط الخريطة لوضع: ${placementActor?.label}`}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                if (armedAbility) {
-                  armedAbilityRef.current = null;
-                  setArmedAbility(null);
-                } else {
-                  setActiveTool('select');
-                }
-              }}
-              className="p-1 rounded bg-slate-800 hover:bg-red-900 text-slate-200"
-              aria-label="إيقاف الوضع الحالي"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
-
-
-        {/* إفلات ملف سيناريو */}
-        {dragActive && (
-          <div className="pointer-events-none fixed inset-4 z-40 flex items-center justify-center rounded-xl border-2 border-dashed border-sky-400 bg-slate-950/85">
-            <p className="text-sm font-semibold text-sky-300">أفلت ملف السيناريو (.yaml) هنا</p>
-          </div>
-        )}
-
-        {/* شريط التعليق السينمائي */}
-        {hudState.caption && (
-          <div
-            id="captionBar"
-            data-testid="caption-bar"
-            className={`pointer-events-none fixed left-1/2 -translate-x-1/2 z-20 max-w-[88vw] bg-slate-950/92 border border-sky-500/70 px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-100 text-center shadow-xl ${
-              selectedEntity && selectedActor?.ability
-                ? armedAbility?.entityId === selectedEntity.id
-                  ? cinematicCamera || timelineOpen
-                    ? 'bottom-41'
-                    : 'bottom-36'
-                  : cinematicCamera || timelineOpen
-                    ? 'bottom-34'
-                    : 'bottom-29'
-                : placementActor || armedAbility
-                  ? cinematicCamera || timelineOpen
-                    ? 'bottom-29'
-                    : 'bottom-24'
-                  : cinematicCamera || timelineOpen
-                    ? 'bottom-18'
-                    : 'bottom-14'
-            }`}
-          >
-            {hudState.caption}
-          </div>
-        )}
-
-        {/* شريط الزمن القابل للطي في أسفل الشاشة */}
-        <div className="fixed bottom-2 left-2 right-2 z-25 flex items-center justify-center pointer-events-none">
-          {!timelineOpen ? (
-            <button
-              type="button"
-              id="timelineToggleBtn"
-              aria-expanded={false}
-              onClick={() => setTimelineOpen(true)}
-              className="pointer-events-auto min-h-[34px] px-3 rounded-lg bg-slate-950/88 border border-slate-700/90 text-xs font-mono tabular-nums text-sky-300 flex items-center gap-1.5 shadow-lg backdrop-blur-md hover:bg-slate-900"
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>{hudState.simTimeSec.toFixed(1)}s</span>
-              <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-          ) : (
-            <div
-              aria-label="شريط الزمن التفاعلي"
-              className="pointer-events-auto w-full max-w-xl bg-slate-950/94 border border-slate-700/90 rounded-xl px-3 py-1.5 flex items-center gap-2.5 text-xs shadow-xl backdrop-blur-md"
-            >
-              <button
-                type="button"
-                onClick={() => setTimelineOpen(false)}
-                aria-label="طي شريط الزمن"
-                className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 shrink-0"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              <span id="timeLabel" className="font-mono tabular-nums text-sky-300 w-10 shrink-0 text-center">
-                {hudState.simTimeSec.toFixed(1)}s
-              </span>
-              <input
-                id="timeScrubber"
-                type="range"
-                aria-label="التقديم والترجيع في شريط الزمن"
-                min={0}
-                max={hudState.maxTicks}
-                value={Math.min(hudState.maxTicks, hudState.tick)}
-                onChange={(e) => handleScrub(parseInt(e.target.value, 10))}
-                className="flex-1 accent-sky-400 cursor-pointer"
-              />
-              <span id="durLabel" className="font-mono tabular-nums text-slate-400 w-10 shrink-0 text-center">
-                {(hudState.maxTicks / TICK_RATE).toFixed(1)}s
-              </span>
-            </div>
-          )}
-        </div>
+        <StudioBottomOverlays
+          placementActor={placementActor}
+          armedAbility={armedAbility}
+          selectedEntity={selectedEntity}
+          selectedActor={selectedActor}
+          cinematicCamera={cinematicCamera}
+          timelineOpen={timelineOpen}
+          setTimelineOpen={setTimelineOpen}
+          dragActive={dragActive}
+          hudState={hudState}
+          onStopCurrentMode={() => {
+            if (armedAbility) {
+              armedAbilityRef.current = null;
+              setArmedAbility(null);
+            } else {
+              setActiveTool('select');
+            }
+          }}
+          onScrub={handleScrub}
+        />
       </main>
 
       <SpecModal
