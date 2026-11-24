@@ -21,6 +21,8 @@ import {
   rewindGeoJsonForD3,
   slugifyGeoId
 } from './worldGeoGeometry';
+import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID } from './worldMapIds';
+import { drawPacificBriefingSkin } from './worldPacificBriefingSkin';
 
 export { applyWorldNavCorridors, rewindGeoJsonForD3 };
 
@@ -44,51 +46,151 @@ export function createWorldProjection(width = 1920, height = 1080): GeoProjectio
   );
 }
 
-export function buildWorldMapPack(): MapPack {
-  const width = 1920;
-  const height = 1080;
-  const cellSize = 8;
+/** إسقاط متمركز على المحيط الهادئ للوحة الإحاطة الحربية (آسيا يساراً، أمريكا يميناً). */
+export function createPacificBriefingProjection(width = 1920, height = 1080): GeoProjection {
+  return geoNaturalEarth1()
+    .rotate([-190, 0])
+    .scale(width * 0.3)
+    .translate([width / 2, height * 0.58]);
+}
 
-  const topo = worldAtlas as any;
-  const countriesFc = feature(topo, topo.objects.countries) as unknown as GeoJSON.FeatureCollection;
-  const borderMesh = mesh(topo, topo.objects.countries, (a: any, b: any) => a !== b);
-  const landGeom = feature(topo, topo.objects.land) as unknown as GeoPermissibleObjects;
+function normalizeLon(lon: number): number {
+  return lon < 0 ? lon + 360 : lon;
+}
 
-  const projection = geoNaturalEarth1().fitExtent(
-    [
-      [36, 36],
-      [width - 36, height - 36]
-    ],
-    countriesFc
-  );
+function isPacificLongitude(lon: number): boolean {
+  const l = normalizeLon(lon);
+  return l >= 70 && l <= 270;
+}
 
-  // رسم الخريطة بنفس الستايل الهندسي الداكن المتوهج للاستوديو
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d')!;
+function isPacificLandLongitude(lon: number): boolean {
+  const l = normalizeLon(lon);
+  return l >= 70 && l <= 255;
+}
 
+function featureInPacificTheater(f: any): boolean {
+  try {
+    const [lon, lat] = geoCentroid(f);
+    return Number.isFinite(lon) && Number.isFinite(lat) && lat > -60 && isPacificLongitude(lon);
+  } catch {
+    return false;
+  }
+}
+
+function filterPacificLand(landGeom: GeoPermissibleObjects): GeoPermissibleObjects {
+  const source = landGeom as any;
+  const polygons: any[] = source?.geometry?.coordinates ?? source?.coordinates;
+  if (!Array.isArray(polygons)) return landGeom;
+  const kept = polygons.filter((poly: any) => {
+    const ring = poly?.[0];
+    if (!Array.isArray(ring) || ring.length === 0) return false;
+    let lonSum = 0;
+    let latSum = 0;
+    for (const c of ring) {
+      lonSum += c[0];
+      latSum += c[1];
+    }
+    const avgLat = latSum / ring.length;
+    return avgLat > -60 && isPacificLandLongitude(lonSum / ring.length);
+  });
+  return { type: 'MultiPolygon', coordinates: kept } as unknown as GeoPermissibleObjects;
+}
+
+export type WorldMapSkin = 'classic' | 'pacific_briefing';
+
+export interface WorldMapPackOptions {
+  skin?: WorldMapSkin;
+  id?: string;
+  title?: string;
+}
+
+const worldPackCache = new Map<string, MapPack>();
+
+function drawClassicWorldSkin(
+  ctx: CanvasRenderingContext2D,
+  drawPath: any,
+  countriesFc: GeoJSON.FeatureCollection,
+  borderMesh: any,
+  width: number,
+  height: number
+): void {
   const grad = ctx.createRadialGradient(width / 2, height / 2, 100, width / 2, height / 2, width * 0.65);
   grad.addColorStop(0, '#0d223a');
   grad.addColorStop(1, '#061221');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, width, height);
 
-  const pathGen = geoPath(projection, ctx);
-
-  // شبكة خطوط الطول والعرض
   ctx.beginPath();
-  pathGen(geoGraticule10());
+  drawPath(geoGraticule10());
   ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
   ctx.lineWidth = 1;
   ctx.stroke();
+
+  countriesFc.features.forEach((f, i) => {
+    ctx.beginPath();
+    drawPath(f);
+    ctx.fillStyle = i % 2 === 0 ? '#1b293b' : '#1f3044';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  ctx.beginPath();
+  drawPath(borderMesh);
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+export function buildWorldMapPack(options: WorldMapPackOptions = {}): MapPack {
+  const width = 1920;
+  const height = 1080;
+  const cellSize = 8;
+
+  const skin = options.skin ?? 'pacific_briefing';
+  const id = options.id ?? (skin === 'pacific_briefing' ? WORLD_PACIFIC_MAP_ID : WORLD_CLASSIC_MAP_ID);
+  const title =
+    options.title ??
+    (skin === 'pacific_briefing' ? 'خريطة العالم — لوح المحيط الهادئ' : 'خريطة العالم التفاعلية');
+  const cacheKey = `${id}|${skin}|${width}x${height}`;
+  const cached = worldPackCache.get(cacheKey);
+  if (cached) return cached;
+
+  const topo = worldAtlas as any;
+  const countriesFc = feature(topo, topo.objects.countries) as unknown as GeoJSON.FeatureCollection;
+  const borderMesh = mesh(topo, topo.objects.countries, (a: any, b: any) => a !== b);
+  const landGeom = feature(topo, topo.objects.land) as unknown as GeoPermissibleObjects;
+
+  const projection =
+    skin === 'pacific_briefing' ? createPacificBriefingProjection(width, height) : createWorldProjection(width, height);
+
+  // في جلد المحيط الهادئ تُقتصر الحدود واليابسة على مسرح المحيط فقط،
+  // حتى لا تظهر أوروبا/إفريقيا/أمريكا الجنوبية ملتفة حول خط التاريخ.
+  const theaterCountriesFc: GeoJSON.FeatureCollection =
+    skin === 'pacific_briefing'
+      ? { type: 'FeatureCollection', features: countriesFc.features.filter(featureInPacificTheater) }
+      : countriesFc;
+  const theaterLandGeom: GeoPermissibleObjects =
+    skin === 'pacific_briefing' ? filterPacificLand(landGeom) : landGeom;
+  const theaterBorderMesh: any =
+    skin === 'pacific_briefing' ? { type: 'MultiLineString', coordinates: [] } : borderMesh;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+
+  const pathGen = geoPath(projection);
+  const drawPath = geoPath(projection, ctx);
 
   const regions: Record<string, GeoRegionItem> = {};
   const zones: Record<string, MapZoneDef> = {};
   const anchors: Record<string, Point & { label?: string }> = {};
   const regionIds: string[] = [];
+  const featureIso3: Array<string | undefined> = [];
 
-  countriesFc.features.forEach((f, i) => {
+  theaterCountriesFc.features.forEach((f, i) => {
     const rawId = f.id !== undefined ? String(f.id).padStart(3, '0') : '';
     const enName = (f.properties?.name as string) || `Country_${i}`;
     const a2 = rawId ? countries.numericToAlpha2(rawId) : undefined;
@@ -96,14 +198,7 @@ export function buildWorldMapPack(): MapPack {
     const arName = iso3 ? countries.getName(iso3, 'ar') : undefined;
     const regId = iso3 || slugifyGeoId(enName);
     regionIds.push(regId);
-
-    ctx.beginPath();
-    pathGen(f);
-    ctx.fillStyle = i % 2 === 0 ? '#1b293b' : '#1f3044';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    featureIso3[i] = iso3;
 
     const cent = pathGen.centroid(f);
     const b = pathGen.bounds(f);
@@ -126,13 +221,6 @@ export function buildWorldMapPack(): MapPack {
     }
   });
 
-  // الحدود المشتركة بين الدول
-  ctx.beginPath();
-  pathGen(borderMesh);
-  ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
   // إضافة مراسي بحرية واستراتيجية عالمية
   const strategicPoints: Array<[string, string, [number, number]]> = [
     ['suez_canal', 'قناة السويس', [32.3, 30.5]],
@@ -145,20 +233,35 @@ export function buildWorldMapPack(): MapPack {
     ['riyadh', 'الرياض', [46.7, 24.7]],
     ['cairo', 'القاهرة', [31.2, 30.0]]
   ];
-  for (const [id, label, ll] of strategicPoints) {
+  for (const [anchorId, label, ll] of strategicPoints) {
     const p = projection(ll);
-    if (p) anchors[id] = { x: Math.round(p[0]), y: Math.round(p[1]), label };
+    if (p) anchors[anchorId] = { x: Math.round(p[0]), y: Math.round(p[1]), label };
   }
 
   // توليد شبكة الملاحة الحقيقية (يابسة=0، بحر=1، قناة/جسر مشترك=3)
-  const { cols, rows, navGrid } = rasterizeLandNavGrid(landGeom, projection, width, height, cellSize);
+  const { cols, rows, navGrid } = rasterizeLandNavGrid(theaterLandGeom, projection, width, height, cellSize);
   applyWorldNavCorridors(navGrid, cols, rows, projection, cellSize);
 
-  const hitTest = createHitTester(countriesFc.features, regionIds, projection, width, height);
+  const hitTest = createHitTester(theaterCountriesFc.features, regionIds, projection, width, height);
 
-  return {
-    id: 'world_live',
-    title: 'خريطة العالم التفاعلية',
+  if (skin === 'pacific_briefing') {
+    drawPacificBriefingSkin({
+      ctx,
+      projection,
+      countriesFc: theaterCountriesFc,
+      landGeom: theaterLandGeom,
+      borderMesh: theaterBorderMesh,
+      featureIso3,
+      width,
+      height
+    });
+  } else {
+    drawClassicWorldSkin(ctx, drawPath, countriesFc, borderMesh, width, height);
+  }
+
+  const pack: MapPack = {
+    id,
+    title,
     kind: 'geopolitical',
     width,
     height,
@@ -174,6 +277,8 @@ export function buildWorldMapPack(): MapPack {
     regions,
     hitTest
   };
+  worldPackCache.set(cacheKey, pack);
+  return pack;
 }
 
 async function fetchAdm1GeoJson(iso3: string): Promise<GeoJSON.FeatureCollection> {
