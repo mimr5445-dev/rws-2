@@ -1364,10 +1364,13 @@ test('StudioUnits distinct weapon ballistics: straight shell, rapid bullet burst
   assert.equal(sim.muzzleFlashes.length, 1);
   assert.equal(sim.projectiles.length, 1);
   assert.equal(sim.projectiles[0].mode, 'shell');
+  assert.equal(sim.projectiles[0].sourceKind, 'vehicle', 'impact FX should retain the firing platform class');
   assert.ok(sim.projectiles[0].altitude <= 0.1, 'tank shell trajectory must stay flat/straight');
 
   for (let i = 0; i < Math.round(0.5 * TICK_RATE); i++) sim.step();
   assert.equal(sim.entities.has('enemy_1'), false, 'enemy tank should be destroyed by direct shell impact');
+  assert.equal(sim.explosions.at(-1)?.sourceKind, 'vehicle', 'tank impact should carry vehicle-specific FX metadata');
+  assert.ok(['land', 'water'].includes(sim.explosions.at(-1)?.surface ?? ''), 'ground impacts should identify their impact surface');
 
   // 2. Infantry bullet burst: 5 staggered tracer rounds, gunfire_burst sound, no crater left behind
   const cratersBeforeBullets = sim.craters.length;
@@ -1375,6 +1378,7 @@ test('StudioUnits distinct weapon ballistics: straight shell, rapid bullet burst
   sim.flushOrders();
   assert.ok(heard.includes('gunfire_burst'), 'infantry fire must emit gunfire_burst');
   assert.equal(sim.projectiles.filter((p) => p.mode === 'bullet').length, 5, 'bullet mode spawns 5 staggered tracer rounds');
+  assert.ok(sim.projectiles.filter((p) => p.mode === 'bullet').every((p) => p.sourceKind === 'person'), 'small-arms impacts should retain infantry as their source');
 
   for (let i = 0; i < Math.round(1.0 * TICK_RATE); i++) sim.step();
   assert.equal(sim.entities.has('enemy_2'), false, 'enemy squad hit by bullet burst should be eliminated');
@@ -1391,6 +1395,7 @@ test('StudioUnits distinct weapon ballistics: straight shell, rapid bullet burst
   assert.ok(heard.includes('radar_ping'), 'scan mode must emit radar_ping');
   assert.ok(heard.includes('missile_launch'), 'ballistic TEL must emit missile_launch');
   assert.equal(sim.projectiles.filter((p) => p.mode === 'missile').length, 2, 'consecutive missile strikes both launch');
+  assert.equal(sim.projectiles.find((p) => p.mode === 'torpedo')?.sourceKind, 'ship', 'naval impacts should retain their launch platform');
   assert.equal(sim.muzzleFlashes.length, 2, 'consecutive missile launches emit launch flashes');
   assert.ok(sim.pulses.length >= 1, 'radar scan must emit visual pulse');
 });

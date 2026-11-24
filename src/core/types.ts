@@ -206,6 +206,8 @@ export interface ProjectileState {
   color: string;
   faction: Faction;
   impactDamage?: boolean;
+  sourceKind?: ActorTemplate['kind'];
+  sourceScale?: number;
 }
 
 export interface MuzzleFlashState {
@@ -227,6 +229,9 @@ export interface ExplosionState {
   prevProgress: number;
   color: string;
   kind: 'airstrike' | 'missile' | 'shell' | 'bullet' | 'artillery' | 'interceptor' | 'torpedo';
+  sourceKind?: ActorTemplate['kind'];
+  sourceScale?: number;
+  surface?: 'land' | 'water' | 'air';
 }
 
 export interface CraterDecal {
