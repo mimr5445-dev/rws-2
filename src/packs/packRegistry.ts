@@ -1,13 +1,6 @@
 import { ActorPack, ActorTemplate, MapPack, PackBundle, SavedScenarioRecord } from '../core/types';
 import { buildWorldMapPack } from '../maps/worldGeoEngine';
-import type { WorldSkin } from '../maps/worldGeoEngine';
-import { buildWorldPoliticalBoard } from '../maps/worldPoliticalBoard';
-import {
-  WORLD_BRIEFING_MAP_ID,
-  WORLD_POLITICAL_BOARD_MAP_ID,
-  WORLD_RELIEF_MAP_ID,
-  WORLD_SHADED_RELIEF_MAP_ID
-} from '../maps/worldMapIds';
+import { WORLD_BRIEFING_MAP_ID } from '../maps/worldMapIds';
 import { studioDb } from '../storage/studioDb';
 import { STUDIO_ACTORS, STUDIO_TEMPLATES } from './studioUnits';
 import { validatePackBundle } from './packSchema';
@@ -21,11 +14,6 @@ const LEGACY_PRESET_IDS = new Set([
   'preset_valley'
 ]);
 
-const WORLD_MAP_SKINS: Array<{ skin: WorldSkin; id: string; title: string }> = [
-  { skin: 'briefing', id: WORLD_BRIEFING_MAP_ID, title: 'خريطة العالم التفاعلية' },
-  { skin: 'relief', id: WORLD_RELIEF_MAP_ID, title: 'خريطة العالم — التضاريس' },
-  { skin: 'shaded_relief', id: WORLD_SHADED_RELIEF_MAP_ID, title: 'خريطة العالم — تضاريس بارزة' }
-];
 
 export class PackRegistry {
   public maps: Record<string, MapPack> = {};
@@ -34,13 +22,13 @@ export class PackRegistry {
   public actorOverrides = new Set<string>();
 
   constructor(private useStorage = true) {
-    const politicalBoard = buildWorldPoliticalBoard();
-    this.maps[politicalBoard.id] = politicalBoard;
     if (typeof document !== 'undefined') {
-      for (const options of WORLD_MAP_SKINS) {
-        const map = buildWorldMapPack(options);
-        this.maps[map.id] = map;
-      }
+      const worldMap = buildWorldMapPack({
+        skin: 'briefing',
+        id: WORLD_BRIEFING_MAP_ID,
+        title: 'خريطة العالم التفاعلية'
+      });
+      this.maps[worldMap.id] = worldMap;
     }
     for (const [k, a] of Object.entries(STUDIO_ACTORS)) {
       this.actors[k] = { ...a, ability: a.ability ? { ...a.ability } : undefined };
@@ -48,13 +36,12 @@ export class PackRegistry {
   }
 
   async init(presetScenarios: SavedScenarioRecord[] = []): Promise<void> {
-    if (typeof document !== 'undefined') {
-      for (const options of WORLD_MAP_SKINS) {
-        if (!this.maps[options.id]) {
-          const map = buildWorldMapPack(options);
-          this.maps[map.id] = map;
-        }
-      }
+    if (typeof document !== 'undefined' && !this.maps[WORLD_BRIEFING_MAP_ID]) {
+      this.maps[WORLD_BRIEFING_MAP_ID] = buildWorldMapPack({
+        skin: 'briefing',
+        id: WORLD_BRIEFING_MAP_ID,
+        title: 'خريطة العالم التفاعلية'
+      });
     }
 
     if (!this.useStorage) {
@@ -170,7 +157,7 @@ export class PackRegistry {
 
   exportCurrentBundle(): PackBundle {
     const maps = Object.values(this.maps)
-      .filter((m) => !m.geoLevel && m.id !== WORLD_POLITICAL_BOARD_MAP_ID)
+      .filter((m) => !m.geoLevel)
       .map(({ hitTest: _ht, regions: _regs, ...rest }) => rest);
     return {
       maps,

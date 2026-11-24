@@ -386,16 +386,11 @@ export async function buildCountryProvincesMapPack(iso3: string, displayTitle: s
         bounds: { minX: b[0][0], minY: b[0][1], maxX: b[1][0], maxY: b[1][1] },
         polygons
       };
-      anchors[id] = { x: Math.round(cent[0]), y: Math.round(cent[1]), label: rawName };
+      anchors[id] = { x: Math.round(cent[0]), y: Math.round(cent[1]) };
       if (polygons[0]) {
         zones[id] = { id, label: rawName, polygon: polygons[0] };
       }
 
-      // كتابة اسم المحافظة أسفل نقطة المرسى لتجنب التداخل مع معرّف المرسى العلوي
-      ctx.font = '600 11px "IBM Plex Sans Arabic", system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = 'rgba(226, 232, 240, 0.85)';
-      ctx.fillText(rawName, cent[0], cent[1] + 19);
     }
   });
 

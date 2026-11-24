@@ -1,0 +1,104 @@
+meta:
+  title: "الحرب العالمية — أزمة الممرات البحرية"
+  map: world_live
+  duration_hint: 24s
+
+timeline:
+  - at: "0s"
+    camera:
+      focus: red_sea
+      zoom: 1.55
+      duration: "1.2s"
+    caption:
+      text: "تصاعد أزمة دولية متخيّلة: تحالفان يتواجهان حول الممرات البحرية، بينما تبدأ جهود التهدئة"
+    spawn:
+      - id: blue_tank
+        actor: heavy_tank
+        at: riyadh
+        faction: blue
+      - id: blue_fleet
+        actor: naval_corvette
+        at: arabian_sea
+        faction: blue
+      - id: red_fleet
+        actor: naval_corvette
+        at: mediterranean
+        faction: red
+      - id: peace_envoy
+        actor: diplomat_person
+        at: cairo
+        faction: blue
+
+  - at: "3s"
+    camera:
+      focus: bab_el_mandeb
+      zoom: 1.7
+      duration: "1.2s"
+    move:
+      entity: blue_fleet
+      to: bab_el_mandeb
+    callout:
+      id: blue_patrol
+      target: blue_fleet
+      text: "دورية بحرية لحماية خطوط الملاحة"
+      color: "#38bdf8"
+      duration: "6s"
+    pulse:
+      at: bab_el_mandeb
+      color: "#f59e0b"
+      radius: 70
+
+  - at: "7s"
+    camera:
+      focus: mediterranean
+      zoom: 1.5
+      duration: "1.2s"
+    move:
+      entity: red_fleet
+      to: gibraltar
+    caption:
+      text: "تحرك بحري مضاد يرفع مستوى التوتر؛ لا تُستهدف المدن أو المدنيون في هذا السيناريو"
+    callout:
+      id: red_movement
+      target: red_fleet
+      text: "تحرك الأسطول"
+      color: "#fb7185"
+      duration: "5s"
+
+  - at: "12s"
+    camera:
+      focus: cairo
+      zoom: 1.7
+      duration: "1.2s"
+    move:
+      entity: peace_envoy
+      to: riyadh
+    callout:
+      id: envoy_callout
+      target: peace_envoy
+      text: "مبادرة دبلوماسية لوقف التصعيد"
+      color: "#22c55e"
+      duration: "6s"
+    sound: alert_ping
+    caption:
+      text: "تبدأ الوساطة الدولية بالتوازي مع استمرار الدوريات الدفاعية"
+
+  - at: "18s"
+    camera:
+      focus: red_sea
+      zoom: 1.45
+      duration: "1.4s"
+    move:
+      entity: blue_tank
+      to: cairo
+    zone:
+      id: corridor_south
+      color: "#22c55e"
+      opacity: 0.25
+      duration: "1.5s"
+    caption:
+      text: "وقف إطلاق نار مؤقت وفتح ممر إنساني — نهاية السيناريو"
+    pulse:
+      at: cairo
+      color: "#22c55e"
+      radius: 85

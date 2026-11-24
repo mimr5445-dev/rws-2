@@ -6,7 +6,7 @@ import { StrikeLockPhase } from './core/targetingLock';
 import { ActorPack, Faction, MapPack, Point, ValidationIssue } from './core/types';
 import { CountryRegistry } from './countries/countryRegistry';
 import { PackRegistry } from './packs/packRegistry';
-import { WORLD_BRIEFING_MAP_ID, WORLD_RELIEF_MAP_ID, WORLD_STYLE_IDS } from './maps/worldMapIds';
+import { WORLD_BRIEFING_MAP_ID, WORLD_STYLE_IDS } from './maps/worldMapIds';
 import { SoundSynth } from './renderer/soundSynth';
 import { StudioRenderer } from './renderer/studioRenderer';
 import { studioDb } from './storage/studioDb';
@@ -95,7 +95,6 @@ export default function App() {
   const [activeMap, setActiveMap] = useState<MapPack>(
     () =>
       registryRef.current!.maps[WORLD_BRIEFING_MAP_ID] ??
-      registryRef.current!.maps[WORLD_RELIEF_MAP_ID] ??
       Object.values(registryRef.current!.maps)[0]!
   );
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
@@ -267,10 +266,6 @@ export default function App() {
     setRecStats,
     setHudState
   });
-
-  const handleSelectMapStyle = (style: 'briefing' | 'relief') => {
-    void openEmptyMapBoard(style === 'relief' ? WORLD_RELIEF_MAP_ID : WORLD_BRIEFING_MAP_ID);
-  };
 
   const handleChangeUnitScale = async (nextScale: number) => {
     setUnitScale(nextScale);
@@ -512,7 +507,6 @@ export default function App() {
           selectedRegionObj={selectedRegionObj}
           onEnterCountryProvinces={(id) => void enterCountryProvinces(id)}
           onBackToWorld={() => void openEmptyMapBoard(worldStyleRef.current)}
-          onSelectMapStyle={handleSelectMapStyle}
           hudState={hudState}
           showAnchors={showAnchors}
           onToggleAnchors={handleToggleAnchors}

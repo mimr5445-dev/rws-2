@@ -52,7 +52,7 @@ export function populateAnchorLayer(
       .stroke({ width: 2, color: 0x0f172a });
     dot.position.set(pt.x, pt.y);
     // لا تُعرض أسماء الدول أو المراسي على خرائط العالم، حتى في وضع التحرير.
-    if (isWorldMap) {
+    if (isWorldMap || map.geoLevel === 'country') {
       anchorLayer.addChild(dot);
       continue;
     }
