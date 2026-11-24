@@ -1,7 +1,7 @@
 import { ActorPack, ActorTemplate, MapPack, PackBundle, SavedScenarioRecord } from '../core/types';
 import { buildWorldMapPack } from '../maps/worldGeoEngine';
 import { buildWorldPoliticalBoard } from '../maps/worldPoliticalBoard';
-import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID } from '../maps/worldMapIds';
+import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID, WORLD_SHADED_RELIEF_MAP_ID } from '../maps/worldMapIds';
 import { studioDb } from '../storage/studioDb';
 import { STUDIO_ACTORS, STUDIO_TEMPLATES } from './studioUnits';
 import { validatePackBundle } from './packSchema';
@@ -25,6 +25,12 @@ export class PackRegistry {
     const politicalBoard = buildWorldPoliticalBoard();
     this.maps[politicalBoard.id] = politicalBoard;
     if (typeof document !== 'undefined') {
+      const reliefMap = buildWorldMapPack({
+        skin: 'shaded_relief',
+        id: WORLD_SHADED_RELIEF_MAP_ID,
+        title: 'خريطة العالم — تضاريس بارزة'
+      });
+      this.maps[reliefMap.id] = reliefMap;
       const pacificMap = buildWorldMapPack({
         skin: 'pacific_briefing',
         id: WORLD_PACIFIC_MAP_ID,
@@ -44,6 +50,14 @@ export class PackRegistry {
   }
 
   async init(presetScenarios: SavedScenarioRecord[] = []): Promise<void> {
+    if (typeof document !== 'undefined' && !this.maps[WORLD_SHADED_RELIEF_MAP_ID]) {
+      const reliefMap = buildWorldMapPack({
+        skin: 'shaded_relief',
+        id: WORLD_SHADED_RELIEF_MAP_ID,
+        title: 'خريطة العالم — تضاريس بارزة'
+      });
+      this.maps[reliefMap.id] = reliefMap;
+    }
     if (typeof document !== 'undefined' && !this.maps[WORLD_PACIFIC_MAP_ID]) {
       const pacificMap = buildWorldMapPack({
         skin: 'pacific_briefing',
