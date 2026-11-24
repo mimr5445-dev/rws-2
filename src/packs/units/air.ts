@@ -5,7 +5,7 @@ import { defineUnit } from './shared';
 export const STUDIO_AIR_UNITS: Record<string, ActorPack> = {
   f35_stealth: defineUnit(
     'f35_stealth',
-    'مقاتلة شبح (F-35/F-22)',
+    'مقاتلة شبحية F-35A لايتنينغ II',
     '_air',
     { speed: 235, turnRate: 3.4, scale: 56, radius: 24 },
     {
@@ -16,42 +16,12 @@ export const STUDIO_AIR_UNITS: Record<string, ActorPack> = {
       accentColor: '#38bdf8',
       radius: 68
     },
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
-      <defs>
-        <linearGradient id="f22Body" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#94a3b8"/>
-          <stop offset="50%" stop-color="#64748b"/>
-          <stop offset="100%" stop-color="#334155"/>
-        </linearGradient>
-        <linearGradient id="goldCanopy" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#d97706"/>
-          <stop offset="50%" stop-color="#fcd34d"/>
-          <stop offset="100%" stop-color="#f59e0b"/>
-        </linearGradient>
-      </defs>
-      <!-- Authentic F-22/F-35 diamond cropped delta planform -->
-      <polygon points="90,48 70,41 56,37 37,11 26,11 31,37 19,35 12,21 5,21 9,39 12,42 12,54 9,57 5,75 12,75 19,61 31,59 26,85 37,85 56,59 70,55" fill="url(#f22Body)" stroke="#090f1a" stroke-width="2.2" stroke-linejoin="round"/>
-      <!-- Leading edge & panel seams -->
-      <polygon points="68,42 38,15 33,38 55,41" fill="#475569" opacity="0.45"/>
-      <polygon points="68,54 38,81 33,58 55,55" fill="#1e293b" opacity="0.45"/>
-      <!-- Twin canted vertical tails -->
-      <polygon points="24,36 10,27 12,38 25,41" fill="#334155" stroke="#090f1a" stroke-width="1.3"/>
-      <polygon points="24,60 10,69 12,58 25,55" fill="#334155" stroke="#090f1a" stroke-width="1.3"/>
-      <!-- Twin thrust-vectoring exhaust nozzles & afterburner -->
-      <rect x="8" y="42" width="7" height="5" rx="1" fill="#1e293b" stroke="#090f1a" stroke-width="1.1"/>
-      <rect x="8" y="49" width="7" height="5" rx="1" fill="#1e293b" stroke="#090f1a" stroke-width="1.1"/>
-      <circle cx="8" cy="44.5" r="2.1" fill="#f97316"/>
-      <circle cx="8" cy="51.5" r="2.1" fill="#f97316"/>
-      <!-- Chined Nose Radome & Gold Stealth Canopy -->
-      <polygon points="72,44 88,48 72,52" fill="#475569"/>
-      <ellipse cx="61" cy="48" rx="12" ry="4.2" fill="url(#goldCanopy)" stroke="#090f1a" stroke-width="1.5"/>
-      <line x1="20" y1="48" x2="48" y2="48" stroke="#cbd5e1" stroke-width="1.2" opacity="0.6"/>
-    </svg>`
+    '/vehicles/f35a-lightning.png'
   ),
 
   f16_falcon: defineUnit(
     'f16_falcon',
-    'مقاتلة (F-16 فالكون)',
+    'مقاتلة F-16C فايتنغ فالكون',
     '_air',
     { speed: 225, turnRate: 3.6, scale: 52, radius: 22 },
     {
@@ -150,7 +120,7 @@ export const STUDIO_AIR_UNITS: Record<string, ActorPack> = {
 
   reaper_drone: defineUnit(
     'reaper_drone',
-    'طائرة مسيّرة (MQ-9/بيرقدار)',
+    'مسيّرة MQ-9 ريبر',
     '_air',
     { speed: 165, turnRate: 3.1, scale: 54, radius: 22 },
     {

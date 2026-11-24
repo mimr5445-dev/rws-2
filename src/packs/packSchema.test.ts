@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import * as yaml from 'js-yaml';
 import { isSafeAssetUrl, sanitizeAssetUrl, sanitizeSvg, validatePackBundle } from './packSchema';
 import { DEMO_ACTORS, DEMO_MAPS } from './demoPacks';
@@ -37,6 +39,25 @@ test('a well-formed bundle and all built-in DEMO_MAPS / DEMO_ACTORS pass validat
   for (const a of Object.values(STUDIO_ACTORS)) {
     assert.ok(sanitizeAssetUrl(a.svg), `studio actor ${a.id} svg must sanitize cleanly`);
     assert.ok(a.ability && a.ability.label && a.ability.mode, `studio actor ${a.id} must define an ability`);
+  }
+});
+
+test('real-world M1A2 and F-35A actors use bundled transparent PNG sprites', () => {
+  const models = [
+    { actorId: 'mbt_tank', fileName: 'm1a2-abrams.png', modelLabel: 'M1A2' },
+    { actorId: 'f35_stealth', fileName: 'f35a-lightning.png', modelLabel: 'F-35A' }
+  ];
+  const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+  for (const { actorId, fileName, modelLabel } of models) {
+    const actor = STUDIO_ACTORS[actorId];
+    assert.ok(actor, `expected built-in actor ${actorId}`);
+    assert.equal(actor.svg, `/vehicles/${fileName}`);
+    assert.ok(actor.label.includes(modelLabel), `expected ${actorId} to name ${modelLabel}`);
+
+    const png = fs.readFileSync(path.resolve(process.cwd(), 'public', 'vehicles', fileName));
+    assert.deepEqual(png.subarray(0, 8), pngSignature, `${fileName} must be a valid PNG`);
+    assert.equal(png[25], 6, `${fileName} must retain an alpha channel for map compositing`);
   }
 });
 

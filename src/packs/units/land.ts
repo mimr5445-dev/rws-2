@@ -137,7 +137,7 @@ export const STUDIO_LAND_UNITS: Record<string, ActorPack> = {
   // ==========================================
   mbt_tank: defineUnit(
     'mbt_tank',
-    'دبابة قتال (أبرامز)',
+    'دبابة M1A2 أبرامز SEPv3',
     '_vehicle',
     { speed: 82, turnRate: 2.6, scale: 50, radius: 22 },
     {
@@ -148,51 +148,12 @@ export const STUDIO_LAND_UNITS: Record<string, ActorPack> = {
       accentColor: '#f97316',
       radius: 36
     },
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 80">
-      <defs>
-        <linearGradient id="abramsHull" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#a89060"/>
-          <stop offset="55%" stop-color="#c2a974"/>
-          <stop offset="100%" stop-color="#8c7548"/>
-        </linearGradient>
-        <linearGradient id="abramsTurret" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#d6be8a"/>
-          <stop offset="100%" stop-color="#967f52"/>
-        </linearGradient>
-      </defs>
-      <!-- Heavy Armored Tracks & Skirts -->
-      <rect x="10" y="12" width="60" height="12" rx="3" fill="#1e293b" stroke="#090f1a" stroke-width="2.2"/>
-      <rect x="10" y="56" width="60" height="12" rx="3" fill="#1e293b" stroke="#090f1a" stroke-width="2.2"/>
-      <path d="M16 12 V24 M24 12 V24 M32 12 V24 M40 12 V24 M48 12 V24 M56 12 V24 M64 12 V24 M16 56 V68 M24 56 V68 M32 56 V68 M40 56 V68 M48 56 V68 M56 56 V68 M64 56 V68" stroke="#0f172a" stroke-width="1.6"/>
-      <!-- Side Armor Skirts -->
-      <rect x="12" y="16" width="57" height="7" rx="1.5" fill="#9c8556" stroke="#090f1a" stroke-width="1.4"/>
-      <rect x="12" y="57" width="57" height="7" rx="1.5" fill="#9c8556" stroke="#090f1a" stroke-width="1.4"/>
-      <!-- Main Hull & Rear Turbine Grilles -->
-      <rect x="13" y="21" width="55" height="38" rx="3" fill="url(#abramsHull)" stroke="#090f1a" stroke-width="2.2"/>
-      <rect x="15" y="25" width="14" height="30" rx="2" fill="#44403c" stroke="#090f1a" stroke-width="1.2"/>
-      <path d="M18 27 V53 M21 27 V53 M24 27 V53 M27 27 V53" stroke="#78716c" stroke-width="1.2"/>
-      <!-- Sloped Front Glacis & Headlights -->
-      <polygon points="56,22 68,25 68,55 56,58" fill="#b39b66" stroke="#090f1a" stroke-width="1.4"/>
-      <rect x="65" y="23" width="3" height="4.5" fill="#fef08a"/>
-      <rect x="65" y="52.5" width="3" height="4.5" fill="#fef08a"/>
-      <!-- 120mm M256 Smoothbore Cannon -->
-      <rect x="48" y="37.8" width="44" height="4.4" rx="1" fill="#9c8556" stroke="#090f1a" stroke-width="1.6"/>
-      <rect x="62" y="36.3" width="9" height="7.4" rx="1.8" fill="#b39b66" stroke="#090f1a" stroke-width="1.4"/>
-      <rect x="88" y="37" width="4" height="6" rx="1" fill="#334155" stroke="#090f1a" stroke-width="1.2"/>
-      <!-- Angular Wedge Turret -->
-      <polygon points="18,26 42,22 57,31 57,49 42,58 18,54" fill="url(#abramsTurret)" stroke="#090f1a" stroke-width="2.2" stroke-linejoin="round"/>
-      <!-- Bustle Rack, Cupola, CROWS & Thermal Optics -->
-      <rect x="18" y="29" width="8" height="22" fill="#57534e" stroke="#090f1a" stroke-width="1.2"/>
-      <circle cx="38" cy="33" r="4.8" fill="#8c7548" stroke="#090f1a" stroke-width="1.5"/>
-      <circle cx="38" cy="47" r="4.2" fill="#8c7548" stroke="#090f1a" stroke-width="1.5"/>
-      <rect x="46" y="29" width="5" height="4" rx="1" fill="#38bdf8" stroke="#090f1a" stroke-width="1"/>
-      <line x1="22" y1="29" x2="10" y2="23" stroke="#090f1a" stroke-width="1.3"/>
-    </svg>`
+    '/vehicles/m1a2-abrams.png'
   ),
 
   ifv_bradley: defineUnit(
     'ifv_bradley',
-    'مدرعة قتالية (برادلي)',
+    'مركبة قتال M2A3 برادلي',
     '_vehicle',
     { speed: 96, turnRate: 3.1, scale: 46, radius: 20 },
     {
@@ -229,7 +190,7 @@ export const STUDIO_LAND_UNITS: Record<string, ActorPack> = {
 
   spg_artillery: defineUnit(
     'spg_artillery',
-    'مدفعية ذاتية (155مم)',
+    'مدفع هاوتزر ذاتي M109A7 بالادين',
     '_vehicle',
     { speed: 68, turnRate: 2.2, scale: 52, radius: 22 },
     {
@@ -263,7 +224,7 @@ export const STUDIO_LAND_UNITS: Record<string, ActorPack> = {
 
   sam_patriot: defineUnit(
     'sam_patriot',
-    'دفاع جوي (باتريوت)',
+    'قاذف باتريوت MIM-104',
     '_vehicle',
     { speed: 66, turnRate: 2.1, scale: 52, radius: 22 },
     {
