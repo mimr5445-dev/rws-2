@@ -42,7 +42,7 @@ test('a well-formed bundle and all built-in DEMO_MAPS / DEMO_ACTORS pass validat
   }
 });
 
-test('real-world aircraft and vehicle actors use bundled transparent PNG sprites', () => {
+test('real-world studio units use bundled transparent PNG sprites', () => {
   const models = [
     { actorId: 'mbt_tank', fileName: 'm1a2-abrams.png', modelLabel: 'M1A2' },
     { actorId: 'f35_stealth', fileName: 'f35a-lightning.png', modelLabel: 'F-35A' },
