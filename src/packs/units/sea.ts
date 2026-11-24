@@ -5,7 +5,7 @@ import { defineUnit } from './shared';
 export const STUDIO_SEA_UNITS: Record<string, ActorPack> = {
   arleigh_destroyer: defineUnit(
     'arleigh_destroyer',
-    'مدمرة صواريخ (آرلي بيرك)',
+    'مدمرة صواريخ DDG-51 آرلي بيرك',
     '_ship',
     { speed: 78, turnRate: 1.4, scale: 76, radius: 30 },
     {
@@ -46,7 +46,7 @@ export const STUDIO_SEA_UNITS: Record<string, ActorPack> = {
 
   stealth_frigate: defineUnit(
     'stealth_frigate',
-    'فرقاطة شبحية',
+    'فرقاطة FREMM شبحية',
     '_ship',
     { speed: 86, turnRate: 1.7, scale: 62, radius: 24 },
     {
@@ -71,7 +71,7 @@ export const STUDIO_SEA_UNITS: Record<string, ActorPack> = {
 
   nimitz_carrier: defineUnit(
     'nimitz_carrier',
-    'حاملة طائرات (نيميتز)',
+    'حاملة طائرات CVN-68 نيميتز',
     '_carrier',
     { speed: 52, turnRate: 0.9, scale: 106, radius: 42 },
     {
@@ -114,7 +114,7 @@ export const STUDIO_SEA_UNITS: Record<string, ActorPack> = {
 
   attack_sub: defineUnit(
     'attack_sub',
-    'غواصة هجومية',
+    'غواصة هجومية فئة فرجينيا',
     '_sub',
     { speed: 68, turnRate: 1.8, scale: 68, radius: 23 },
     {

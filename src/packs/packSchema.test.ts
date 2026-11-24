@@ -42,10 +42,20 @@ test('a well-formed bundle and all built-in DEMO_MAPS / DEMO_ACTORS pass validat
   }
 });
 
-test('real-world M1A2 and F-35A actors use bundled transparent PNG sprites', () => {
+test('real-world aircraft and vehicle actors use bundled transparent PNG sprites', () => {
   const models = [
     { actorId: 'mbt_tank', fileName: 'm1a2-abrams.png', modelLabel: 'M1A2' },
-    { actorId: 'f35_stealth', fileName: 'f35a-lightning.png', modelLabel: 'F-35A' }
+    { actorId: 'f35_stealth', fileName: 'f35a-lightning.png', modelLabel: 'F-35A' },
+    { actorId: 'f16_falcon', fileName: 'f16c-fighting-falcon.png', modelLabel: 'F-16C' },
+    { actorId: 'b2_bomber', fileName: 'b2-spirit.png', modelLabel: 'B-2' },
+    { actorId: 'apache_heli', fileName: 'ah64-apache.png', modelLabel: 'AH-64E' },
+    { actorId: 'reaper_drone', fileName: 'mq9-reaper.png', modelLabel: 'MQ-9' },
+    { actorId: 'ifv_bradley', fileName: 'm2a3-bradley.png', modelLabel: 'M2A3' },
+    { actorId: 'spg_artillery', fileName: 'm109a7-paladin.png', modelLabel: 'M109A7' },
+    { actorId: 'sam_patriot', fileName: 'patriot-launcher.png', modelLabel: 'MIM-104' },
+    { actorId: 'ballistic_tel', fileName: 'iskander-tel.png', modelLabel: '9P78-1' },
+    { actorId: 'supply_convoy', fileName: 'fmtv-m1083.png', modelLabel: 'M1083' },
+    { actorId: 'tactical_pickup', fileName: 'hilux-technical.png', modelLabel: 'هايلوكس' }
   ];
   const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
