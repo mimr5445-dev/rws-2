@@ -10,7 +10,7 @@ import {
 import * as countriesNs from 'i18n-iso-countries';
 import arLocale from 'i18n-iso-countries/langs/ar.json';
 import enLocale from 'i18n-iso-countries/langs/en.json';
-import { feature } from 'topojson-client';
+import { feature, mesh } from 'topojson-client';
 import worldAtlas from 'world-atlas/countries-110m.json';
 import { GeoRegionItem, MapPack, MapZoneDef, NavCell, Point } from '../core/types';
 import { applyWorldNavCorridors } from './worldGeoCorridors';
@@ -23,6 +23,8 @@ import {
 } from './worldGeoGeometry';
 import { drawWorldBriefingSkin } from './worldBriefingSkin';
 import { drawWorldReliefSkin } from './worldReliefSkin';
+import { drawWorldShadedReliefSkin } from './worldShadedReliefSkin';
+import { WORLD_BRIEFING_MAP_ID, WORLD_RELIEF_MAP_ID, WORLD_SHADED_RELIEF_MAP_ID } from './worldMapIds';
 
 export { applyWorldNavCorridors, rewindGeoJsonForD3 };
 
@@ -47,7 +49,8 @@ export function createWorldProjection(width = 1920, height = 1080): GeoProjectio
   );
 }
 
-export type WorldSkin = 'briefing' | 'relief';
+export type WorldSkin = 'briefing' | 'relief' | 'shaded_relief';
+export type WorldMapSkin = WorldSkin;
 
 export interface WorldMapPackOptions {
   skin?: WorldSkin;
@@ -62,6 +65,7 @@ interface WorldGeometry {
   projection: GeoProjection;
   countriesFc: GeoJSON.FeatureCollection;
   landGeom: GeoPermissibleObjects;
+  borderMesh: unknown;
   featureIso3: Array<string | undefined>;
   regions: Record<string, GeoRegionItem>;
   zones: Record<string, MapZoneDef>;
@@ -86,6 +90,7 @@ function getWorldGeometry(): WorldGeometry {
   const topo = worldAtlas as any;
   const countriesFc = feature(topo, topo.objects.countries) as unknown as GeoJSON.FeatureCollection;
   const landGeom = feature(topo, topo.objects.land) as unknown as GeoPermissibleObjects;
+  const borderMesh = mesh(topo, topo.objects.countries, (a: any, b: any) => a !== b);
   const projection = createWorldProjection(width, height);
   const pathGen = geoPath(projection);
 
@@ -156,6 +161,7 @@ function getWorldGeometry(): WorldGeometry {
     projection,
     countriesFc,
     landGeom,
+    borderMesh,
     featureIso3,
     regions,
     zones,
@@ -169,13 +175,23 @@ function getWorldGeometry(): WorldGeometry {
   return cachedWorldGeometry;
 }
 
-/** خريطة عالم كاملة تفاعلية بأحد جلدين: «لوح الإحاطة» أو «التضاريس»، دون أسماء دول. */
+const WORLD_SKIN_IDS: Record<WorldSkin, string> = {
+  briefing: WORLD_BRIEFING_MAP_ID,
+  relief: WORLD_RELIEF_MAP_ID,
+  shaded_relief: WORLD_SHADED_RELIEF_MAP_ID
+};
+
+const WORLD_SKIN_TITLES: Record<WorldSkin, string> = {
+  briefing: 'خريطة العالم التفاعلية',
+  relief: 'خريطة العالم — التضاريس',
+  shaded_relief: 'خريطة العالم — تضاريس بارزة'
+};
+
+/** خريطة عالم كاملة تفاعلية بأحد ثلاثة جلود، دون أسماء دول. */
 export function buildWorldMapPack(options: WorldMapPackOptions = {}): MapPack {
   const skin = options.skin ?? 'briefing';
-  const id = options.id ?? (skin === 'briefing' ? 'world_live' : 'world_relief');
-  const title =
-    options.title ??
-    (skin === 'briefing' ? 'خريطة العالم التفاعلية' : 'خريطة العالم — التضاريس');
+  const id = options.id ?? WORLD_SKIN_IDS[skin];
+  const title = options.title ?? WORLD_SKIN_TITLES[skin];
   const cacheKey = `${id}|${skin}`;
   const cached = worldPackCache.get(cacheKey);
   if (cached) return cached;
@@ -196,11 +212,20 @@ export function buildWorldMapPack(options: WorldMapPackOptions = {}): MapPack {
       width: geo.width,
       height: geo.height
     });
-  } else {
+  } else if (skin === 'relief') {
     drawWorldReliefSkin({
       ctx,
       projection: geo.projection,
       landGeom: geo.landGeom,
+      width: geo.width,
+      height: geo.height
+    });
+  } else {
+    drawWorldShadedReliefSkin({
+      ctx,
+      projection: geo.projection,
+      landGeom: geo.landGeom,
+      borderMesh: geo.borderMesh,
       width: geo.width,
       height: geo.height
     });

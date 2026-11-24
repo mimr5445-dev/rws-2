@@ -9,6 +9,7 @@ import { CountryRegistry } from '../countries/countryRegistry';
 import { buildRegionColorMap } from '../countries/countrySelection';
 import { DT, StudioEngine, TICK_RATE } from '../engine/engine';
 import { buildCountryProvincesMapPack } from '../maps/worldGeoEngine';
+import { WORLD_BRIEFING_MAP_ID, WORLD_STYLE_IDS, resolveWorldMapId } from '../maps/worldMapIds';
 import { PackRegistry } from '../packs/packRegistry';
 import { SoundSynth } from '../renderer/soundSynth';
 import { getBundledSoundBank } from '../content/bundledSounds';
@@ -144,7 +145,11 @@ export function useStudioEngineController(input: StudioEngineControllerInput) {
   const openEmptyMapBoard = useCallback(
     async (mapId: string, preserveRecording = false) => {
       const reg = registryRef.current!;
-      const map = reg.maps[mapId] ?? reg.maps.world_live;
+      const requestedId = resolveWorldMapId(mapId);
+      const map =
+        reg.maps[requestedId] ??
+        reg.maps[WORLD_BRIEFING_MAP_ID] ??
+        Object.values(reg.maps)[0];
       if (!map) return;
 
       if (!preserveRecording) cancelActiveActionRecording();
@@ -211,7 +216,14 @@ export function useStudioEngineController(input: StudioEngineControllerInput) {
 
       try {
         const parsed = yaml.load(rawYaml) as ScenarioFile;
-        const map = reg.maps[parsed?.meta?.map];
+        const requestedId = resolveWorldMapId(parsed?.meta?.map);
+        const map =
+          reg.maps[requestedId] ??
+          reg.maps[WORLD_BRIEFING_MAP_ID] ??
+          Object.values(reg.maps)[0];
+        if (parsed?.meta && map) {
+          parsed.meta.map = map.id;
+        }
         const foundIssues = validateScenario(parsed, map, reg.actors);
         if (foundIssues.length > 0) {
           setPlaying(false);
@@ -392,12 +404,24 @@ export function useStudioEngineController(input: StudioEngineControllerInput) {
       setPackVersion((v) => v + 1);
 
       const userScen = lastScenId ? reg.scenarios.find((s) => s.id === lastScenId) : undefined;
-      if (userScen && reg.maps[(() => { try { return (yaml.load(userScen.yaml) as ScenarioFile)?.meta?.map; } catch { return ''; } })()]) {
+      const savedScenarioMapId = userScen
+        ? (() => {
+            try {
+              return resolveWorldMapId((yaml.load(userScen.yaml) as ScenarioFile)?.meta?.map);
+            } catch {
+              return '';
+            }
+          })()
+        : '';
+      if (userScen && reg.maps[savedScenarioMapId]) {
         setSelectedScenarioId(userScen.id);
         setYamlText(userScen.yaml);
         await loadScenario(userScen.yaml, null, userScen.id);
       } else {
-        await openEmptyMapBoard('world_live');
+        const savedMapId = await studioDb.getSetting<string>('lastMapId');
+        const requestedId = resolveWorldMapId(savedMapId);
+        const initialMapId = WORLD_STYLE_IDS.has(requestedId) ? requestedId : WORLD_BRIEFING_MAP_ID;
+        await openEmptyMapBoard(initialMapId);
       }
 
       accumulatorRef.current = 0;

@@ -151,8 +151,13 @@ test('PackRegistry loads studio actors, inherits templates, and keeps world-only
   assert.equal(truck.kind, 'vehicle');
   assert.equal(truck.speed, 94);
 
+  const politicalBoard = reg.maps.world_political_board;
+  assert.ok(politicalBoard, 'the provided political world map is registered as a selectable board');
+  assert.equal(politicalBoard.svgOrUrl, '/maps/world-political-board.jpg');
+  assert.equal(politicalBoard.navGrid.length, politicalBoard.cols * politicalBoard.rows);
+
   const bundle = reg.exportCurrentBundle();
-  assert.equal(bundle.maps?.length ?? 0, 0, 'legacy static maps removed from PackRegistry');
+  assert.equal(bundle.maps?.length ?? 0, 0, 'built-in maps are not included in custom pack exports');
   assert.ok((bundle.actors?.length ?? 0) >= 25);
   assert.ok(reg.actors.mbt_tank?.ability?.mode === 'shell');
   assert.ok(reg.actors.ballistic_tel?.ability?.mode === 'missile');
@@ -1746,8 +1751,8 @@ test('cameraTransform maintains distortion-free uniform matrix, cinematic safe i
   }
 });
 
-test('tactical_pickup military vehicle is registered in PackRegistry and passes SVG sanitization', async () => {
-  const { sanitizeSvg, validatePackBundle } = await import('../packs/packSchema');
+test('tactical_pickup military vehicle is registered and references its bundled transparent PNG', async () => {
+  const { sanitizeAssetUrl, validatePackBundle } = await import('../packs/packSchema');
   const reg = new PackRegistry(false);
   const pickup = reg.actors.tactical_pickup;
   assert.ok(pickup, 'tactical_pickup should exist in PackRegistry');
@@ -1756,10 +1761,7 @@ test('tactical_pickup military vehicle is registered in PackRegistry and passes 
   assert.equal(pickup.ability?.category, 'armor');
   assert.equal(pickup.ability?.mode, 'bullet');
 
-  const sanitized = sanitizeSvg(pickup.svg);
-  assert.ok(sanitized, 'sanitized SVG should not be null');
-  assert.ok(sanitized.includes('TOYOTA'));
-  assert.ok(sanitized.includes('letter-spacing="1.5"'));
+  assert.equal(sanitizeAssetUrl(pickup.svg), '/vehicles/hilux-technical.png');
   assert.doesNotThrow(() => validatePackBundle({ actors: [pickup] }));
 });
 
@@ -2084,4 +2086,11 @@ test('120Hz entity, projectile, and effect prev->curr alpha linear interpolation
   const cr = sim.craters[0]!;
   assert.ok(ex.progress > ex.prevProgress, 'explosion must record prevProgress');
   assert.ok(cr.life < cr.prevLife, 'crater must record prevLife');
+});
+
+test('legacy Pacific world map ids resolve to the full-world briefing map', async () => {
+  const { WORLD_BRIEFING_MAP_ID, resolveWorldMapId } = await import('../maps/worldMapIds');
+  assert.equal(resolveWorldMapId('world_pacific_briefing'), WORLD_BRIEFING_MAP_ID);
+  assert.equal(resolveWorldMapId(undefined), WORLD_BRIEFING_MAP_ID);
+  assert.equal(resolveWorldMapId('country_sau'), 'country_sau');
 });

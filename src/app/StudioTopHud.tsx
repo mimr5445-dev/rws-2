@@ -18,9 +18,12 @@ import { CinematicFocusKind } from '../core/cinematicDirector';
 import { GeoRegionItem, MapPack } from '../core/types';
 import { StudioRenderer } from '../renderer/studioRenderer';
 import { StudioHudState } from './studioAppTypes';
+import { WORLD_BRIEFING_MAP_ID, WORLD_RELIEF_MAP_ID } from '../maps/worldMapIds';
 
 export interface StudioTopHudProps {
   activeMap: MapPack;
+  availableMaps: MapPack[];
+  onSelectMap: (mapId: string) => void;
   topHudExpanded: boolean;
   onToggleTopHud: () => void;
   cinematicCamera: boolean;
@@ -45,6 +48,8 @@ export interface StudioTopHudProps {
 
 export function StudioTopHud({
   activeMap,
+  availableMaps,
+  onSelectMap,
   topHudExpanded,
   onToggleTopHud,
   cinematicCamera,
@@ -66,6 +71,9 @@ export function StudioTopHud({
   toastMsg,
   rendererRef
 }: StudioTopHudProps) {
+  const isBriefingStyle = activeMap.id === WORLD_BRIEFING_MAP_ID;
+  const isReliefStyle = activeMap.id === WORLD_RELIEF_MAP_ID;
+
   return (
     <div className="pointer-events-none fixed top-2 left-2 right-2 z-30 flex flex-col items-center gap-1.5">
       <div className="pointer-events-auto flex items-center gap-1.5 bg-slate-950/90 border border-slate-700/90 rounded-xl px-2 py-1 shadow-xl backdrop-blur-md max-w-full">
@@ -80,7 +88,9 @@ export function StudioTopHud({
           <span className="truncate max-w-[115px] sm:max-w-[240px]">
             {activeMap.geoLevel === 'country'
               ? activeMap.title.replace(' — المحافظات', '')
-              : 'خريطة العالم'}
+              : activeMap.geoLevel === 'world'
+                ? 'خريطة العالم'
+                : activeMap.title}
           </span>
           {topHudExpanded ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
         </button>
@@ -92,10 +102,10 @@ export function StudioTopHud({
           <button
             type="button"
             id="mapStyleBriefingBtn"
-            aria-pressed={activeMap.id !== 'world_relief'}
+            aria-pressed={isBriefingStyle}
             onClick={() => onSelectMapStyle('briefing')}
             className={`min-h-[30px] px-2 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors border ${
-              activeMap.id !== 'world_relief'
+              isBriefingStyle
                 ? 'bg-sky-600 text-white border-sky-400'
                 : 'text-slate-300 border-transparent hover:bg-slate-800'
             }`}
@@ -105,10 +115,10 @@ export function StudioTopHud({
           <button
             type="button"
             id="mapStyleReliefBtn"
-            aria-pressed={activeMap.id === 'world_relief'}
+            aria-pressed={isReliefStyle}
             onClick={() => onSelectMapStyle('relief')}
             className={`min-h-[30px] px-2 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors border ${
-              activeMap.id === 'world_relief'
+              isReliefStyle
                 ? 'bg-sky-600 text-white border-sky-400'
                 : 'text-slate-300 border-transparent hover:bg-slate-800'
             }`}
@@ -342,6 +352,19 @@ export function StudioTopHud({
           <span className="font-mono tabular-nums text-sky-300 px-1.5">
             {hudState.simTimeSec.toFixed(1)}s
           </span>
+          <span className="text-slate-500">|</span>
+          <label className="sr-only" htmlFor="topHudMapSelect">اختيار الخريطة</label>
+          <select
+            id="topHudMapSelect"
+            aria-label="اختيار الخريطة"
+            value={activeMap.id}
+            onChange={(event) => onSelectMap(event.target.value)}
+            className="min-h-[36px] max-w-[min(48vw,220px)] bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg px-2 text-[11px] sm:text-xs text-slate-100 focus:outline-none focus:border-sky-400"
+          >
+            {availableMaps.map((map) => (
+              <option key={map.id} value={map.id}>{map.title}</option>
+            ))}
+          </select>
           <span className="text-slate-500">|</span>
           <span className="text-slate-300 px-1">{hudState.entityCount} وحدة</span>
           <button

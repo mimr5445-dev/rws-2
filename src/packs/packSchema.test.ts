@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import * as yaml from 'js-yaml';
 import { isSafeAssetUrl, sanitizeAssetUrl, sanitizeSvg, validatePackBundle } from './packSchema';
 import { DEMO_ACTORS, DEMO_MAPS } from './demoPacks';
@@ -37,6 +39,35 @@ test('a well-formed bundle and all built-in DEMO_MAPS / DEMO_ACTORS pass validat
   for (const a of Object.values(STUDIO_ACTORS)) {
     assert.ok(sanitizeAssetUrl(a.svg), `studio actor ${a.id} svg must sanitize cleanly`);
     assert.ok(a.ability && a.ability.label && a.ability.mode, `studio actor ${a.id} must define an ability`);
+  }
+});
+
+test('real-world aircraft and vehicle actors use bundled transparent PNG sprites', () => {
+  const models = [
+    { actorId: 'mbt_tank', fileName: 'm1a2-abrams.png', modelLabel: 'M1A2' },
+    { actorId: 'f35_stealth', fileName: 'f35a-lightning.png', modelLabel: 'F-35A' },
+    { actorId: 'f16_falcon', fileName: 'f16c-fighting-falcon.png', modelLabel: 'F-16C' },
+    { actorId: 'b2_bomber', fileName: 'b2-spirit.png', modelLabel: 'B-2' },
+    { actorId: 'apache_heli', fileName: 'ah64-apache.png', modelLabel: 'AH-64E' },
+    { actorId: 'reaper_drone', fileName: 'mq9-reaper.png', modelLabel: 'MQ-9' },
+    { actorId: 'ifv_bradley', fileName: 'm2a3-bradley.png', modelLabel: 'M2A3' },
+    { actorId: 'spg_artillery', fileName: 'm109a7-paladin.png', modelLabel: 'M109A7' },
+    { actorId: 'sam_patriot', fileName: 'patriot-launcher.png', modelLabel: 'MIM-104' },
+    { actorId: 'ballistic_tel', fileName: 'iskander-tel.png', modelLabel: '9P78-1' },
+    { actorId: 'supply_convoy', fileName: 'fmtv-m1083.png', modelLabel: 'M1083' },
+    { actorId: 'tactical_pickup', fileName: 'hilux-technical.png', modelLabel: 'هايلوكس' }
+  ];
+  const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+  for (const { actorId, fileName, modelLabel } of models) {
+    const actor = STUDIO_ACTORS[actorId];
+    assert.ok(actor, `expected built-in actor ${actorId}`);
+    assert.equal(actor.svg, `/vehicles/${fileName}`);
+    assert.ok(actor.label.includes(modelLabel), `expected ${actorId} to name ${modelLabel}`);
+
+    const png = fs.readFileSync(path.resolve(process.cwd(), 'public', 'vehicles', fileName));
+    assert.deepEqual(png.subarray(0, 8), pngSignature, `${fileName} must be a valid PNG`);
+    assert.equal(png[25], 6, `${fileName} must retain an alpha channel for map compositing`);
   }
 });
 

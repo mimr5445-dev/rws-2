@@ -6,6 +6,7 @@ import { StrikeLockPhase } from './core/targetingLock';
 import { ActorPack, Faction, MapPack, Point, ValidationIssue } from './core/types';
 import { CountryRegistry } from './countries/countryRegistry';
 import { PackRegistry } from './packs/packRegistry';
+import { WORLD_BRIEFING_MAP_ID, WORLD_RELIEF_MAP_ID, WORLD_STYLE_IDS } from './maps/worldMapIds';
 import { SoundSynth } from './renderer/soundSynth';
 import { StudioRenderer } from './renderer/studioRenderer';
 import { studioDb } from './storage/studioDb';
@@ -49,6 +50,7 @@ export default function App() {
   const toastTimerRef = useRef<number | null>(null);
   const accumulatorRef = useRef(0);
   const lastAlphaRef = useRef(1);
+  const worldStyleRef = useRef<string>(WORLD_BRIEFING_MAP_ID);
 
   const [, setPackVersion] = useState(0);
   const [unitsOpen, setUnitsOpen] = useState(false);
@@ -90,10 +92,21 @@ export default function App() {
   const [specOpen, setSpecOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
-  const [activeMap, setActiveMap] = useState<MapPack>(registryRef.current.maps.world_live);
+  const [activeMap, setActiveMap] = useState<MapPack>(
+    () =>
+      registryRef.current!.maps[WORLD_BRIEFING_MAP_ID] ??
+      registryRef.current!.maps[WORLD_RELIEF_MAP_ID] ??
+      Object.values(registryRef.current!.maps)[0]!
+  );
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const [geoLoadingMsg, setGeoLoadingMsg] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (WORLD_STYLE_IDS.has(activeMap.id)) {
+      worldStyleRef.current = activeMap.id;
+    }
+  }, [activeMap.id]);
 
   const [viewportSize, setViewportSize] = useState(() => ({
     w: typeof window !== 'undefined' ? window.innerWidth : 1280,
@@ -256,7 +269,7 @@ export default function App() {
   });
 
   const handleSelectMapStyle = (style: 'briefing' | 'relief') => {
-    void openEmptyMapBoard(style === 'relief' ? 'world_relief' : 'world_live');
+    void openEmptyMapBoard(style === 'relief' ? WORLD_RELIEF_MAP_ID : WORLD_BRIEFING_MAP_ID);
   };
 
   const handleChangeUnitScale = async (nextScale: number) => {
@@ -460,6 +473,8 @@ export default function App() {
 
         <StudioTopHud
           activeMap={activeMap}
+          availableMaps={Object.values(reg.maps)}
+          onSelectMap={(mapId) => void openEmptyMapBoard(mapId)}
           topHudExpanded={topHudExpanded}
           onToggleTopHud={() =>
             setTopHudExpanded((v) => {
@@ -496,9 +511,7 @@ export default function App() {
           selectedRegionId={selectedRegionId}
           selectedRegionObj={selectedRegionObj}
           onEnterCountryProvinces={(id) => void enterCountryProvinces(id)}
-          onBackToWorld={() =>
-            void openEmptyMapBoard(activeMap.id === 'world_relief' ? 'world_relief' : 'world_live')
-          }
+          onBackToWorld={() => void openEmptyMapBoard(worldStyleRef.current)}
           onSelectMapStyle={handleSelectMapStyle}
           hudState={hudState}
           showAnchors={showAnchors}
