@@ -1,12 +1,104 @@
 {
   "tank.fire": {
-    "files": ["vehicles/tank_fire_01.ogg"],
+    "files": [
+      "vehicles/tank_fire_01.ogg"
+    ],
     "volume": 0.85,
     "fallbackSynthId": "cannon_fire"
   },
   "explosion": {
-    "files": ["missiles/ballistic_impact_01.mp3"],
+    "files": [
+      "weapons/explosion_01.ogg",
+      "weapons/explosion_02.ogg",
+      "weapons/explosion_03.ogg",
+      "weapons/explosion_04.ogg",
+      "weapons/explosion_05.ogg"
+    ],
     "volume": 0.9,
     "fallbackSynthId": "explosion"
+  },
+  "missile_launch": {
+    "files": [
+      "weapons/missile_launch_01.ogg",
+      "weapons/missile_launch_02.ogg"
+    ],
+    "volume": 0.8
+  },
+  "jet_takeoff": {
+    "files": [
+      "vehicles/jet_takeoff_01.ogg",
+      "vehicles/jet_takeoff_02.ogg"
+    ],
+    "volume": 0.8
+  },
+  "cannon_fire": {
+    "files": [
+      "weapons/cannon_fire_01.ogg",
+      "weapons/cannon_fire_02.ogg"
+    ],
+    "volume": 0.85
+  },
+  "gunfire_burst": {
+    "files": [
+      "weapons/gunfire_burst_01.ogg",
+      "weapons/gunfire_burst_02.ogg",
+      "weapons/gunfire_burst_03.ogg"
+    ],
+    "volume": 0.8
+  },
+  "artillery_fire": {
+    "files": [
+      "weapons/artillery_fire_01.ogg",
+      "weapons/artillery_fire_02.ogg"
+    ],
+    "volume": 0.85
+  },
+  "torpedo_launch": {
+    "files": [
+      "naval/torpedo_launch_01.ogg",
+      "naval/torpedo_launch_02.ogg",
+      "naval/torpedo_launch_03.ogg"
+    ],
+    "volume": 0.8
+  },
+  "ship_horn": {
+    "files": [
+      "naval/ship_horn_01.ogg",
+      "naval/ship_horn_02.ogg"
+    ],
+    "volume": 0.8
+  },
+  "spawn_pop": {
+    "files": [
+      "system/spawn_pop_01.ogg",
+      "system/spawn_pop_02.ogg"
+    ],
+    "volume": 0.7
+  },
+  "move_order": {
+    "files": [
+      "infantry/move_order_01.ogg",
+      "infantry/move_order_02.ogg",
+      "infantry/move_order_03.ogg",
+      "infantry/move_order_04.ogg",
+      "infantry/move_order_05.ogg",
+      "infantry/move_order_06.ogg",
+      "infantry/move_order_07.ogg"
+    ],
+    "volume": 0.8
+  },
+  "build_complete": {
+    "files": [
+      "system/build_complete_01.ogg",
+      "system/build_complete_02.ogg"
+    ],
+    "volume": 0.75
+  },
+  "alert_ping": {
+    "files": [
+      "system/alert_ping_01.ogg",
+      "system/alert_ping_02.ogg"
+    ],
+    "volume": 0.7
   }
 }
