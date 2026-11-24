@@ -4,6 +4,173 @@ import { ExplosionState, MuzzleFlashState, ProjectileState } from '../../core/ty
 import { StudioEngine } from '../../engine/engine';
 import { FxParticle, lerp } from './rendererUtils';
 
+function seededRandom(seed: string): () => number {
+  let state = 2166136261;
+  for (let i = 0; i < seed.length; i++) state = Math.imul(state ^ seed.charCodeAt(i), 16777619);
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+}
+
+function stableRandom(seed: number, index: number): number {
+  let value = (seed ^ Math.imul(index + 1, 0x9e3779b1)) >>> 0;
+  value = Math.imul(value ^ (value >>> 16), 0x7feb352d);
+  value = Math.imul(value ^ (value >>> 15), 0x846ca68b);
+  return ((value ^ (value >>> 16)) >>> 0) / 4294967296;
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function spawnImpactParticles(ex: ExplosionState, add: (particle: FxParticle) => void): void {
+  const random = seededRandom(ex.id);
+  const scale = Math.max(0.65, Math.min(1.55, ex.sourceScale ?? 1));
+  const radius = Math.max(8, ex.maxRadius * scale);
+  const water = ex.surface === 'water' || ex.kind === 'torpedo';
+  const airborne = ex.surface === 'air' || ex.kind === 'interceptor';
+
+  if (ex.kind === 'bullet') {
+    const sparks = ex.sourceKind === 'person' ? 5 : 9;
+    for (let i = 0; i < sparks; i++) {
+      const angle = random() * Math.PI * 2;
+      const speed = 24 + random() * 60;
+      const life = 0.18 + random() * 0.24;
+      add({
+        x: ex.x, y: ex.y,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        drag: 7, rise: -2, life, maxLife: life,
+        startRadius: 1 + random() * 1.8, endRadius: 0.2,
+        startAlpha: 0.9, color: i % 2 ? 0xfbbf24 : 0xfff7cc,
+        shape: 'spark', rotation: angle, spin: (random() - 0.5) * 8
+      });
+    }
+    return;
+  }
+
+  if (water) {
+    const count = ex.sourceKind === 'ship' ? 34 : 26;
+    for (let i = 0; i < count; i++) {
+      const angle = random() * Math.PI * 2;
+      const speed = radius * (0.48 + random() * 1.45);
+      const life = 0.75 + random() * 0.95;
+      const droplet = random() > 0.28;
+      add({
+        x: ex.x + Math.cos(angle) * radius * 0.08,
+        y: ex.y + Math.sin(angle) * radius * 0.04,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed * 0.34 - radius * (0.25 + random() * 0.45),
+        drag: 2.5, rise: 6, life, maxLife: life,
+        startRadius: (2.2 + random() * 4.2) * scale,
+        endRadius: 0.5,
+        startAlpha: 0.75,
+        color: i % 4 === 0 ? 0xf8fafc : i % 3 === 0 ? 0x7dd3fc : 0x38bdf8,
+        shape: droplet ? 'droplet' : 'smoke',
+        rotation: angle, spin: (random() - 0.5) * 10,
+        aspect: 0.6 + random() * 0.5
+      });
+    }
+    return;
+  }
+
+  if (airborne) {
+    const count = ex.kind === 'interceptor' ? 8 : 12;
+    for (let i = 0; i < count; i++) {
+      const angle = random() * Math.PI * 2;
+      const speed = radius * (0.45 + random() * 1.15);
+      const life = 0.75 + random() * 0.8;
+      add({
+        x: ex.x, y: ex.y,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - radius * 0.22,
+        drag: 2.8, rise: -10, life, maxLife: life,
+        startRadius: 2 + random() * 3, endRadius: 10 + random() * 10,
+        startAlpha: 0.48,
+        color: i % 2 ? 0x94a3b8 : 0xdbeafe,
+        shape: 'smoke', aspect: 1.35 + random() * 0.65
+      });
+    }
+    for (let i = 0; i < 26; i++) {
+      const angle = random() * Math.PI * 2;
+      const speed = radius * (1.1 + random() * 2.2);
+      const life = 0.25 + random() * 0.5;
+      add({
+        x: ex.x, y: ex.y,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        drag: 4.8, rise: -4, life, maxLife: life,
+        startRadius: 1 + random() * 2.2, endRadius: 0.15,
+        startAlpha: 1,
+        color: i % 3 ? 0x7dd3fc : 0xffffff,
+        shape: 'spark', rotation: angle, spin: (random() - 0.5) * 16
+      });
+    }
+    return;
+  }
+
+  const airstrike = ex.kind === 'airstrike';
+  const missile = ex.kind === 'missile';
+  const artillery = ex.kind === 'artillery';
+  const smokeCount = Math.round((airstrike ? 42 : missile ? 32 : artillery ? 25 : 18) * (ex.sourceKind === 'person' ? 0.65 : 1));
+  const smokeColors = [0x26343a, 0x3b4548, 0x57534e, 0x71665b, 0x8a7b6d];
+  for (let i = 0; i < smokeCount; i++) {
+    const plumeT = i / Math.max(1, smokeCount - 1);
+    const angle = random() * Math.PI * 2;
+    const radial = random() * radius * (airstrike ? 0.32 : 0.48);
+    const life = (airstrike ? 2.25 : missile ? 1.8 : artillery ? 1.45 : 1.2) + random() * (airstrike ? 1.15 : 0.75);
+    const puff = (8 + random() * 12) * scale;
+    add({
+      x: ex.x + Math.cos(angle) * radial + (airstrike ? (random() - 0.5) * radius * 0.5 : 0),
+      y: ex.y + Math.sin(angle) * radial * 0.35 - (airstrike ? plumeT * radius * 1.15 : 0),
+      vx: Math.cos(angle) * (airstrike ? 8 : 16) + (random() - 0.5) * 20,
+      vy: -radius * (airstrike ? 0.2 + plumeT * 0.28 : artillery ? 0.1 : 0.16) - random() * 18,
+      drag: 1.65, rise: -(airstrike ? 22 : missile ? 17 : 13), life, maxLife: life,
+      startRadius: puff * 0.5,
+      endRadius: puff * (airstrike ? 3.0 : missile ? 2.5 : artillery ? 2.0 : 1.7),
+      startAlpha: 0.42 + random() * 0.18,
+      color: smokeColors[Math.floor(random() * smokeColors.length)],
+      shape: artillery ? 'dust' : 'smoke',
+      aspect: 1.1 + random() * 1.0
+    });
+  }
+
+  const debrisCount = artillery ? 30 : airstrike ? 24 : missile ? 20 : 16;
+  const debrisColors = artillery || ex.kind === 'shell'
+    ? [0x5b4a3e, 0x736052, 0x302b28]
+    : [0x292a29, 0x47413b, 0x9a4b22];
+  for (let i = 0; i < debrisCount; i++) {
+    const angle = random() * Math.PI * 2;
+    const speed = radius * (0.75 + random() * 2.1);
+    const life = 0.42 + random() * 0.86;
+    add({
+      x: ex.x, y: ex.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed * 0.55 - radius * (0.3 + random() * 0.55),
+      drag: 2.3, rise: 0, life, maxLife: life,
+      startRadius: 1.5 + random() * 3.6, endRadius: 0.25,
+      startAlpha: 0.88,
+      color: debrisColors[Math.floor(random() * debrisColors.length)],
+      shape: 'debris', rotation: angle, spin: (random() - 0.5) * 16,
+      aspect: 1.8 + random() * 2.7
+    });
+  }
+
+  const emberCount = airstrike || missile ? 34 : artillery ? 24 : 18;
+  for (let i = 0; i < emberCount; i++) {
+    const angle = random() * Math.PI * 2;
+    const speed = radius * (1.0 + random() * 2.3);
+    const life = 0.32 + random() * 0.62;
+    add({
+      x: ex.x, y: ex.y,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - radius * 0.32,
+      drag: 4.4, rise: -8, life, maxLife: life,
+      startRadius: 1.2 + random() * 2.2, endRadius: 0.1,
+      startAlpha: 0.96,
+      color: i % 4 === 0 ? 0xffffff : i % 3 === 0 ? 0xfef08a : i % 2 ? 0xf97316 : 0xfb923c,
+      shape: 'spark', rotation: angle, spin: (random() - 0.5) * 12
+    });
+  }
+}
+
 export interface CombatFxInput {
   engine: StudioEngine;
   alpha: number;
@@ -409,199 +576,128 @@ export function renderCombatFx(input: CombatFxInput): void {
   for (const ex of engine.explosions) {
     if (!seenExplosions.has(ex)) {
       seenExplosions.add(ex);
-      if (ex.kind === 'bullet') {
-        for (let i = 0; i < 6; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          const spd = 45 + Math.random() * 65;
-          spawnFxParticle({
-            x: ex.x,
-            y: ex.y,
-            vx: Math.cos(ang) * spd,
-            vy: Math.sin(ang) * spd,
-            drag: 6.5,
-            rise: 0,
-            life: 0.25 + Math.random() * 0.14,
-            maxLife: 0.39,
-            startRadius: 2.0,
-            endRadius: 0.3,
-            startAlpha: 0.95,
-            color: i % 2 === 0 ? 0xfef08a : 0xfacc15
-          });
-        }
-        spawnFxParticle({
-          x: ex.x,
-          y: ex.y,
-          vx: 0,
-          vy: -4,
-          drag: 2.5,
-          rise: -8,
-          life: 0.45,
-          maxLife: 0.45,
-          startRadius: 3,
-          endRadius: 8,
-          startAlpha: 0.4,
-          color: 0x94a3b8
-        });
-      } else if (ex.kind === 'torpedo') {
-        for (let i = 0; i < 16; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          const spd = 25 + Math.random() * 55;
-          spawnFxParticle({
-            x: ex.x,
-            y: ex.y,
-            vx: Math.cos(ang) * spd,
-            vy: Math.sin(ang) * spd - 22,
-            drag: 2.8,
-            rise: 16,
-            life: 1.0 + Math.random() * 0.6,
-            maxLife: 1.6,
-            startRadius: 4 + Math.random() * 4,
-            endRadius: 12 + Math.random() * 6,
-            startAlpha: 0.72,
-            color: i % 3 === 0 ? 0xf8fafc : i % 2 === 0 ? 0xbae6fd : 0x38bdf8
-          });
-        }
-      } else {
-        const isHeavy = ex.kind === 'missile' || ex.kind === 'airstrike' || ex.kind === 'artillery';
-        const isInt = ex.kind === 'interceptor';
-        const smokeN = isHeavy ? 15 : 7;
-        const sparkN = isHeavy ? 20 : 12;
-        for (let i = 0; i < smokeN; i++) {
-          const ang = (i / smokeN) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
-          const spd = (isHeavy ? 18 : 14) + Math.random() * (isHeavy ? 42 : 24);
-          const dur = (isHeavy ? 1.8 : 1.1) + Math.random() * 1.1;
-          spawnFxParticle({
-            x: ex.x + Math.cos(ang) * 4,
-            y: ex.y + Math.sin(ang) * 4,
-            vx: Math.cos(ang) * spd,
-            vy: Math.sin(ang) * spd,
-            drag: 2.2,
-            rise: isHeavy ? -20 : -14,
-            life: dur,
-            maxLife: dur,
-            startRadius: (isHeavy ? 7 : 4.5) + Math.random() * 4,
-            endRadius: (isHeavy ? 24 : 14) + Math.random() * 10,
-            startAlpha: isInt ? 0.55 : 0.68,
-            color: isInt
-              ? i % 2 === 0
-                ? 0xe0f2fe
-                : 0x94a3b8
-              : i % 3 === 0
-                ? 0x1e293b
-                : i % 3 === 1
-                  ? 0x334155
-                  : 0x475569
-          });
-        }
-        for (let i = 0; i < sparkN; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          const spd = (isHeavy ? 70 : 55) + Math.random() * (isHeavy ? 115 : 75);
-          const dur = 0.42 + Math.random() * 0.42;
-          spawnFxParticle({
-            x: ex.x,
-            y: ex.y,
-            vx: Math.cos(ang) * spd,
-            vy: Math.sin(ang) * spd,
-            drag: 4.0,
-            rise: -8,
-            life: dur,
-            maxLife: dur,
-            startRadius: isHeavy ? 3.2 : 2.4,
-            endRadius: 0.4,
-            startAlpha: 1,
-            color: isInt
-              ? i % 2 === 0
-                ? 0xffffff
-                : 0x38bdf8
-              : i % 3 === 0
-                ? 0xffffff
-                : i % 3 === 1
-                  ? 0xfef08a
-                  : 0xf97316
-          });
-        }
-      }
+      spawnImpactParticles(ex, spawnFxParticle);
     }
 
-    const p = Math.max(0, Math.min(1, lerp(ex.prevProgress, ex.progress, alpha)));
+    const p = clamp01(lerp(ex.prevProgress, ex.progress, alpha));
+    const seed = ex.id.split('').reduce((value, char) => Math.imul(value ^ char.charCodeAt(0), 16777619) >>> 0, 2166136261);
+    const platformScale = ex.sourceKind === 'air' ? 1.18 : ex.sourceKind === 'ship' ? 1.08 : ex.sourceKind === 'vehicle' ? 1.04 : ex.sourceKind === 'person' ? 0.72 : 1;
+    const size = Math.max(7, ex.maxRadius * Math.max(0.65, Math.min(1.5, ex.sourceScale ?? 1)) * platformScale);
+    const expansion = 1 - Math.pow(1 - p, 2.6);
+    const isWater = ex.surface === 'water' || ex.kind === 'torpedo';
+    const isAir = ex.surface === 'air' || ex.kind === 'interceptor';
+
     if (ex.kind === 'bullet') {
-      const sparkR = Math.max(5, ex.maxRadius * 0.5);
-      if (p < 0.35) {
+      const flash = Math.exp(-p * 18);
+      const radius = size * (0.12 + expansion * 0.42);
+      if (flash > 0.04) {
         explosionGraphics
-          .circle(ex.x, ex.y, sparkR * 0.55 * (1 - p / 0.35))
-          .fill({ color: 0xffffff, alpha: 0.95 * (1 - p / 0.35) });
+          .circle(ex.x, ex.y, size * (0.08 + flash * 0.08))
+          .fill({ color: 0xfff4c2, alpha: flash * 0.86 })
+          .circle(ex.x, ex.y, size * (0.035 + flash * 0.035))
+          .fill({ color: 0xffffff, alpha: flash });
       }
       explosionGraphics
-        .circle(ex.x, ex.y, sparkR * (0.4 + p * 0.9))
-        .stroke({ width: 1.8 * (1 - p), color: 0xfef08a, alpha: Math.max(0, 1 - p) });
-      for (let i = 0; i < 4; i++) {
-        const ang = (i / 4) * Math.PI * 2 + (ex.x % 2);
-        const d = sparkR * (0.3 + p * 0.95);
+        .circle(ex.x, ex.y, radius)
+        .stroke({ width: Math.max(0.6, size * 0.018) * (1 - p), color: 0xffd66b, alpha: (1 - p) * 0.54 });
+      continue;
+    }
+
+    if (isWater) {
+      const ringRadius = size * (0.18 + expansion * 1.08);
+      const waterFade = Math.pow(1 - p, 1.5);
+      explosionGraphics
+        .ellipse(ex.x, ex.y + size * 0.06, ringRadius * 1.22, ringRadius * 0.42)
+        .stroke({ width: Math.max(1.2, size * 0.055 * (1 - p)), color: 0xe0f7ff, alpha: waterFade * 0.78 })
+        .ellipse(ex.x, ex.y + size * 0.06, ringRadius * 0.78, ringRadius * 0.27)
+        .stroke({ width: Math.max(0.8, size * 0.026 * (1 - p)), color: 0x38bdf8, alpha: waterFade * 0.62 });
+      if (p < 0.28) {
+        const column = size * (0.16 + expansion * 0.28);
         explosionGraphics
-          .circle(ex.x + Math.cos(ang) * d, ex.y + Math.sin(ang) * d, 2.0 * (1 - p))
-          .fill({ color: 0xfacc15, alpha: 1 - p });
+          .ellipse(ex.x, ex.y - column * 0.18, column * 0.64, column * 1.05)
+          .fill({ color: 0x93e7ff, alpha: (1 - p / 0.28) * 0.28 })
+          .ellipse(ex.x, ex.y - column * 0.46, column * 0.34, column * 0.68)
+          .fill({ color: 0xf2fbff, alpha: (1 - p / 0.28) * 0.48 });
       }
       continue;
     }
 
-    const isTorp = ex.kind === 'torpedo';
-    const isInt = ex.kind === 'interceptor';
-    const isHeavy = ex.kind === 'missile' || ex.kind === 'airstrike' || ex.kind === 'artillery';
-    const ringCol = isTorp ? 0xe0f2fe : isInt ? 0x38bdf8 : 0xfef08a;
-    const fireCol = isTorp ? 0x38bdf8 : isInt ? 0x0ea5e9 : 0xf97316;
-
-    if (p < 0.24) {
-      const flashRatio = 1 - p / 0.24;
+    if (isAir) {
+      const flash = Math.exp(-p * 12);
+      const ringRadius = size * (0.15 + expansion * 1.02);
       explosionGraphics
-        .circle(ex.x, ex.y, ex.maxRadius * (isHeavy ? 1.55 : 1.05) * (0.5 + p * 2.2))
-        .fill({ color: isTorp ? 0xe0f2fe : isInt ? 0x7dd3fc : 0xfef08a, alpha: flashRatio * 0.42 })
-        .circle(ex.x, ex.y, ex.maxRadius * (isHeavy ? 0.8 : 0.55) * flashRatio)
-        .fill({ color: 0xffffff, alpha: flashRatio * 0.92 });
-    }
-
-    const rShock = ex.maxRadius * (0.25 + p * 1.15);
-    const shockAlpha = Math.max(0, 1 - p) * 0.92;
-    explosionGraphics
-      .circle(ex.x, ex.y, rShock)
-      .stroke({ width: (isHeavy ? 3.8 : 3.0) * (1 - p * 0.6), color: ringCol, alpha: shockAlpha });
-
-    if (p > 0.08 && p < 0.85) {
-      const p2 = (p - 0.08) / 0.77;
-      explosionGraphics
-        .circle(ex.x, ex.y, ex.maxRadius * (0.18 + p2 * 0.82))
-        .stroke({ width: 2.2 * (1 - p2), color: fireCol, alpha: (1 - p2) * 0.7 });
-    }
-
-    const rFire = ex.maxRadius * (isHeavy ? 0.74 : 0.58) * Math.sin(Math.min(1, p * 1.25) * Math.PI);
-    if (rFire > 2) {
-      if (!isTorp && !isInt) {
+        .circle(ex.x, ex.y, ringRadius)
+        .stroke({ width: Math.max(1, size * 0.045 * (1 - p)), color: 0x7dd3fc, alpha: (1 - p) * 0.72 })
+        .circle(ex.x, ex.y, ringRadius * 0.72)
+        .stroke({ width: 1.1 * (1 - p), color: 0xe0f2fe, alpha: (1 - p) * 0.5 });
+      if (flash > 0.04) {
+        explosionGraphics.circle(ex.x, ex.y, size * 0.15 * flash).fill({ color: 0xf0f9ff, alpha: flash * 0.78 });
+      }
+      for (let i = 0; i < 7; i++) {
+        const angle = stableRandom(seed, i + 71) * Math.PI * 2;
+        const length = size * (0.18 + stableRandom(seed, i + 81) * 0.36) * (1 - p);
         explosionGraphics
-          .circle(ex.x, ex.y, rFire * 1.15)
-          .fill({ color: 0xdc2626, alpha: Math.max(0, 0.55 - p * 0.5) });
+          .moveTo(ex.x + Math.cos(angle) * size * 0.06, ex.y + Math.sin(angle) * size * 0.06)
+          .lineTo(ex.x + Math.cos(angle) * length, ex.y + Math.sin(angle) * length)
+          .stroke({ width: 1.5 * (1 - p), color: i % 2 ? 0x38bdf8 : 0xdbeafe, alpha: (1 - p) * 0.85 });
       }
-      explosionGraphics
-        .circle(ex.x, ex.y, rFire)
-        .fill({ color: fireCol, alpha: Math.max(0, 0.88 - p * 0.7) })
-        .circle(ex.x, ex.y, rFire * 0.54)
-        .fill({ color: isTorp ? 0xf8fafc : 0xfef08a, alpha: Math.max(0, 0.96 - p * 1.08) });
+      continue;
     }
 
-    const sparkCount = isHeavy ? 10 : 6;
-    for (let i = 0; i < sparkCount; i++) {
-      const ang = (i / sparkCount) * Math.PI * 2 + (ex.x % 3);
-      const dist = ex.maxRadius * (0.2 + p * 0.95) * (0.7 + ((i * 17) % 5) * 0.1);
-      const sx = ex.x + Math.cos(ang) * dist;
-      const sy = ex.y + Math.sin(ang) * dist - p * 18;
-      if (p < 0.75) {
-        explosionGraphics.circle(sx, sy, 3.0 * (1 - p)).fill({ color: ringCol, alpha: 1 - p });
+    const airstrike = ex.kind === 'airstrike';
+    const missile = ex.kind === 'missile';
+    const artillery = ex.kind === 'artillery';
+    const fireFade = clamp01(1 - Math.max(0, p - 0.18) / (airstrike || missile ? 0.52 : 0.36));
+    const fireRadius = size * (airstrike ? 0.78 : missile ? 0.62 : artillery ? 0.44 : 0.38) * (0.18 + Math.min(1, p / 0.22) * 0.82);
+    const flash = Math.exp(-p * 11);
+    const shockRadius = size * (0.18 + expansion * 1.06);
+    const shockAlpha = Math.pow(1 - p, 1.45);
+
+    // Uneven pressure ring and a very brief hot flash at the impact point.
+    explosionGraphics
+      .circle(ex.x, ex.y, shockRadius)
+      .stroke({ width: Math.max(1, size * (airstrike ? 0.045 : 0.032) * (1 - p)), color: 0xffd8a1, alpha: shockAlpha * 0.6 });
+    if (flash > 0.035) {
+      explosionGraphics
+        .circle(ex.x, ex.y, size * (airstrike ? 0.25 : 0.16) * flash)
+        .fill({ color: 0xffa33b, alpha: flash * 0.42 })
+        .circle(ex.x, ex.y, size * (airstrike ? 0.12 : 0.085) * flash)
+        .fill({ color: 0xfff6d4, alpha: flash * 0.92 });
+    }
+
+    if (fireFade > 0.02) {
+      const lobes = airstrike || missile ? 14 : 10;
+      for (let i = 0; i < lobes; i++) {
+        const angle = stableRandom(seed, i * 3 + 1) * Math.PI * 2;
+        const offset = fireRadius * (0.15 + stableRandom(seed, i * 3 + 2) * 0.53);
+        const lobeRadius = fireRadius * (0.16 + stableRandom(seed, i * 3 + 3) * 0.18);
+        const x = ex.x + Math.cos(angle) * offset;
+        const y = ex.y + Math.sin(angle) * offset * 0.82 - p * size * 0.08;
+        explosionGraphics
+          .circle(x, y, lobeRadius * 1.35)
+          .fill({ color: artillery ? 0x8a573a : 0x9e3518, alpha: fireFade * 0.48 })
+          .circle(x, y, lobeRadius)
+          .fill({ color: i % 3 === 0 ? 0xffbb4d : 0xf97316, alpha: fireFade * 0.76 });
       }
       explosionGraphics
-        .circle(
-          sx * 0.25 + ex.x * 0.75 + Math.cos(ang) * dist * 0.45,
-          ex.y + Math.sin(ang) * dist * 0.45 - p * 26,
-          8 + p * 12
-        )
-        .fill({ color: isTorp ? 0xbae6fd : 0x334155, alpha: Math.max(0, (1 - p) * 0.5) });
+        .circle(ex.x, ex.y - p * size * 0.04, fireRadius * 0.5)
+        .fill({ color: 0xffad42, alpha: fireFade * 0.78 })
+        .circle(ex.x, ex.y - p * size * 0.04, fireRadius * 0.23)
+        .fill({ color: 0xfff0b3, alpha: fireFade * (0.68 + flash * 0.3) });
+    }
+
+    // A low, irregular ground-hugging dust skirt separates the hot core from the rising smoke.
+    const dustFade = Math.pow(1 - p, 1.3) * (artillery || ex.kind === 'shell' ? 0.46 : 0.24);
+    if (dustFade > 0.015) {
+      const dustRadius = size * (0.2 + expansion * 0.92);
+      for (let i = 0; i < 9; i++) {
+        const angle = stableRandom(seed, i + 131) * Math.PI * 2;
+        const offset = dustRadius * (0.26 + stableRandom(seed, i + 141) * 0.44);
+        const puff = size * (0.12 + stableRandom(seed, i + 151) * 0.14) * (0.55 + expansion * 0.7);
+        explosionGraphics
+          .ellipse(ex.x + Math.cos(angle) * offset, ex.y + Math.sin(angle) * offset * 0.36, puff * 1.55, puff * 0.84)
+          .fill({ color: artillery || ex.kind === 'shell' ? 0x806752 : 0x4a423c, alpha: dustFade });
+      }
     }
   }
 
@@ -615,17 +711,68 @@ export function renderCombatFx(input: CombatFxInput): void {
       fp.vy *= damp;
       fp.x += fp.vx * safeDt;
       fp.y += (fp.vy + fp.rise) * safeDt;
+      fp.rotation = (fp.rotation ?? 0) + (fp.spin ?? 0) * safeDt;
       fp.life -= safeDt;
     }
     if (fp.life <= 0) {
       fxParticles.splice(i, 1);
       continue;
     }
-    const t = 1 - fp.life / fp.maxLife;
+    const t = clamp01(1 - fp.life / fp.maxLife);
     const rad = lerp(fp.startRadius, fp.endRadius, t);
-    const fade = fp.startAlpha * (1 - t * t);
+    const fade = fp.startAlpha * (fp.shape === 'smoke' || fp.shape === 'dust' ? 1 - t * 0.72 : (1 - t) * (1 - t));
     if (rad > 0.2 && fade > 0.01) {
-      fxParticleGraphics.circle(fp.x, fp.y, rad).fill({ color: fp.color, alpha: fade });
+      const angle = fp.rotation ?? Math.atan2(fp.vy + fp.rise, fp.vx);
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const px = -sin;
+      const py = cos;
+      if (fp.shape === 'debris') {
+        const length = rad * (fp.aspect ?? 2.5);
+        const halfWidth = Math.max(0.45, rad * 0.36);
+        fxParticleGraphics
+          .poly([
+            fp.x - cos * length * 0.5 + px * halfWidth,
+            fp.y - sin * length * 0.5 + py * halfWidth,
+            fp.x + cos * length * 0.5 + px * halfWidth,
+            fp.y + sin * length * 0.5 + py * halfWidth,
+            fp.x + cos * length * 0.5 - px * halfWidth,
+            fp.y + sin * length * 0.5 - py * halfWidth,
+            fp.x - cos * length * 0.5 - px * halfWidth,
+            fp.y - sin * length * 0.5 - py * halfWidth
+          ])
+          .fill({ color: fp.color, alpha: fade });
+      } else if (fp.shape === 'spark') {
+        fxParticleGraphics
+          .moveTo(fp.x - cos * rad * 2.4, fp.y - sin * rad * 2.4)
+          .lineTo(fp.x + cos * rad * 0.7, fp.y + sin * rad * 0.7)
+          .stroke({ width: Math.max(0.65, rad * 0.62), color: fp.color, alpha: fade });
+      } else if (fp.shape === 'droplet') {
+        const length = rad * (fp.aspect ?? 0.85) * 1.5;
+        fxParticleGraphics
+          .poly([
+            fp.x + cos * length,
+            fp.y + sin * length,
+            fp.x + cos * length * 0.05 + px * rad * 0.56,
+            fp.y + sin * length * 0.05 + py * rad * 0.56,
+            fp.x - cos * length * 0.68 + px * rad * 0.42,
+            fp.y - sin * length * 0.68 + py * rad * 0.42,
+            fp.x - cos * length * 0.92,
+            fp.y - sin * length * 0.92,
+            fp.x - cos * length * 0.68 - px * rad * 0.42,
+            fp.y - sin * length * 0.68 - py * rad * 0.42,
+            fp.x + cos * length * 0.05 - px * rad * 0.56,
+            fp.y + sin * length * 0.05 - py * rad * 0.56
+          ])
+          .fill({ color: fp.color, alpha: fade });
+      } else if (fp.shape === 'smoke' || fp.shape === 'dust' || fp.aspect !== undefined) {
+        const aspect = fp.aspect ?? (fp.shape === 'dust' ? 1.3 : 1.5);
+        fxParticleGraphics
+          .ellipse(fp.x, fp.y, rad * aspect, rad * (fp.shape === 'dust' ? 0.62 : 0.78))
+          .fill({ color: fp.color, alpha: fade });
+      } else {
+        fxParticleGraphics.circle(fp.x, fp.y, rad).fill({ color: fp.color, alpha: fade });
+      }
     }
   }
 }

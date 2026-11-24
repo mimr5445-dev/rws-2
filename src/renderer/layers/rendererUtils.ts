@@ -94,6 +94,10 @@ export interface FxParticle {
   endRadius: number;
   startAlpha: number;
   color: number;
+  shape?: 'smoke' | 'spark' | 'debris' | 'dust' | 'droplet';
+  rotation?: number;
+  spin?: number;
+  aspect?: number;
 }
 
 export interface WakeRipple {

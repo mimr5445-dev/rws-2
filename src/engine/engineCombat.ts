@@ -41,8 +41,16 @@ export function triggerExplosionEffect(
   kind: ExplosionState['kind'],
   color: string,
   attackerFaction: Faction,
-  dealDamage = true
+  dealDamage = true,
+  source: { kind?: EntityState['kind']; scale?: number } = {}
 ): void {
+  const gx = Math.floor(x / ctx.map.cellSize);
+  const gy = Math.floor(y / ctx.map.cellSize);
+  const cell = gx >= 0 && gy >= 0 && gx < ctx.map.cols && gy < ctx.map.rows
+    ? ctx.map.navGrid[gy * ctx.map.cols + gx]
+    : 0;
+  const surface: ExplosionState['surface'] =
+    kind === 'interceptor' ? 'air' : kind === 'torpedo' || cell === 1 ? 'water' : 'land';
   ctx.explosions.push({
     id: ctx.nextAutoId('exp'),
     x,
@@ -51,7 +59,10 @@ export function triggerExplosionEffect(
     progress: 0,
     prevProgress: 0,
     color,
-    kind
+    kind,
+    sourceKind: source.kind,
+    sourceScale: source.scale,
+    surface
   });
 
   if (kind !== 'bullet') {
@@ -144,7 +155,8 @@ export function stepCombatAndEffects(ctx: CombatContext): void {
         expKind,
         p.color,
         p.faction,
-        p.impactDamage !== false
+        p.impactDamage !== false,
+        { kind: p.sourceKind, scale: p.sourceScale }
       );
     } else {
       nextProjectiles.push(p);
@@ -294,6 +306,8 @@ export function processStrikeOrder(ctx: CombatContext, ord: Extract<Order, { typ
         radius,
         color,
         faction,
+        sourceKind: attacker?.kind,
+        sourceScale: attacker?.scaleMul,
         impactDamage: b === 0 || b === burstCount - 1
       });
     }
@@ -330,7 +344,9 @@ export function processStrikeOrder(ctx: CombatContext, ord: Extract<Order, { typ
       durationSec: dur,
       radius,
       color,
-      faction
+      faction,
+      sourceKind: attacker?.kind,
+      sourceScale: attacker?.scaleMul
     });
     ctx.muzzleFlashes.push({
       x: sx,
@@ -365,7 +381,9 @@ export function processStrikeOrder(ctx: CombatContext, ord: Extract<Order, { typ
       durationSec: dur,
       radius,
       color,
-      faction
+      faction,
+      sourceKind: attacker?.kind,
+      sourceScale: attacker?.scaleMul
     });
     ctx.muzzleFlashes.push({
       x: sx,
@@ -397,7 +415,9 @@ export function processStrikeOrder(ctx: CombatContext, ord: Extract<Order, { typ
       durationSec: dur,
       radius,
       color,
-      faction
+      faction,
+      sourceKind: attacker?.kind,
+      sourceScale: attacker?.scaleMul
     });
     ctx.emitSound('torpedo_launch', { actorId: attacker?.actorId, eventKind: 'strike' });
   } else if (mode === 'interceptor') {
@@ -420,7 +440,9 @@ export function processStrikeOrder(ctx: CombatContext, ord: Extract<Order, { typ
       durationSec: dur,
       radius,
       color,
-      faction
+      faction,
+      sourceKind: attacker?.kind,
+      sourceScale: attacker?.scaleMul
     });
     ctx.muzzleFlashes.push({
       x: launchPt.x,
@@ -455,7 +477,9 @@ export function processStrikeOrder(ctx: CombatContext, ord: Extract<Order, { typ
       durationSec: dur,
       radius,
       color,
-      faction
+      faction,
+      sourceKind: attacker?.kind,
+      sourceScale: attacker?.scaleMul
     });
     if (mode === 'missile') {
       ctx.muzzleFlashes.push({

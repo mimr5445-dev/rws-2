@@ -218,7 +218,9 @@ export function stepEntitiesMovement(ctx: MovementStepContext): void {
             durationSec: 0.42,
             radius: st.radius,
             color: st.color,
-            faction: e.faction
+            faction: e.faction,
+            sourceKind: e.kind,
+            sourceScale: e.scaleMul
           });
 
           // نقطة عبور بعد الهدف + قوس التفاف واسع باتجاه القاعدة ثم العودة إلى نقطة الانطلاق
