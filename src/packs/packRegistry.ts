@@ -1,5 +1,6 @@
 import { ActorPack, ActorTemplate, MapPack, PackBundle, SavedScenarioRecord } from '../core/types';
 import { buildWorldMapPack } from '../maps/worldGeoEngine';
+import { buildWorldPoliticalBoard } from '../maps/worldPoliticalBoard';
 import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID } from '../maps/worldMapIds';
 import { studioDb } from '../storage/studioDb';
 import { STUDIO_ACTORS, STUDIO_TEMPLATES } from './studioUnits';
@@ -21,6 +22,8 @@ export class PackRegistry {
   public actorOverrides = new Set<string>();
 
   constructor(private useStorage = true) {
+    const politicalBoard = buildWorldPoliticalBoard();
+    this.maps[politicalBoard.id] = politicalBoard;
     if (typeof document !== 'undefined') {
       const pacificMap = buildWorldMapPack({
         skin: 'pacific_briefing',
@@ -171,7 +174,7 @@ export class PackRegistry {
 
   exportCurrentBundle(): PackBundle {
     const maps = Object.values(this.maps)
-      .filter((m) => !m.geoLevel)
+      .filter((m) => !m.geoLevel && m.id !== 'world_political_board')
       .map(({ hitTest: _ht, regions: _regs, ...rest }) => rest);
     return {
       maps,

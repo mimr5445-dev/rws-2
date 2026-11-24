@@ -459,6 +459,8 @@ export default function App() {
 
         <StudioTopHud
           activeMap={activeMap}
+          availableMaps={Object.values(reg.maps)}
+          onSelectMap={(mapId) => void openEmptyMapBoard(mapId)}
           topHudExpanded={topHudExpanded}
           onToggleTopHud={() =>
             setTopHudExpanded((v) => {

@@ -21,6 +21,8 @@ import { StudioHudState } from './studioAppTypes';
 
 export interface StudioTopHudProps {
   activeMap: MapPack;
+  availableMaps: MapPack[];
+  onSelectMap: (mapId: string) => void;
   topHudExpanded: boolean;
   onToggleTopHud: () => void;
   cinematicCamera: boolean;
@@ -44,6 +46,8 @@ export interface StudioTopHudProps {
 
 export function StudioTopHud({
   activeMap,
+  availableMaps,
+  onSelectMap,
   topHudExpanded,
   onToggleTopHud,
   cinematicCamera,
@@ -78,7 +82,9 @@ export function StudioTopHud({
           <span className="truncate max-w-[115px] sm:max-w-[240px]">
             {activeMap.geoLevel === 'country'
               ? activeMap.title.replace(' — المحافظات', '')
-              : 'خريطة العالم'}
+              : activeMap.geoLevel === 'world'
+                ? 'خريطة العالم'
+                : activeMap.title}
           </span>
           {topHudExpanded ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
         </button>
@@ -308,6 +314,19 @@ export function StudioTopHud({
           <span className="font-mono tabular-nums text-sky-300 px-1.5">
             {hudState.simTimeSec.toFixed(1)}s
           </span>
+          <span className="text-slate-500">|</span>
+          <label className="sr-only" htmlFor="topHudMapSelect">اختيار الخريطة</label>
+          <select
+            id="topHudMapSelect"
+            aria-label="اختيار الخريطة"
+            value={activeMap.id}
+            onChange={(event) => onSelectMap(event.target.value)}
+            className="min-h-[36px] max-w-[min(48vw,220px)] bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg px-2 text-[11px] sm:text-xs text-slate-100 focus:outline-none focus:border-sky-400"
+          >
+            {availableMaps.map((map) => (
+              <option key={map.id} value={map.id}>{map.title}</option>
+            ))}
+          </select>
           <span className="text-slate-500">|</span>
           <span className="text-slate-300 px-1">{hudState.entityCount} وحدة</span>
           <button

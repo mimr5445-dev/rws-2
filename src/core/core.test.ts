@@ -151,8 +151,13 @@ test('PackRegistry loads studio actors, inherits templates, and keeps world-only
   assert.equal(truck.kind, 'vehicle');
   assert.equal(truck.speed, 94);
 
+  const politicalBoard = reg.maps.world_political_board;
+  assert.ok(politicalBoard, 'the provided political world map is registered as a selectable board');
+  assert.equal(politicalBoard.svgOrUrl, '/maps/world-political-board.jpg');
+  assert.equal(politicalBoard.navGrid.length, politicalBoard.cols * politicalBoard.rows);
+
   const bundle = reg.exportCurrentBundle();
-  assert.equal(bundle.maps?.length ?? 0, 0, 'legacy static maps removed from PackRegistry');
+  assert.equal(bundle.maps?.length ?? 0, 0, 'built-in maps are not included in custom pack exports');
   assert.ok((bundle.actors?.length ?? 0) >= 25);
   assert.ok(reg.actors.mbt_tank?.ability?.mode === 'shell');
   assert.ok(reg.actors.ballistic_tel?.ability?.mode === 'missile');
