@@ -2085,18 +2085,3 @@ test('120Hz entity, projectile, and effect prev->curr alpha linear interpolation
   assert.ok(ex.progress > ex.prevProgress, 'explosion must record prevProgress');
   assert.ok(cr.life < cr.prevLife, 'crater must record prevLife');
 });
-
-
-
-
-
-
-test('Pacific briefing projection places Asia, Hawaii and America left-to-right', async () => {
-  const { createPacificBriefingProjection } = await import('../maps/worldGeoEngine');
-  const projection = createPacificBriefingProjection(1920, 1080);
-  const tokyo = projection([139.7, 35.7])!;
-  const hawaii = projection([-157.8, 21.3])!;
-  const sanFrancisco = projection([-122.4, 37.8])!;
-  assert.ok(tokyo[0] < hawaii[0] && hawaii[0] < sanFrancisco[0], 'Pacific-centered world must keep the theater ordered');
-  assert.ok(tokyo[1] > 0 && tokyo[1] < 1080 && sanFrancisco[1] > 0 && sanFrancisco[1] < 1080);
-});

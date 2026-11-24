@@ -9,7 +9,6 @@ import { CountryRegistry } from '../countries/countryRegistry';
 import { buildRegionColorMap } from '../countries/countrySelection';
 import { DT, StudioEngine, TICK_RATE } from '../engine/engine';
 import { buildCountryProvincesMapPack } from '../maps/worldGeoEngine';
-import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID } from '../maps/worldMapIds';
 import { PackRegistry } from '../packs/packRegistry';
 import { SoundSynth } from '../renderer/soundSynth';
 import { getBundledSoundBank } from '../content/bundledSounds';
@@ -145,7 +144,7 @@ export function useStudioEngineController(input: StudioEngineControllerInput) {
   const openEmptyMapBoard = useCallback(
     async (mapId: string, preserveRecording = false) => {
       const reg = registryRef.current!;
-      const map = reg.maps[mapId] ?? reg.maps[WORLD_PACIFIC_MAP_ID] ?? reg.maps[WORLD_CLASSIC_MAP_ID];
+      const map = reg.maps[mapId] ?? reg.maps.world_live;
       if (!map) return;
 
       if (!preserveRecording) cancelActiveActionRecording();
@@ -398,7 +397,7 @@ export function useStudioEngineController(input: StudioEngineControllerInput) {
         setYamlText(userScen.yaml);
         await loadScenario(userScen.yaml, null, userScen.id);
       } else {
-        await openEmptyMapBoard(WORLD_PACIFIC_MAP_ID);
+        await openEmptyMapBoard('world_live');
       }
 
       accumulatorRef.current = 0;
