@@ -1751,8 +1751,8 @@ test('cameraTransform maintains distortion-free uniform matrix, cinematic safe i
   }
 });
 
-test('tactical_pickup military vehicle is registered in PackRegistry and passes SVG sanitization', async () => {
-  const { sanitizeSvg, validatePackBundle } = await import('../packs/packSchema');
+test('tactical_pickup military vehicle is registered and references its bundled transparent PNG', async () => {
+  const { sanitizeAssetUrl, validatePackBundle } = await import('../packs/packSchema');
   const reg = new PackRegistry(false);
   const pickup = reg.actors.tactical_pickup;
   assert.ok(pickup, 'tactical_pickup should exist in PackRegistry');
@@ -1761,10 +1761,7 @@ test('tactical_pickup military vehicle is registered in PackRegistry and passes 
   assert.equal(pickup.ability?.category, 'armor');
   assert.equal(pickup.ability?.mode, 'bullet');
 
-  const sanitized = sanitizeSvg(pickup.svg);
-  assert.ok(sanitized, 'sanitized SVG should not be null');
-  assert.ok(sanitized.includes('TOYOTA'));
-  assert.ok(sanitized.includes('letter-spacing="1.5"'));
+  assert.equal(sanitizeAssetUrl(pickup.svg), '/vehicles/hilux-technical.png');
   assert.doesNotThrow(() => validatePackBundle({ actors: [pickup] }));
 });
 

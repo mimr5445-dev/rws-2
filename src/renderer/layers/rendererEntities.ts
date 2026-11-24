@@ -41,7 +41,7 @@ export function createEntityView(ent: EntityState, actorTextures: Map<string, Te
     .fill({ color: 0x000000, alpha: ent.kind === 'air' ? 0.38 : 0.32 });
 
   const isElongated = drawW > drawH * 1.35;
-  const isSideView = ent.actorId === 'tactical_pickup';
+  const isSideView = ent.actorId === 'supply_convoy';
   const hw = Math.max(12, drawW * 0.52);
   const hh = Math.max(10, drawH * 0.54);
   const factionHalo = new Graphics();
@@ -57,7 +57,8 @@ export function createEntityView(ent: EntityState, actorTextures: Map<string, Te
   sprite.scale.set(ratio);
 
   let rotor: Graphics | undefined;
-  if (ent.actorId === 'apache_heli' || ent.actorId === 'attack_heli') {
+  // The detailed Apache sprite includes its rotor blades; keep the procedural rotor for the vector fallback.
+  if (ent.actorId === 'attack_heli') {
     rotor = new Graphics()
       .poly([-20, -1.4, -4, -0.8, -4, 0.8, -20, 1.4])
       .fill({ color: 0x94a3b8, alpha: 0.78 })
