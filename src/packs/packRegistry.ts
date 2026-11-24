@@ -1,5 +1,6 @@
 import { ActorPack, ActorTemplate, MapPack, PackBundle, SavedScenarioRecord } from '../core/types';
 import { buildWorldMapPack } from '../maps/worldGeoEngine';
+import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID } from '../maps/worldMapIds';
 import { studioDb } from '../storage/studioDb';
 import { STUDIO_ACTORS, STUDIO_TEMPLATES } from './studioUnits';
 import { validatePackBundle } from './packSchema';
@@ -21,8 +22,18 @@ export class PackRegistry {
 
   constructor(private useStorage = true) {
     if (typeof document !== 'undefined') {
-      const worldMap = buildWorldMapPack();
-      this.maps[worldMap.id] = worldMap;
+      const pacificMap = buildWorldMapPack({
+        skin: 'pacific_briefing',
+        id: WORLD_PACIFIC_MAP_ID,
+        title: 'خريطة العالم — لوح المحيط الهادئ'
+      });
+      this.maps[pacificMap.id] = pacificMap;
+      const classicMap = buildWorldMapPack({
+        skin: 'classic',
+        id: WORLD_CLASSIC_MAP_ID,
+        title: 'خريطة العالم التفاعلية'
+      });
+      this.maps[classicMap.id] = classicMap;
     }
     for (const [k, a] of Object.entries(STUDIO_ACTORS)) {
       this.actors[k] = { ...a, ability: a.ability ? { ...a.ability } : undefined };
@@ -30,9 +41,21 @@ export class PackRegistry {
   }
 
   async init(presetScenarios: SavedScenarioRecord[] = []): Promise<void> {
-    if (typeof document !== 'undefined' && !this.maps.world_live) {
-      const worldMap = buildWorldMapPack();
-      this.maps[worldMap.id] = worldMap;
+    if (typeof document !== 'undefined' && !this.maps[WORLD_PACIFIC_MAP_ID]) {
+      const pacificMap = buildWorldMapPack({
+        skin: 'pacific_briefing',
+        id: WORLD_PACIFIC_MAP_ID,
+        title: 'خريطة العالم — لوح المحيط الهادئ'
+      });
+      this.maps[pacificMap.id] = pacificMap;
+    }
+    if (typeof document !== 'undefined' && !this.maps[WORLD_CLASSIC_MAP_ID]) {
+      const classicMap = buildWorldMapPack({
+        skin: 'classic',
+        id: WORLD_CLASSIC_MAP_ID,
+        title: 'خريطة العالم التفاعلية'
+      });
+      this.maps[classicMap.id] = classicMap;
     }
 
     if (!this.useStorage) {

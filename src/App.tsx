@@ -6,6 +6,7 @@ import { StrikeLockPhase } from './core/targetingLock';
 import { ActorPack, Faction, MapPack, Point, ValidationIssue } from './core/types';
 import { CountryRegistry } from './countries/countryRegistry';
 import { PackRegistry } from './packs/packRegistry';
+import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID } from './maps/worldMapIds';
 import { SoundSynth } from './renderer/soundSynth';
 import { StudioRenderer } from './renderer/studioRenderer';
 import { studioDb } from './storage/studioDb';
@@ -90,7 +91,9 @@ export default function App() {
   const [specOpen, setSpecOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
-  const [activeMap, setActiveMap] = useState<MapPack>(registryRef.current.maps.world_live);
+  const [activeMap, setActiveMap] = useState<MapPack>(
+    registryRef.current.maps[WORLD_PACIFIC_MAP_ID] ?? registryRef.current.maps[WORLD_CLASSIC_MAP_ID]
+  );
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const [geoLoadingMsg, setGeoLoadingMsg] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -492,7 +495,7 @@ export default function App() {
           selectedRegionId={selectedRegionId}
           selectedRegionObj={selectedRegionObj}
           onEnterCountryProvinces={(id) => void enterCountryProvinces(id)}
-          onBackToWorld={() => void openEmptyMapBoard('world_live')}
+          onBackToWorld={() => void openEmptyMapBoard(WORLD_PACIFIC_MAP_ID)}
           hudState={hudState}
           showAnchors={showAnchors}
           onToggleAnchors={handleToggleAnchors}
