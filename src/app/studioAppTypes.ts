@@ -1,6 +1,6 @@
 import { TICK_RATE } from '../engine/engine';
 import { StrikeMode } from '../core/types';
-import { WORLD_PACIFIC_MAP_ID } from '../maps/worldMapIds';
+import { WORLD_BRIEFING_MAP_ID } from '../maps/worldMapIds';
 
 export interface ArmedAbilityState {
   entityId: string;
@@ -33,7 +33,7 @@ export const INITIAL_HUD_STATE: StudioHudState = {
 
 export const DEFAULT_EMPTY_YAML = `meta:
   title: "سيناريو عالمي جديد"
-  map: ${WORLD_PACIFIC_MAP_ID}
+  map: ${WORLD_BRIEFING_MAP_ID}
 timeline:
   - at: "0s"
     caption:

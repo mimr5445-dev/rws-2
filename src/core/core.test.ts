@@ -2093,17 +2093,9 @@ test('120Hz entity, projectile, and effect prev->curr alpha linear interpolation
   assert.ok(cr.life < cr.prevLife, 'crater must record prevLife');
 });
 
-
-
-
-
-
-test('Pacific briefing projection places Asia, Hawaii and America left-to-right', async () => {
-  const { createPacificBriefingProjection } = await import('../maps/worldGeoEngine');
-  const projection = createPacificBriefingProjection(1920, 1080);
-  const tokyo = projection([139.7, 35.7])!;
-  const hawaii = projection([-157.8, 21.3])!;
-  const sanFrancisco = projection([-122.4, 37.8])!;
-  assert.ok(tokyo[0] < hawaii[0] && hawaii[0] < sanFrancisco[0], 'Pacific-centered world must keep the theater ordered');
-  assert.ok(tokyo[1] > 0 && tokyo[1] < 1080 && sanFrancisco[1] > 0 && sanFrancisco[1] < 1080);
+test('legacy Pacific world map ids resolve to the full-world briefing map', async () => {
+  const { WORLD_BRIEFING_MAP_ID, resolveWorldMapId } = await import('../maps/worldMapIds');
+  assert.equal(resolveWorldMapId('world_pacific_briefing'), WORLD_BRIEFING_MAP_ID);
+  assert.equal(resolveWorldMapId(undefined), WORLD_BRIEFING_MAP_ID);
+  assert.equal(resolveWorldMapId('country_sau'), 'country_sau');
 });

@@ -1,9 +1,10 @@
 import { GeoProjection, geoPath } from 'd3-geo';
 
 /**
- * جلد «لوح إحاطة المحيط الهادئ»: بحر أسود مطفي، زبد/ضباب أبيض على السواحل،
- * مناطق يابسة حمراء متوهجة، نقاط أهداف، خطوط مسافات بيضاء، وتسميات فرنسية متتبّعة.
- * يُرسم بالكامل على Canvas دون أصول خارجية، مع بذرة عشوائية ثابتة لضمان تكرار النتيجة.
+ * جلد «لوح الإحاطة» لخريطة العالم الكاملة:
+ * بحر/يابسة سوداء مطفية، زبد وضباب أبيض على السواحل، جبهات حمراء متوهجة،
+ * نقاط أهداف ونجوم وخطوط مسافات — دون أي أسماء دول.
+ * يُرسم على Canvas ببذرة عشوائية ثابتة لضمان تكرار النتيجة.
  */
 
 type Rng = () => number;
@@ -65,7 +66,7 @@ function drawTrackedText(ctx: CanvasRenderingContext2D, text: string, x: number,
   ctx.save();
   ctx.translate(x, y);
   if (o.rotate) ctx.rotate(o.rotate);
-  ctx.font = `${o.weight ?? 500} ${o.size}px ${o.family ?? '"IBM Plex Mono", "Courier New", monospace'}`;
+  ctx.font = `${o.weight ?? 600} ${o.size}px ${o.family ?? '"IBM Plex Mono", "Courier New", monospace'}`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
   ctx.fillStyle = o.color;
@@ -152,12 +153,7 @@ function drawPuffCluster(
   ctx.restore();
 }
 
-function drawGreatCircle(
-  ctx: CanvasRenderingContext2D,
-  a: Pt,
-  b: Pt,
-  bend: number
-): { mid: Pt; angle: number } {
+function drawGreatCircle(ctx: CanvasRenderingContext2D, a: Pt, b: Pt, bend: number): { mid: Pt; angle: number } {
   const mx = (a.x + b.x) / 2;
   const my = (a.y + b.y) / 2;
   const dx = b.x - a.x;
@@ -180,7 +176,6 @@ function drawGreatCircle(
   ctx.stroke();
   ctx.restore();
 
-  // علامات نهاية رفيعة
   ctx.save();
   ctx.strokeStyle = 'rgba(232, 238, 244, 0.55)';
   ctx.lineWidth = 1;
@@ -198,23 +193,22 @@ function drawGreatCircle(
   };
 }
 
-export interface PacificBriefingSkinInput {
+export interface WorldBriefingSkinInput {
   ctx: CanvasRenderingContext2D;
   projection: GeoProjection;
   countriesFc: GeoJSON.FeatureCollection;
   landGeom: any;
-  borderMesh: any;
   featureIso3: Array<string | undefined>;
   width: number;
   height: number;
 }
 
-export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
-  const { ctx, projection, countriesFc, landGeom, borderMesh, featureIso3, width, height } = input;
+export function drawWorldBriefingSkin(input: WorldBriefingSkinInput): void {
+  const { ctx, projection, countriesFc, landGeom, featureIso3, width, height } = input;
   const rand = mulberry32(0x19421207);
   const pathString = geoPath(projection);
 
-  // 1) بحر أسود مطفي مع وهج مركزي خفيف جداً
+  // 1) بحر أسود مطفي مع وهج مركزي خفيف
   const ocean = ctx.createLinearGradient(0, 0, 0, height);
   ocean.addColorStop(0, '#0a0d0f');
   ocean.addColorStop(0.48, '#07090b');
@@ -231,7 +225,7 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
   ctx.fillStyle = centerGlow;
   ctx.fillRect(0, 0, width, height);
 
-  // مسار اليابسة الموحّد (سواحل فقط بلا حدود سياسية داخلية) + مسارات الدول للمناطق الحمراء
+  // مسار اليابسة الكامل + مسارات الدول للمناطق الحمراء فقط
   const landGeometry = (landGeom as any)?.geometry ?? landGeom;
   const landD = pathString(landGeom as any);
   const landPath = landD ? new Path2D(landD) : null;
@@ -241,20 +235,14 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
     if (!d) return;
     paths.push({ path: new Path2D(d), iso3: featureIso3[i], geometry: (f as any).geometry });
   });
-  const borderD = pathString(borderMesh as any);
-  const borderPath = borderD ? new Path2D(borderD) : null;
 
-  // 2) اليابسة شبه السوداء (مع قصّ الحافة السفلية التي تغطيها الغيوم)
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, 0, width, height * 0.88);
-  ctx.clip();
+  // 2) اليابسة شبه السوداء
   ctx.save();
   ctx.fillStyle = '#090b0d';
   if (landPath) ctx.fill(landPath);
   ctx.restore();
 
-  // 3) زبد/رغوة ساحلية مضطربة: هالة ناعمة ثم خطوط متقطعة ثم رذاذ صغير
+  // 3) زبد/رغوة ساحلية مضطربة على كامل خطوط السواحل
   if (landPath) {
     ctx.save();
     ctx.lineJoin = 'round';
@@ -280,7 +268,6 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
     ctx.restore();
   }
 
-  // رذاذ صغير على امتداد السواحل (من هندسة اليابسة الموحّدة)
   const allSegments: Segment[] = collectCoastlineSegments(landGeometry, projection, width);
   const redSegments: Segment[] = [];
   paths.forEach((p) => {
@@ -293,7 +280,7 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
   ctx.lineCap = 'round';
   for (let i = 0; i < allSegments.length; i += 1) {
     const s = allSegments[i];
-    if (rand() > 0.52) continue;
+    if (rand() > 0.50) continue;
     const mx = (s.x1 + s.x2) / 2;
     const my = (s.y1 + s.y2) / 2;
     if (mx < -60 || mx > width + 60 || my < -60 || my > height + 60) continue;
@@ -338,47 +325,34 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
     ctx.stroke();
   }
   ctx.restore();
-  ctx.restore(); // إنهاء قصّ الحافة السفلية
 
-  // حدود الدول: خفيفة جداً حتى لا تطفو فوق النمط الحربي
-  if (borderPath) {
-    ctx.save();
-    ctx.strokeStyle = 'rgba(150, 160, 170, 0.09)';
-    ctx.lineWidth = 0.7;
-    ctx.stroke(borderPath);
-    ctx.restore();
-  }
+  // 4) ضباب/غيوم بيضاء-رمادية على الأطراف
+  drawPuffCluster(ctx, rand, width * 0.18, height * 0.92, 230, 78, 46, 0.30, '238, 244, 250');
+  drawPuffCluster(ctx, rand, width * 0.46, height * 0.94, 280, 88, 56, 0.34, '244, 249, 252');
+  drawPuffCluster(ctx, rand, width * 0.74, height * 0.91, 250, 82, 50, 0.30, '236, 243, 249');
+  drawPuffCluster(ctx, rand, width * 0.92, height * 0.88, 190, 70, 34, 0.24, '232, 240, 246');
+  drawPuffCluster(ctx, rand, width * 0.30, height * 0.035, 220, 62, 34, 0.16, '226, 234, 241');
+  drawPuffCluster(ctx, rand, width * 0.68, height * 0.045, 220, 62, 34, 0.16, '226, 234, 241');
+  drawPuffCluster(ctx, rand, width * 0.06, height * 0.30, 120, 150, 24, 0.10, '210, 220, 230');
+  drawPuffCluster(ctx, rand, width * 0.94, height * 0.30, 120, 150, 24, 0.10, '210, 220, 230');
 
-  // 4) ضباب/غيوم بيضاء-رمادية على الأطراف وفي الأسفل
-  drawPuffCluster(ctx, rand, width * 0.36, height * 0.90, 250, 82, 58, 0.36, '240, 245, 250');
-  drawPuffCluster(ctx, rand, width * 0.52, height * 0.93, 280, 92, 64, 0.40, '246, 250, 253');
-  drawPuffCluster(ctx, rand, width * 0.69, height * 0.88, 235, 78, 54, 0.34, '236, 243, 249');
-  drawPuffCluster(ctx, rand, width * 0.85, height * 0.91, 205, 70, 42, 0.30, '240, 246, 251');
-  drawPuffCluster(ctx, rand, width * 0.17, height * 0.93, 165, 66, 30, 0.22, '224, 233, 241');
-  drawPuffCluster(ctx, rand, width * 0.43, height * 0.03, 205, 66, 38, 0.20, '232, 239, 246');
-  drawPuffCluster(ctx, rand, width * 0.72, height * 0.05, 185, 60, 32, 0.18, '226, 234, 242');
-  drawPuffCluster(ctx, rand, width * 0.06, height * 0.26, 125, 145, 28, 0.13, '214, 224, 233');
-  drawPuffCluster(ctx, rand, width * 0.95, height * 0.24, 125, 145, 28, 0.13, '214, 224, 233');
-
-  // 5) المناطق الحمراء المتوهجة ونقاط الجبهة
+  // 5) المناطق الحمراء المتوهجة (دول/جزر مختارة بلا أي تسمية)
   ctx.save();
   for (const p of paths) {
     if (!p.iso3 || !RED_SOLID_ISO3.has(p.iso3)) continue;
     ctx.shadowColor = 'rgba(255, 42, 24, 0.9)';
     ctx.shadowBlur = 26;
-    ctx.fillStyle = 'rgba(158, 22, 14, 0.38)';
+    ctx.fillStyle = 'rgba(158, 22, 14, 0.42)';
     ctx.fill(p.path);
     ctx.shadowBlur = 0;
-
-    // تنقيش داكن فوق المنطقة الحمراء حتى تبدو كجبهة متوهجة لا كتلة صمّاء
     ctx.save();
     ctx.clip(p.path);
-    for (let j = 0; j < 46; j++) {
-      const x = rand() * width * 0.56;
-      const y = rand() * height * 0.78;
-      const r = 16 + rand() * 76;
+    for (let j = 0; j < 40; j++) {
+      const x = rand() * width;
+      const y = rand() * height;
+      const r = 16 + rand() * 70;
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, `rgba(4, 5, 6, ${0.32 + rand() * 0.34})`);
+      g.addColorStop(0, `rgba(4, 5, 6, ${0.30 + rand() * 0.32})`);
       g.addColorStop(1, 'rgba(4, 5, 6, 0)');
       ctx.fillStyle = g;
       ctx.beginPath();
@@ -386,7 +360,6 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
       ctx.fill();
     }
     ctx.restore();
-
     ctx.shadowColor = 'rgba(255, 56, 32, 0.95)';
     ctx.shadowBlur = 20;
     ctx.strokeStyle = 'rgba(255, 86, 56, 0.92)';
@@ -412,11 +385,11 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
   }
   ctx.restore();
 
-  // إعادة رغوة بيضاء خفيفة فوق سواحل المناطق الحمراء
+  // رغوة بيضاء خفيفة فوق سواحل المناطق الحمراء
   ctx.save();
   ctx.lineCap = 'round';
   for (let i = 0; i < redSegments.length; i += 1) {
-    if (rand() > 0.42) continue;
+    if (rand() > 0.40) continue;
     const s = redSegments[i];
     const mx = (s.x1 + s.x2) / 2;
     const my = (s.y1 + s.y2) / 2;
@@ -440,7 +413,7 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
   }
   ctx.restore();
 
-  // خط جبهة أحمر متقطع على امتداد جزر شرق آسيا
+  // خط جبهة أحمر متقطع على امتداد شرق آسيا
   const frontLl: Array<[number, number]> = [
     [146, 45], [142, 40], [138, 35], [132, 31], [127, 25], [123, 19],
     [121, 13], [119, 7], [116, 2], [110, -1], [105, -3], [100, -1], [96, 3]
@@ -461,7 +434,7 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
     ctx.restore();
   }
 
-  // نقاط حمراء صغيرة على الساحل المُبرَز وفي وسط المحيط
+  // نقاط أهداف حمراء صغيرة
   ctx.save();
   ctx.shadowColor = 'rgba(255, 48, 28, 0.95)';
   ctx.shadowBlur = 10;
@@ -486,9 +459,9 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
     ctx.arc(p[0], p[1], 2.6 + rand() * 1.4, 0, Math.PI * 2);
     ctx.fill();
   }
-  for (let i = 0; i < 12; i++) {
-    const x = width * (0.30 + rand() * 0.48);
-    const y = height * (0.32 + rand() * 0.42);
+  for (let i = 0; i < 18; i++) {
+    const x = rand() * width;
+    const y = height * (0.18 + rand() * 0.62);
     ctx.beginPath();
     ctx.arc(x, y, 1 + rand() * 1.2, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(255, 66, 42, ${0.45 + rand() * 0.4})`;
@@ -496,33 +469,7 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
   }
   ctx.restore();
 
-  // 6) خطوط المسافات البيضاء ونجوم/بوصلة
-  const japanStar: Pt = { x: width * 0.285, y: height * 0.245 };
-  const hawaiiPoint: Pt = { x: width * 0.55, y: height * 0.49 };
-  const usStar: Pt = { x: width * 0.82, y: height * 0.40 };
-  const leg1 = drawGreatCircle(ctx, japanStar, hawaiiPoint, 26);
-  const leg2 = drawGreatCircle(ctx, hawaiiPoint, usStar, -20);
-
-  // نقاط صغيرة على الخطوط
-  ctx.save();
-  ctx.fillStyle = 'rgba(236, 242, 247, 0.75)';
-  for (const leg of [leg1, leg2]) {
-    for (let i = 1; i <= 3; i++) {
-      const t = i / 4;
-      ctx.beginPath();
-      ctx.arc(
-        leg.mid.x + (rand() - 0.5) * 4,
-        leg.mid.y + (rand() - 0.5) * 4,
-        1.3,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    }
-  }
-  ctx.restore();
-
-  // 7) تعتيم الأطراف ( vignette )
+  // 6) تعتيم الأطراف
   const vignette = ctx.createRadialGradient(
     width * 0.5, height * 0.48, height * 0.22,
     width * 0.5, height * 0.5, width * 0.72
@@ -533,42 +480,27 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, width, height);
 
-  // 8) النجوم والبوصلة
-  drawSparkle(ctx, japanStar.x, japanStar.y, 22, 'rgba(242, 246, 250, 0.95)');
-  drawSparkle(ctx, usStar.x, usStar.y, 22, 'rgba(242, 246, 250, 0.95)');
-  drawCompassRose(ctx, width * 0.575, height * 0.705, 20, 'rgba(226, 233, 240, 0.72)');
+  // 7) خطوط المسافات والنجوم والبوصلة — دون أسماء دول
+  const starA: Pt = { x: width * 0.26, y: height * 0.30 };
+  const midPoint: Pt = { x: width * 0.52, y: height * 0.46 };
+  const starB: Pt = { x: width * 0.78, y: height * 0.34 };
+  const leg1 = drawGreatCircle(ctx, starA, midPoint, 24);
+  const leg2 = drawGreatCircle(ctx, midPoint, starB, -18);
 
-  // 9) التسميات الفرنسية المتتبّعة + مسافات الخطوط
-  const labelColor = 'rgba(214, 222, 230, 0.66)';
-  const brightColor = 'rgba(238, 243, 248, 0.92)';
-  const countryLabels: Array<{ text: string; x: number; y: number; size: number; tracking: number; color?: string; rotate?: number; align?: 'left' | 'center' | 'right' }> = [
-    { text: 'RUSSIE', x: 0.075, y: 0.045, size: 20, tracking: 5, rotate: -0.12 },
-    { text: 'SIBERIE', x: 0.035, y: 0.155, size: 18, tracking: 4, rotate: -0.18 },
-    { text: 'CHINE', x: 0.045, y: 0.305, size: 18, tracking: 4 },
-    { text: 'COREE', x: 0.175, y: 0.265, size: 16, tracking: 3.5 },
-    { text: 'JAPON', x: 0.268, y: 0.292, size: 28, tracking: 7, color: brightColor },
-    { text: 'ETATS-UNIS', x: 0.802, y: 0.468, size: 28, tracking: 7, color: brightColor },
-    { text: 'OCEAN PACIFIQUE', x: 0.485, y: 0.655, size: 34, tracking: 14, color: 'rgba(220, 228, 236, 0.74)', align: 'center' },
-    { text: 'ILES HAWAI', x: 0.545, y: 0.555, size: 18, tracking: 5 },
-    { text: 'ILES MARSHALL', x: 0.415, y: 0.635, size: 15, tracking: 3.5 },
-    { text: 'ILES CAROLINES', x: 0.225, y: 0.665, size: 15, tracking: 3.5 },
-    { text: 'ILES MARIANNES', x: 0.275, y: 0.475, size: 15, tracking: 3.5 },
-    { text: 'ILES BONIN', x: 0.302, y: 0.345, size: 15, tracking: 3.5 },
-    { text: 'ILES PHOENIX', x: 0.49, y: 0.615, size: 15, tracking: 3.5 },
-    { text: 'ILES SAMOA', x: 0.47, y: 0.79, size: 15, tracking: 3.5 },
-    { text: 'ILES SOCIETE', x: 0.60, y: 0.80, size: 15, tracking: 3.5 },
-    { text: 'ALASKA', x: 0.885, y: 0.10, size: 18, tracking: 4 }
-  ];
-  for (const l of countryLabels) {
-    drawTrackedText(ctx, l.text, l.x * width, l.y * height, {
-      size: l.size,
-      tracking: l.tracking,
-      color: l.color ?? labelColor,
-      weight: l.size >= 24 ? 600 : 500,
-      align: l.align,
-      rotate: l.rotate
-    });
+  ctx.save();
+  ctx.fillStyle = 'rgba(236, 242, 247, 0.75)';
+  for (const leg of [leg1, leg2]) {
+    for (let i = 1; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.arc(leg.mid.x + (rand() - 0.5) * 4, leg.mid.y + (rand() - 0.5) * 4, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
+  ctx.restore();
+
+  drawSparkle(ctx, starA.x, starA.y, 22, 'rgba(242, 246, 250, 0.95)');
+  drawSparkle(ctx, starB.x, starB.y, 22, 'rgba(242, 246, 250, 0.95)');
+  drawCompassRose(ctx, width * 0.5, height * 0.70, 20, 'rgba(226, 233, 240, 0.72)');
 
   drawTrackedText(ctx, '6000 KMS', leg1.mid.x, leg1.mid.y - 20, {
     size: 24,
@@ -587,7 +519,7 @@ export function drawPacificBriefingSkin(input: PacificBriefingSkinInput): void {
     rotate: leg2.angle
   });
 
-  // 10) حبيبات فيلم خفيفة
+  // 8) حبيبات فيلم خفيفة
   ctx.save();
   for (let i = 0; i < 2600; i++) {
     const x = rand() * width;

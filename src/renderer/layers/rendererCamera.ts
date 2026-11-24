@@ -43,13 +43,19 @@ export function populateAnchorLayer(
 ): Text[] {
   anchorLayer.removeChildren();
   const labels: Text[] = [];
-  if (map.geoLevel === 'world' && !editorEnabled) return labels;
+  const isWorldMap = map.geoLevel === 'world';
+  if (isWorldMap && !editorEnabled) return labels;
   for (const [id, pt] of Object.entries(map.anchors)) {
     const dot = new Graphics()
       .circle(0, 0, 5)
       .fill({ color: 0xfef08a, alpha: 0.92 })
       .stroke({ width: 2, color: 0x0f172a });
     dot.position.set(pt.x, pt.y);
+    // لا تُعرض أسماء الدول أو المراسي على خرائط العالم، حتى في وضع التحرير.
+    if (isWorldMap) {
+      anchorLayer.addChild(dot);
+      continue;
+    }
     const anchorText =
       map.geoLevel === 'country'
         ? id
