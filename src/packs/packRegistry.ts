@@ -21,8 +21,18 @@ export class PackRegistry {
 
   constructor(private useStorage = true) {
     if (typeof document !== 'undefined') {
-      const worldMap = buildWorldMapPack();
-      this.maps[worldMap.id] = worldMap;
+      const briefingMap = buildWorldMapPack({
+        skin: 'briefing',
+        id: 'world_live',
+        title: 'خريطة العالم التفاعلية'
+      });
+      this.maps[briefingMap.id] = briefingMap;
+      const reliefMap = buildWorldMapPack({
+        skin: 'relief',
+        id: 'world_relief',
+        title: 'خريطة العالم — التضاريس'
+      });
+      this.maps[reliefMap.id] = reliefMap;
     }
     for (const [k, a] of Object.entries(STUDIO_ACTORS)) {
       this.actors[k] = { ...a, ability: a.ability ? { ...a.ability } : undefined };
@@ -31,8 +41,20 @@ export class PackRegistry {
 
   async init(presetScenarios: SavedScenarioRecord[] = []): Promise<void> {
     if (typeof document !== 'undefined' && !this.maps.world_live) {
-      const worldMap = buildWorldMapPack();
-      this.maps[worldMap.id] = worldMap;
+      const briefingMap = buildWorldMapPack({
+        skin: 'briefing',
+        id: 'world_live',
+        title: 'خريطة العالم التفاعلية'
+      });
+      this.maps[briefingMap.id] = briefingMap;
+    }
+    if (typeof document !== 'undefined' && !this.maps.world_relief) {
+      const reliefMap = buildWorldMapPack({
+        skin: 'relief',
+        id: 'world_relief',
+        title: 'خريطة العالم — التضاريس'
+      });
+      this.maps[reliefMap.id] = reliefMap;
     }
 
     if (!this.useStorage) {

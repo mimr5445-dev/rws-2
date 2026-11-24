@@ -12,7 +12,7 @@ import arLocale from 'i18n-iso-countries/langs/ar.json';
 import enLocale from 'i18n-iso-countries/langs/en.json';
 import { feature } from 'topojson-client';
 import worldAtlas from 'world-atlas/countries-110m.json';
-import { GeoRegionItem, MapPack, MapZoneDef, Point } from '../core/types';
+import { GeoRegionItem, MapPack, MapZoneDef, NavCell, Point } from '../core/types';
 import { applyWorldNavCorridors } from './worldGeoCorridors';
 import {
   createHitTester,
@@ -22,6 +22,7 @@ import {
   slugifyGeoId
 } from './worldGeoGeometry';
 import { drawWorldBriefingSkin } from './worldBriefingSkin';
+import { drawWorldReliefSkin } from './worldReliefSkin';
 
 export { applyWorldNavCorridors, rewindGeoJsonForD3 };
 
@@ -46,11 +47,37 @@ export function createWorldProjection(width = 1920, height = 1080): GeoProjectio
   );
 }
 
-let cachedWorldPack: MapPack | null = null;
+export type WorldSkin = 'briefing' | 'relief';
 
-/** خريطة العالم الكاملة التفاعلية بجلد «لوح الإحاطة» الداكن، دون أسماء دول. */
-export function buildWorldMapPack(): MapPack {
-  if (cachedWorldPack) return cachedWorldPack;
+export interface WorldMapPackOptions {
+  skin?: WorldSkin;
+  id?: string;
+  title?: string;
+}
+
+interface WorldGeometry {
+  width: number;
+  height: number;
+  cellSize: number;
+  projection: GeoProjection;
+  countriesFc: GeoJSON.FeatureCollection;
+  landGeom: GeoPermissibleObjects;
+  featureIso3: Array<string | undefined>;
+  regions: Record<string, GeoRegionItem>;
+  zones: Record<string, MapZoneDef>;
+  anchors: Record<string, Point & { label?: string }>;
+  regionIds: string[];
+  cols: number;
+  rows: number;
+  navGrid: NavCell[];
+  hitTest: (pt: Point) => string | null;
+}
+
+let cachedWorldGeometry: WorldGeometry | null = null;
+const worldPackCache = new Map<string, MapPack>();
+
+function getWorldGeometry(): WorldGeometry {
+  if (cachedWorldGeometry) return cachedWorldGeometry;
 
   const width = 1920;
   const height = 1080;
@@ -59,14 +86,7 @@ export function buildWorldMapPack(): MapPack {
   const topo = worldAtlas as any;
   const countriesFc = feature(topo, topo.objects.countries) as unknown as GeoJSON.FeatureCollection;
   const landGeom = feature(topo, topo.objects.land) as unknown as GeoPermissibleObjects;
-
   const projection = createWorldProjection(width, height);
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d')!;
-
   const pathGen = geoPath(projection);
 
   const regions: Record<string, GeoRegionItem> = {};
@@ -129,35 +149,83 @@ export function buildWorldMapPack(): MapPack {
 
   const hitTest = createHitTester(countriesFc.features, regionIds, projection, width, height);
 
-  drawWorldBriefingSkin({
-    ctx,
+  cachedWorldGeometry = {
+    width,
+    height,
+    cellSize,
     projection,
     countriesFc,
     landGeom,
     featureIso3,
-    width,
-    height
-  });
-
-  cachedWorldPack = {
-    id: 'world_live',
-    title: 'خريطة العالم التفاعلية',
-    kind: 'geopolitical',
-    width,
-    height,
-    cellSize,
+    regions,
+    zones,
+    anchors,
+    regionIds,
     cols,
     rows,
     navGrid,
-    svgOrUrl: canvas.toDataURL('image/png'),
-    unitScaleMultiplier: 0.32,
-    anchors,
-    zones,
-    geoLevel: 'world',
-    regions,
     hitTest
   };
-  return cachedWorldPack;
+  return cachedWorldGeometry;
+}
+
+/** خريطة عالم كاملة تفاعلية بأحد جلدين: «لوح الإحاطة» أو «التضاريس»، دون أسماء دول. */
+export function buildWorldMapPack(options: WorldMapPackOptions = {}): MapPack {
+  const skin = options.skin ?? 'briefing';
+  const id = options.id ?? (skin === 'briefing' ? 'world_live' : 'world_relief');
+  const title =
+    options.title ??
+    (skin === 'briefing' ? 'خريطة العالم التفاعلية' : 'خريطة العالم — التضاريس');
+  const cacheKey = `${id}|${skin}`;
+  const cached = worldPackCache.get(cacheKey);
+  if (cached) return cached;
+
+  const geo = getWorldGeometry();
+  const canvas = document.createElement('canvas');
+  canvas.width = geo.width;
+  canvas.height = geo.height;
+  const ctx = canvas.getContext('2d')!;
+
+  if (skin === 'briefing') {
+    drawWorldBriefingSkin({
+      ctx,
+      projection: geo.projection,
+      countriesFc: geo.countriesFc,
+      landGeom: geo.landGeom,
+      featureIso3: geo.featureIso3,
+      width: geo.width,
+      height: geo.height
+    });
+  } else {
+    drawWorldReliefSkin({
+      ctx,
+      projection: geo.projection,
+      landGeom: geo.landGeom,
+      width: geo.width,
+      height: geo.height
+    });
+  }
+
+  const pack: MapPack = {
+    id,
+    title,
+    kind: 'geopolitical',
+    width: geo.width,
+    height: geo.height,
+    cellSize: geo.cellSize,
+    cols: geo.cols,
+    rows: geo.rows,
+    navGrid: geo.navGrid,
+    svgOrUrl: canvas.toDataURL('image/png'),
+    unitScaleMultiplier: 0.32,
+    anchors: geo.anchors,
+    zones: geo.zones,
+    geoLevel: 'world',
+    regions: geo.regions,
+    hitTest: geo.hitTest
+  };
+  worldPackCache.set(cacheKey, pack);
+  return pack;
 }
 
 async function fetchAdm1GeoJson(iso3: string): Promise<GeoJSON.FeatureCollection> {

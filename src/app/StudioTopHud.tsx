@@ -34,6 +34,7 @@ export interface StudioTopHudProps {
   selectedRegionObj: GeoRegionItem | undefined;
   onEnterCountryProvinces: (regionId: string) => void;
   onBackToWorld: () => void;
+  onSelectMapStyle: (style: 'briefing' | 'relief') => void;
   hudState: StudioHudState;
   showAnchors: boolean;
   onToggleAnchors: () => void;
@@ -57,6 +58,7 @@ export function StudioTopHud({
   selectedRegionObj,
   onEnterCountryProvinces,
   onBackToWorld,
+  onSelectMapStyle,
   hudState,
   showAnchors,
   onToggleAnchors,
@@ -82,6 +84,38 @@ export function StudioTopHud({
           </span>
           {topHudExpanded ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
         </button>
+
+        <div
+          className="flex items-center gap-0.5 bg-slate-900/80 border border-slate-700 rounded-lg p-0.5"
+          aria-label="نمط خريطة العالم"
+        >
+          <button
+            type="button"
+            id="mapStyleBriefingBtn"
+            aria-pressed={activeMap.id !== 'world_relief'}
+            onClick={() => onSelectMapStyle('briefing')}
+            className={`min-h-[30px] px-2 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors border ${
+              activeMap.id !== 'world_relief'
+                ? 'bg-sky-600 text-white border-sky-400'
+                : 'text-slate-300 border-transparent hover:bg-slate-800'
+            }`}
+          >
+            لوح الإحاطة
+          </button>
+          <button
+            type="button"
+            id="mapStyleReliefBtn"
+            aria-pressed={activeMap.id === 'world_relief'}
+            onClick={() => onSelectMapStyle('relief')}
+            className={`min-h-[30px] px-2 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors border ${
+              activeMap.id === 'world_relief'
+                ? 'bg-sky-600 text-white border-sky-400'
+                : 'text-slate-300 border-transparent hover:bg-slate-800'
+            }`}
+          >
+            تضاريس
+          </button>
+        </div>
 
         <button
           type="button"

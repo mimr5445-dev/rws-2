@@ -255,6 +255,10 @@ export default function App() {
     setHudState
   });
 
+  const handleSelectMapStyle = (style: 'briefing' | 'relief') => {
+    void openEmptyMapBoard(style === 'relief' ? 'world_relief' : 'world_live');
+  };
+
   const handleChangeUnitScale = async (nextScale: number) => {
     setUnitScale(nextScale);
     if (rendererRef.current) rendererRef.current.userUnitScale = nextScale;
@@ -492,7 +496,10 @@ export default function App() {
           selectedRegionId={selectedRegionId}
           selectedRegionObj={selectedRegionObj}
           onEnterCountryProvinces={(id) => void enterCountryProvinces(id)}
-          onBackToWorld={() => void openEmptyMapBoard('world_live')}
+          onBackToWorld={() =>
+            void openEmptyMapBoard(activeMap.id === 'world_relief' ? 'world_relief' : 'world_live')
+          }
+          onSelectMapStyle={handleSelectMapStyle}
           hudState={hudState}
           showAnchors={showAnchors}
           onToggleAnchors={handleToggleAnchors}
