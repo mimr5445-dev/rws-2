@@ -18,7 +18,7 @@ import { CinematicFocusKind } from '../core/cinematicDirector';
 import { GeoRegionItem, MapPack } from '../core/types';
 import { StudioRenderer } from '../renderer/studioRenderer';
 import { StudioHudState } from './studioAppTypes';
-import { WORLD_BRIEFING_MAP_ID, WORLD_RELIEF_MAP_ID } from '../maps/worldMapIds';
+import { WORLD_BRIEFING_MAP_ID } from '../maps/worldMapIds';
 
 export interface StudioTopHudProps {
   activeMap: MapPack;
@@ -37,7 +37,6 @@ export interface StudioTopHudProps {
   selectedRegionObj: GeoRegionItem | undefined;
   onEnterCountryProvinces: (regionId: string) => void;
   onBackToWorld: () => void;
-  onSelectMapStyle: (style: 'briefing' | 'relief') => void;
   hudState: StudioHudState;
   showAnchors: boolean;
   onToggleAnchors: () => void;
@@ -63,7 +62,6 @@ export function StudioTopHud({
   selectedRegionObj,
   onEnterCountryProvinces,
   onBackToWorld,
-  onSelectMapStyle,
   hudState,
   showAnchors,
   onToggleAnchors,
@@ -71,8 +69,6 @@ export function StudioTopHud({
   toastMsg,
   rendererRef
 }: StudioTopHudProps) {
-  const isBriefingStyle = activeMap.id === WORLD_BRIEFING_MAP_ID;
-  const isReliefStyle = activeMap.id === WORLD_RELIEF_MAP_ID;
 
   return (
     <div className="pointer-events-none fixed top-2 left-2 right-2 z-30 flex flex-col items-center gap-1.5">
@@ -94,38 +90,6 @@ export function StudioTopHud({
           </span>
           {topHudExpanded ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
         </button>
-
-        <div
-          className="flex items-center gap-0.5 bg-slate-900/80 border border-slate-700 rounded-lg p-0.5"
-          aria-label="نمط خريطة العالم"
-        >
-          <button
-            type="button"
-            id="mapStyleBriefingBtn"
-            aria-pressed={isBriefingStyle}
-            onClick={() => onSelectMapStyle('briefing')}
-            className={`min-h-[30px] px-2 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors border ${
-              isBriefingStyle
-                ? 'bg-sky-600 text-white border-sky-400'
-                : 'text-slate-300 border-transparent hover:bg-slate-800'
-            }`}
-          >
-            لوح الإحاطة
-          </button>
-          <button
-            type="button"
-            id="mapStyleReliefBtn"
-            aria-pressed={isReliefStyle}
-            onClick={() => onSelectMapStyle('relief')}
-            className={`min-h-[30px] px-2 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors border ${
-              isReliefStyle
-                ? 'bg-sky-600 text-white border-sky-400'
-                : 'text-slate-300 border-transparent hover:bg-slate-800'
-            }`}
-          >
-            تضاريس
-          </button>
-        </div>
 
         <button
           type="button"
