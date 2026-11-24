@@ -21,8 +21,9 @@ import {
   rewindGeoJsonForD3,
   slugifyGeoId
 } from './worldGeoGeometry';
-import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID } from './worldMapIds';
+import { WORLD_CLASSIC_MAP_ID, WORLD_PACIFIC_MAP_ID, WORLD_SHADED_RELIEF_MAP_ID } from './worldMapIds';
 import { drawPacificBriefingSkin } from './worldPacificBriefingSkin';
+import { drawWorldShadedReliefSkin } from './worldShadedReliefSkin';
 
 export { applyWorldNavCorridors, rewindGeoJsonForD3 };
 
@@ -96,7 +97,7 @@ function filterPacificLand(landGeom: GeoPermissibleObjects): GeoPermissibleObjec
   return { type: 'MultiPolygon', coordinates: kept } as unknown as GeoPermissibleObjects;
 }
 
-export type WorldMapSkin = 'classic' | 'pacific_briefing';
+export type WorldMapSkin = 'classic' | 'pacific_briefing' | 'shaded_relief';
 
 export interface WorldMapPackOptions {
   skin?: WorldMapSkin;
@@ -149,10 +150,20 @@ export function buildWorldMapPack(options: WorldMapPackOptions = {}): MapPack {
   const cellSize = 8;
 
   const skin = options.skin ?? 'pacific_briefing';
-  const id = options.id ?? (skin === 'pacific_briefing' ? WORLD_PACIFIC_MAP_ID : WORLD_CLASSIC_MAP_ID);
+  const id =
+    options.id ??
+    (skin === 'pacific_briefing'
+      ? WORLD_PACIFIC_MAP_ID
+      : skin === 'shaded_relief'
+        ? WORLD_SHADED_RELIEF_MAP_ID
+        : WORLD_CLASSIC_MAP_ID);
   const title =
     options.title ??
-    (skin === 'pacific_briefing' ? 'خريطة العالم — لوح المحيط الهادئ' : 'خريطة العالم التفاعلية');
+    (skin === 'pacific_briefing'
+      ? 'خريطة العالم — لوح المحيط الهادئ'
+      : skin === 'shaded_relief'
+        ? 'خريطة العالم — تضاريس بارزة'
+        : 'خريطة العالم التفاعلية');
   const cacheKey = `${id}|${skin}|${width}x${height}`;
   const cached = worldPackCache.get(cacheKey);
   if (cached) return cached;
@@ -252,6 +263,15 @@ export function buildWorldMapPack(options: WorldMapPackOptions = {}): MapPack {
       landGeom: theaterLandGeom,
       borderMesh: theaterBorderMesh,
       featureIso3,
+      width,
+      height
+    });
+  } else if (skin === 'shaded_relief') {
+    drawWorldShadedReliefSkin({
+      ctx,
+      projection,
+      landGeom,
+      borderMesh,
       width,
       height
     });
