@@ -1,6 +1,6 @@
-# Real-world vehicle sprites
+# Real-world equipment sprites
 
-Photorealistic generated renderings of specific real-world equipment, isolated as transparent PNGs for use on the map. Aircraft and ground units are shown from above with their nose/front facing right; the M1083 cargo truck is a side-profile sprite, matching the renderer's side-view treatment.
+AI-generated photorealistic renderings of specific real-world equipment, isolated as transparent PNGs for use on the map. Aircraft, ground vehicles, and ships are shown from above with their nose or bow facing right; the M1083 cargo truck is a side-profile sprite matching the renderer's side-view treatment.
 
 - `m1a2-abrams.png` — M1A2 Abrams SEPv3 main battle tank.
 - `m2a3-bradley.png` — M2A3 Bradley infantry fighting vehicle.
@@ -14,5 +14,9 @@ Photorealistic generated renderings of specific real-world equipment, isolated a
 - `b2-spirit.png` — B-2 Spirit stealth bomber.
 - `ah64-apache.png` — AH-64E Apache Guardian attack helicopter.
 - `mq9-reaper.png` — MQ-9 Reaper remotely piloted aircraft.
+- `ddg-51-arleigh-burke.png` — Arleigh Burke-class Flight III DDG-51 guided-missile destroyer.
+- `fremm-frigate.png` — FREMM multipurpose stealth frigate.
+- `cvn-68-nimitz.png` — USS Nimitz (CVN-68) aircraft carrier, with deck aircraft for scale.
+- `virginia-class-submarine.png` — Virginia-class nuclear-powered attack submarine.
 
 These are AI-generated visual representations, not documentary photographs. They use no third-party photo assets.
