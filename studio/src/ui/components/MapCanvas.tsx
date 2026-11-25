@@ -16,6 +16,9 @@ interface DebugApi {
   resetFrames: () => void;
   camera: () => Camera;
   selectAtCenter: () => string | null;
+  loadDemoScene: () => Promise<{ entities: number; events: number; durationTicks: number }>;
+  setTick: (tick: number) => { tick: number; entities: number };
+  scene: () => { tick: number; entities: number; events: number } | null;
 }
 
 const TAP_MAX_MS = 450;
@@ -31,6 +34,7 @@ export function MapCanvas({ className }: MapCanvasProps) {
   const cameraState = useEditorStore((state) => state.camera);
   const viewport = useEditorStore((state) => state.viewport);
   const selectedCountryId = useEditorStore((state) => state.selectedCountryId);
+  const sceneEntities = useEditorStore((state) => state.scene?.entities);
   const setCamera = useEditorStore((state) => state.setCamera);
   const setViewport = useEditorStore((state) => state.setViewport);
   const setMapReady = useEditorStore((state) => state.setMapReady);
@@ -97,8 +101,8 @@ export function MapCanvas({ className }: MapCanvasProps) {
   // مزامنة الطبقة مع الحالة (قراءة فقط)
   useEffect(() => {
     rendererRef.current?.resize(viewport.width, viewport.height);
-    rendererRef.current?.update(cameraState, selectedCountryId);
-  }, [cameraState, viewport, selectedCountryId]);
+    rendererRef.current?.update(cameraState, selectedCountryId, sceneEntities);
+  }, [cameraState, viewport, selectedCountryId, sceneEntities]);
 
   // يقرأ الكاميرا والمقاس من المتجر لحظة النقر، لا من إغلاق الرسم الأول:
   // الإغلاق يحمل كاميرا قديمة بعد أي تكبير أو تحريك، فيختار الدولة الخطأ.
@@ -191,6 +195,26 @@ export function MapCanvas({ className }: MapCanvasProps) {
       frames: () => frameStats(),
       resetFrames: () => resetFrameSampling(),
       camera: () => useEditorStore.getState().camera,
+      loadDemoScene: async () => {
+        await useEditorStore.getState().loadDemoScene();
+        const scene = useEditorStore.getState().scene;
+        return {
+          entities: scene?.entities.length ?? 0,
+          events: scene?.events.length ?? 0,
+          durationTicks: scene?.durationTicks ?? 0,
+        };
+      },
+      setTick: (tick) => {
+        useEditorStore.getState().setTick(tick);
+        const scene = useEditorStore.getState().scene;
+        return { tick: scene?.tick ?? 0, entities: scene?.entities.length ?? 0 };
+      },
+      scene: () => {
+        const scene = useEditorStore.getState().scene;
+        return scene
+          ? { tick: scene.tick, entities: scene.entities.length, events: scene.events.length }
+          : null;
+      },
       selectAtCenter: () => {
         const state = useEditorStore.getState();
         pickCountry({ x: state.viewport.width / 2, y: state.viewport.height / 2 });

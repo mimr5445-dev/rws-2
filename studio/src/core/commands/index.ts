@@ -6,5 +6,6 @@ export {
   moveEntity,
   removeEffect,
   removeEntity,
+  setEntityProps,
   setEntityScale,
 } from './builtins';

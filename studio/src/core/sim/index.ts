@@ -1,3 +1,10 @@
-// المحاكاة على الـ tick: حركة وtriggers وأحداث (المرحلة 03).
-// هيكل المرحلة 00: الملف موجود، والتنفيذ في مرحلته المعلنة.
-export {};
+export { ease, isSymmetric } from './easing';
+export type { Easing } from './easing';
+export { measurePath, pathLengthOf, pointAtLength } from './path';
+export type { MeasuredPath } from './path';
+export { evaluateTrack, pathEndTick, sampleKeyframes, samplePath } from './track';
+export type { TrackSample } from './track';
+export { arrivalTicksOf, scheduleTriggers, TriggerCycleError } from './triggers';
+export type { TriggerSchedule } from './triggers';
+export { entityStatesAt, hasArrivalAt, simulate } from './simulate';
+export type { EntityState, SimEvent, SimEventKind, SimResult } from './simulate';

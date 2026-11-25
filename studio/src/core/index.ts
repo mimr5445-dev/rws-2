@@ -5,4 +5,5 @@ export * from './geo';
 export * from './hash';
 export * from './model';
 export * from './rng';
+export * from './sim';
 export * from './time';

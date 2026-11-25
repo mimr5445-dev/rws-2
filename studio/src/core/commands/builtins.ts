@@ -32,13 +32,22 @@ export function addEntity(entity: Entity): Command {
 }
 
 export function removeEntity(entity: Entity): Command {
+  // نحفظ موضع الحذف كي يعيد التراجع الكيان إلى مكانه لا إلى آخر القائمة (البصمة تعتمد على الترتيب).
+  let removedAt = -1;
   return {
     id: `removeEntity:${entity.id}`,
     do: (project) => {
       requireEntity(project, entity.id);
+      removedAt = project.entities.findIndex((item) => item.id === entity.id);
       return { ...project, entities: project.entities.filter((item) => item.id !== entity.id) };
     },
-    undo: (project) => ({ ...project, entities: [...project.entities, entity] }),
+    undo: (project) => {
+      if (project.entities.some((item) => item.id === entity.id)) return project;
+      const entities = [...project.entities];
+      const index = removedAt < 0 ? entities.length : Math.min(removedAt, entities.length);
+      entities.splice(index, 0, entity);
+      return { ...project, entities };
+    },
   };
 }
 
@@ -48,6 +57,24 @@ export function moveEntity(entityId: string, from: Position, to: Position): Comm
     do: (project) => replaceEntity(project, { ...requireEntity(project, entityId), position: to }),
     undo: (project) =>
       replaceEntity(project, { ...requireEntity(project, entityId), position: from }),
+  };
+}
+
+/**
+ * تعديل خصائص كيان دفعة واحدة مع لقطة قبل/بعد (S3.1).
+ * اللقطة الاثنتان تجعلان التراجع ممكناً حتى لو تغيّرت الخصائص في الوسط.
+ */
+export function setEntityProps(
+  entityId: string,
+  before: Partial<Entity>,
+  after: Partial<Entity>,
+): Command {
+  const apply = (patch: Partial<Entity>) => (project: Project) =>
+    replaceEntity(project, { ...requireEntity(project, entityId), ...patch });
+  return {
+    id: `setEntityProps:${entityId}:${Object.keys(after).join(',')}`,
+    do: apply(after),
+    undo: apply(before),
   };
 }
 

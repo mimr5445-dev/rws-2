@@ -23,9 +23,9 @@ export default defineConfig({
       // العتبات المقيسة في المرحلة 02 (docs/forge/QUALITY.md): 91.71% أسطر، 90.17% عبارات.
       // تُرفع بعد كل مرحلة إلى أقل من المقيس بهامش أمان صغير.
       thresholds: {
-        lines: 90,
-        statements: 89,
-        functions: 86,
+        lines: 92,
+        statements: 90,
+        functions: 89,
         branches: 78,
       },
     },

@@ -1,16 +1,30 @@
 import { visibleWorldRect, type Camera, type Viewport } from '@/core/camera';
-import { bboxOverlaps, type PolygonalCountry } from '@/core/geo';
+import { bboxOverlaps, project, type PolygonalCountry } from '@/core/geo';
+import type { EntityState } from '@/core/sim';
 import { LAYER_ORDER, type LayerName } from './layers';
 
 export interface MapSnapshot {
   readonly countries: readonly PolygonalCountry[];
   readonly selectedCountryId: string | null;
+  /** حالة الكيانات عند الـ tick الحالي (تُحسب في core/sim، لا هنا). */
+  readonly entities?: readonly EntityState[];
 }
 
 export interface CountryDraw {
   readonly id: string;
   readonly name: string;
   readonly selected: boolean;
+}
+
+export interface EntityDraw {
+  readonly id: string;
+  readonly kind: EntityState['kind'];
+  readonly side: EntityState['side'];
+  readonly x: number;
+  readonly y: number;
+  readonly scale: number;
+  readonly rotation: number;
+  readonly opacity: number;
 }
 
 export interface RenderPlan {
@@ -24,6 +38,8 @@ export interface RenderPlan {
   readonly hiddenCount: number;
   readonly selected: CountryDraw | null;
   readonly strokeWidth: number;
+  readonly entities: readonly EntityDraw[];
+  readonly hiddenEntities: number;
 }
 
 /**
@@ -50,6 +66,27 @@ export function buildRenderPlan(
 
   const selected = visible.find((country) => country.selected) ?? null;
 
+  // الكيانات تُقصّ بإحداثيات العالم نفسها المستخدمة للدول.
+  const entities: EntityDraw[] = [];
+  let hiddenEntities = 0;
+  for (const entity of snapshot.entities ?? []) {
+    const point = project(entity.position.lon, entity.position.lat);
+    if (point.x < rect.minX || point.x > rect.maxX || point.y < rect.minY || point.y > rect.maxY) {
+      hiddenEntities += 1;
+      continue;
+    }
+    entities.push({
+      id: entity.id,
+      kind: entity.kind,
+      side: entity.side,
+      x: point.x,
+      y: point.y,
+      scale: entity.scale,
+      rotation: entity.rotation,
+      opacity: entity.opacity,
+    });
+  }
+
   return {
     layers: LAYER_ORDER,
     transform: {
@@ -61,6 +98,8 @@ export function buildRenderPlan(
     hiddenCount: snapshot.countries.length - visible.length,
     selected,
     strokeWidth: 1 / camera.zoom,
+    entities,
+    hiddenEntities,
   };
 }
 

@@ -1,23 +1,10 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import './debug';
 
 const SHOT_DIR = path.resolve(process.cwd(), 'docs/forge/shots/phase-02');
 const READY_TIMEOUT = 30_000;
-
-interface DebugApi {
-  centerOn: (lon: number, lat: number, zoom?: number) => void;
-  frames: () => { frames: number; meanMs: number; p95Ms: number; minMs: number; maxMs: number };
-  resetFrames: () => void;
-  selectAtCenter: () => string | null;
-  camera: () => { centerX: number; centerY: number; zoom: number };
-}
-
-declare global {
-  interface Window {
-    __studioDebug?: DebugApi;
-  }
-}
 
 test.beforeAll(async () => {
   await mkdir(SHOT_DIR, { recursive: true });

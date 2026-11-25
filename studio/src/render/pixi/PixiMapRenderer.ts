@@ -1,8 +1,9 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { fitWorld, type Camera, type Viewport } from '@/core/camera';
 import { WORLD_HEIGHT, WORLD_WIDTH, type PolygonalCountry } from '@/core/geo';
+import type { EntityState } from '@/core/sim';
 import { EXPORT_HIDDEN_LAYERS, LAYER_ORDER, type LayerName } from '../layers';
-import { buildRenderPlan } from '../plan';
+import { buildRenderPlan, type EntityDraw } from '../plan';
 
 const COLORS = {
   background: 0x050a14,
@@ -13,6 +14,9 @@ const COLORS = {
   selectedStroke: 0x9fd0ff,
   graticule: 0x1a2a44,
 };
+
+/** ألوان الجوانب مساعدة بصرية لا تحمل المعنى وحدها: الشكل يميّز الفئة (S3.6). */
+const SIDE_COLORS = { a: 0xda3d3d, b: 0x4a90d9, neutral: 0xb8c2cf } as const;
 
 const GRATICULE_STEP_LON = 15;
 const GRATICULE_STEP_LAT = 15;
@@ -29,6 +33,8 @@ export class PixiMapRenderer {
   private readonly land = new Graphics();
   private borders = new Graphics();
   private readonly selection = new Graphics();
+  private readonly units = new Graphics();
+  private readonly structures = new Graphics();
   private readonly countries: readonly PolygonalCountry[];
   private viewport: Viewport = { width: 1, height: 1 };
   private camera: Camera = fitWorld({ width: 1, height: 1 });
@@ -82,6 +88,9 @@ export class PixiMapRenderer {
       if (name === 'map') container.addChild(this.world);
       this.app.stage.addChild(container);
     });
+
+    this.layers.get('units')?.addChild(this.units);
+    this.layers.get('structures')?.addChild(this.structures);
 
     this.world.addChild(this.ocean);
     this.world.addChild(this.land);
@@ -157,6 +166,105 @@ export class PixiMapRenderer {
     this.borders = next;
   }
 
+  /** الرموز تُرسم بأشكال هندسية مطابقة لملفات content/symbols (بلا تحميل SVG في هذه المرحلة). */
+  private drawEntities(entities: readonly EntityDraw[]): void {
+    this.units.clear();
+    this.structures.clear();
+    const zoom = Math.max(this.camera.zoom, 0.05);
+    for (const entity of entities) {
+      const target = entity.kind === 'structure' ? this.structures : this.units;
+      const radius = Math.min(60, Math.max(3, (9 * entity.scale) / zoom));
+      const color = SIDE_COLORS[entity.side];
+      const alpha = entity.opacity;
+      switch (entity.kind) {
+        case 'unit':
+          target
+            .circle(entity.x, entity.y, radius)
+            .fill({ color, alpha })
+            .circle(entity.x, entity.y, radius)
+            .stroke({ width: Math.max(0.6, 1.6 / zoom), color: 0xf4f7fb, alpha });
+          break;
+        case 'marker':
+          target
+            .poly(
+              [
+                entity.x,
+                entity.y - radius,
+                entity.x + radius,
+                entity.y,
+                entity.x,
+                entity.y + radius,
+                entity.x - radius,
+                entity.y,
+              ],
+              true,
+            )
+            .fill({ color, alpha: Math.min(1, alpha + 0.1) })
+            .poly(
+              [
+                entity.x,
+                entity.y - radius,
+                entity.x + radius,
+                entity.y,
+                entity.x,
+                entity.y + radius,
+                entity.x - radius,
+                entity.y,
+              ],
+              true,
+            )
+            .stroke({ width: Math.max(0.6, 1.6 / zoom), color: 0x141a24, alpha });
+          break;
+        case 'structure':
+          target
+            .rect(entity.x - radius, entity.y - radius, radius * 2, radius * 2)
+            .fill({ color, alpha })
+            .rect(entity.x - radius, entity.y - radius, radius * 2, radius * 2)
+            .stroke({ width: Math.max(0.6, 1.6 / zoom), color: 0xf4f7fb, alpha });
+          break;
+        case 'zone':
+          target
+            .poly(
+              [
+                entity.x,
+                entity.y - radius,
+                entity.x + radius,
+                entity.y + radius,
+                entity.x - radius,
+                entity.y + radius,
+              ],
+              true,
+            )
+            .fill({ color, alpha: alpha * 0.35 })
+            .poly(
+              [
+                entity.x,
+                entity.y - radius,
+                entity.x + radius,
+                entity.y + radius,
+                entity.x - radius,
+                entity.y + radius,
+              ],
+              true,
+            )
+            .stroke({ width: Math.max(0.6, 1.4 / zoom), color, alpha });
+          break;
+        default:
+          target
+            .roundRect(
+              entity.x - radius * 1.6,
+              entity.y - radius * 0.7,
+              radius * 3.2,
+              radius * 1.4,
+              radius * 0.4,
+            )
+            .fill({ color: 0x1b2431, alpha: alpha * 0.75 })
+            .stroke({ width: Math.max(0.6, 1.2 / zoom), color, alpha });
+          break;
+      }
+    }
+  }
+
   private drawSelection(): void {
     this.selection.clear();
     if (!this.selectedCountryId) return;
@@ -182,13 +290,17 @@ export class PixiMapRenderer {
   }
 
   /** يطبّق خطة الرسم النقية على شجرة المشاهد. */
-  update(camera: Camera, selectedCountryId: string | null): void {
+  update(
+    camera: Camera,
+    selectedCountryId: string | null,
+    entities: readonly EntityState[] = [],
+  ): void {
     if (this.destroyed) return;
     this.camera = camera;
     this.selectedCountryId = selectedCountryId;
 
     const plan = buildRenderPlan(
-      { countries: this.countries, selectedCountryId },
+      { countries: this.countries, selectedCountryId, entities },
       camera,
       this.viewport,
     );
@@ -197,6 +309,7 @@ export class PixiMapRenderer {
     this.world.position.set(plan.transform.offsetX, plan.transform.offsetY);
     this.rebuildBorders(camera.zoom);
     this.drawSelection();
+    this.drawEntities(plan.entities);
     this.app.render();
   }
 
