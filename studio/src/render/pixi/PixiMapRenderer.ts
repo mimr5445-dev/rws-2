@@ -57,6 +57,8 @@ export class PixiMapRenderer {
       autoDensity: true,
       preference: 'webgl',
       powerPreference: 'high-performance',
+      // خريطة ساكنة: نرسم عند تغيّر الحالة فقط، لا ستين مرة في الثانية بلا سبب.
+      autoStart: false,
     });
 
     const renderer = new PixiMapRenderer(app, countries);
@@ -67,6 +69,7 @@ export class PixiMapRenderer {
     app.canvas.setAttribute('aria-hidden', 'true');
     renderer.build();
     renderer.resize(width, height);
+    app.render();
     return renderer;
   }
 
@@ -194,6 +197,7 @@ export class PixiMapRenderer {
     this.world.position.set(plan.transform.offsetX, plan.transform.offsetY);
     this.rebuildBorders(camera.zoom);
     this.drawSelection();
+    this.app.render();
   }
 
   get stats(): { layers: number; countries: number } {

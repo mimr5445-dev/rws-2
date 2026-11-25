@@ -137,10 +137,20 @@ test('قياس الإطارات يُسجّل معدلاً واقعياً', async
   await page.evaluate(() => window.__studioDebug?.resetFrames());
   await page.waitForTimeout(1500);
 
-  const stats = await page.evaluate(() => window.__studioDebug?.frames() ?? null);
-  expect(stats).not.toBeNull();
-  expect(stats!.frames).toBeGreaterThan(10);
-  expect(stats!.meanMs).toBeGreaterThan(0);
-  expect(stats!.meanMs).toBeLessThan(200);
-  console.log(`[perf] ${testInfo.project.name} ${JSON.stringify(stats)}`);
+  const idle = await page.evaluate(() => window.__studioDebug?.frames() ?? null);
+  expect(idle).not.toBeNull();
+  expect(idle!.frames).toBeGreaterThan(10);
+  expect(idle!.meanMs).toBeGreaterThan(0);
+  expect(idle!.meanMs, 'إطارات ساكنة').toBeLessThan(25);
+
+  // قياس أثناء التفاعل: ست خطوات تكبير متتالية تفرض إعادة رسم كاملة في كل خطوة.
+  await page.evaluate(() => window.__studioDebug?.resetFrames());
+  const zoomIn = page.getByRole('button', { name: /تكبير|Zoom in/ });
+  for (let step = 0; step < 6; step += 1) await zoomIn.click();
+  await page.waitForTimeout(400);
+  const busy = await page.evaluate(() => window.__studioDebug?.frames() ?? null);
+
+  console.log(
+    `[perf] ${testInfo.project.name} idle ${JSON.stringify(idle)} busy ${JSON.stringify(busy)}`,
+  );
 });

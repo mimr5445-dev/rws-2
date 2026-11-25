@@ -62,7 +62,7 @@ jobs:
           npm run test:e2e 2>&1 | tee docs/forge/reports/e2e.log
       - name: Collect failure context
         # لقطات DOM لأخطاء Playwright تُدفع مع الأدلة كي تُقرأ بلا وصول إلى سجلات CI.
-        if: failure()
+        if: always() && github.event_name == 'push'
         continue-on-error: true
         run: |
           mkdir -p docs/forge/reports/error-context
@@ -83,7 +83,8 @@ jobs:
       - name: Publish evidence back to branch
         # اللقطات وسجل الاختبار تُدفع إلى الفرع ليقرأها الوكيل والمستخدم، مع [skip ci] لمنع الحلقة.
         # يُعاد التأسيس على آخر الفرع لأن دفعات بشرية قد تصل أثناء تشغيل CI.
-        if: always()
+        # على أحداث pull_request يكون رمز GITHUB_TOKEN للقراءة فقط، والدفع يفشل حتماً؛ لذلك لا يُشغَّل.
+        if: always() && github.event_name == 'push'
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
