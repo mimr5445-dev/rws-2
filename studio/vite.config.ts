@@ -1,0 +1,16 @@
+import { fileURLToPath, URL } from 'node:url';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  // content/ يُقدَّم كما هو: الخريطة والأصوات والمخططات تُحمَّل من مسارات ثابتة.
+  publicDir: 'content',
+  resolve: {
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
+  server: { host: '0.0.0.0', port: 3000, strictPort: true, allowedHosts: true },
+  preview: { host: '0.0.0.0', port: 4173, strictPort: true, allowedHosts: true },
+  build: { target: 'es2022', sourcemap: false },
+});

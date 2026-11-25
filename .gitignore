@@ -6,3 +6,8 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# studio app
+studio/playwright-report/
+studio/test-results/
+studio/dist/

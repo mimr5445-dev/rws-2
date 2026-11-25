@@ -1,0 +1,129 @@
+name: studio-ci
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'studio/**'
+      - '.github/workflows/studio-ci.yml'
+  pull_request:
+    paths:
+      - 'studio/**'
+      - '.github/workflows/studio-ci.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: studio
+
+jobs:
+  quality:
+    name: Quality (lint / types / unit / build / guards)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run test:coverage
+      - run: npm run build
+      - run: npm run check
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-dist
+          path: studio/dist
+          retention-days: 7
+
+  e2e:
+    name: E2E (Playwright 390x844 + 1280x800, axe)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run e2e and capture log
+        run: |
+          set -o pipefail
+          mkdir -p docs/forge/reports
+          npm run test:e2e 2>&1 | tee docs/forge/reports/e2e.log
+      - name: Collect failure context
+        # لقطات DOM لأخطاء Playwright تُدفع مع الأدلة كي تُقرأ بلا وصول إلى سجلات CI.
+        if: always() && github.event_name == 'push'
+        continue-on-error: true
+        run: |
+          mkdir -p docs/forge/reports/error-context
+          shopt -s nullglob
+          for file in test-results/*/error-context.md test-results/*/*/error-context.md; do
+            target="docs/forge/reports/error-context/$(printf '%s' "$file" | tr '/' '_')"
+            cp "$file" "$target"
+          done
+          ls -1 docs/forge/reports/error-context | head -20
+      - name: Upload shell screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-00-shots
+          path: studio/docs/forge/shots
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publish evidence back to branch
+        # اللقطات وسجل الاختبار تُدفع إلى الفرع ليقرأها الوكيل والمستخدم، مع [skip ci] لمنع الحلقة.
+        # يُعاد التأسيس على آخر الفرع لأن دفعات بشرية قد تصل أثناء تشغيل CI.
+        # على أحداث pull_request يكون رمز GITHUB_TOKEN للقراءة فقط، والدفع يفشل حتماً؛ لذلك لا يُشغَّل.
+        if: always() && github.event_name == 'push'
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -uo pipefail
+          git config user.name "studio-ci"
+          git config user.email "ci@studio.local"
+          # HTTP/1.1 يتفادى انقطاع الدفع (EOF) على شبكة Actions.
+          git config http.version HTTP/1.1
+          git config http.postBuffer 524288000
+          git add -f docs/forge/shots docs/forge/reports
+          if git diff --cached --quiet; then
+            echo "لا تغيير في الأدلة."
+            exit 0
+          fi
+          git commit -m "ci: phase evidence (shots + e2e log) [skip ci]" --no-verify
+          status=1
+          for attempt in 1 2 3 4; do
+            git fetch origin "$BRANCH" || true
+            git rebase "origin/$BRANCH" || { git rebase --abort || true; }
+            if git push origin "HEAD:$BRANCH"; then
+              echo "دُفعت الأدلة في المحاولة $attempt"
+              status=0
+              break
+            fi
+            sleep 5
+          done
+          if [ "$status" -ne 0 ]; then
+            echo "تعذّر دفع الأدلة بعد أربع محاولات" >&2
+            git log --oneline -3 >&2
+            git status --porcelain=v1 >&2
+            exit 1
+          fi
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            studio/playwright-report
+            studio/test-results
+          if-no-files-found: ignore
+          retention-days: 7

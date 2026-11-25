@@ -1,0 +1,3286 @@
+{
+  "schemaVersion": 1,
+  "id": "bench",
+  "title": "مشهد القياس المرجعي",
+  "locale": "ar",
+  "seed": 42,
+  "map": "world",
+  "durationTicks": 1800,
+  "entities": [
+    {
+      "id": "u01",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 40,
+        "lat": 30
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u02",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 39.921147013144775,
+        "lat": 30.87733263495013
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u03",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 39.68583161128631,
+        "lat": 31.740829210153983
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u04",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "b",
+      "position": {
+        "lon": 39.297764858882516,
+        "lat": 32.57687186879274
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u05",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 38.76306680043864,
+        "lat": 33.372275718712004
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u06",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 38.09016994374947,
+        "lat": 34.11449676604731
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u07",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 37.28968627421412,
+        "lat": 34.79182974150082
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u08",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 36.374239897486895,
+        "lat": 35.39359269943053
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u09",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 35.35826794978996,
+        "lat": 35.91029547851411
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u10",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "b",
+      "position": {
+        "lon": 34.257792915650725,
+        "lat": 36.333789367262135
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u11",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 33.09016994374947,
+        "lat": 36.657395614066075
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u12",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 31.87381314585725,
+        "lat": 36.87601075510082
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u13",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 30.627905195293135,
+        "lat": 36.9861870989979
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u14",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 29.372094804706865,
+        "lat": 36.9861870989979
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u15",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 28.12618685414275,
+        "lat": 36.87601075510082
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u16",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "b",
+      "position": {
+        "lon": 26.909830056250527,
+        "lat": 36.657395614066075
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u17",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 25.742207084349275,
+        "lat": 36.333789367262135
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u18",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 24.64173205021003,
+        "lat": 35.9102954785141
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u19",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 23.6257601025131,
+        "lat": 35.39359269943053
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u20",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 22.710313725785888,
+        "lat": 34.79182974150082
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u21",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 21.909830056250527,
+        "lat": 34.11449676604731
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u22",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "b",
+      "position": {
+        "lon": 21.236933199561363,
+        "lat": 33.37227571871201
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u23",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 20.702235141117487,
+        "lat": 32.57687186879275
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u24",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 20.31416838871369,
+        "lat": 31.740829210153983
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u25",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 20.078852986855225,
+        "lat": 30.877332634950132
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u26",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 20,
+        "lat": 30
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u27",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 20.07885298685522,
+        "lat": 29.12266736504987
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u28",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "b",
+      "position": {
+        "lon": 20.31416838871369,
+        "lat": 28.259170789846014
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u29",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 20.702235141117487,
+        "lat": 27.423128131207253
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u30",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 21.236933199561363,
+        "lat": 26.627724281287996
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u31",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 21.909830056250527,
+        "lat": 25.88550323395269
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u32",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 22.710313725785884,
+        "lat": 25.20817025849918
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u33",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 23.625760102513105,
+        "lat": 24.606407300569476
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u34",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "b",
+      "position": {
+        "lon": 24.641732050210038,
+        "lat": 24.089704521485892
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u35",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 25.74220708434928,
+        "lat": 23.66621063273786
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u36",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 26.909830056250524,
+        "lat": 23.342604385933925
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u37",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 28.126186854142755,
+        "lat": 23.123989244899178
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u38",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 29.37209480470687,
+        "lat": 23.013812901002098
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u39",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 30.627905195293128,
+        "lat": 23.013812901002098
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u40",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "b",
+      "position": {
+        "lon": 31.87381314585724,
+        "lat": 23.123989244899178
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u41",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 33.09016994374947,
+        "lat": 23.342604385933925
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u42",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 34.25779291565072,
+        "lat": 23.66621063273786
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u43",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 35.35826794978996,
+        "lat": 24.089704521485892
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u44",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 36.374239897486895,
+        "lat": 24.606407300569472
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u45",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 37.28968627421411,
+        "lat": 25.208170258499177
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u46",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "b",
+      "position": {
+        "lon": 38.09016994374947,
+        "lat": 25.885503233952686
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u47",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "a",
+      "position": {
+        "lon": 38.76306680043864,
+        "lat": 26.627724281287993
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u48",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 39.29776485888251,
+        "lat": 27.42312813120725
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u49",
+      "kind": "unit",
+      "assetId": "symbol.infantry",
+      "side": "b",
+      "position": {
+        "lon": 39.68583161128631,
+        "lat": 28.259170789846014
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "u50",
+      "kind": "unit",
+      "assetId": "symbol.armor",
+      "side": "a",
+      "position": {
+        "lon": 39.921147013144775,
+        "lat": 29.122667365049868
+      },
+      "scale": 1,
+      "spawnTick": 0
+    },
+    {
+      "id": "s001",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 46,
+        "lat": 30
+      },
+      "scale": 1
+    },
+    {
+      "id": "s002",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 45.96842765485235,
+        "lat": 30.70325381872831
+      },
+      "scale": 1
+    },
+    {
+      "id": "s003",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 45.87383522103165,
+        "lat": 31.403732215920208
+      },
+      "scale": 2
+    },
+    {
+      "id": "s004",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 45.71659601165902,
+        "lat": 32.098670723360115
+      },
+      "scale": 1
+    },
+    {
+      "id": "s005",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 45.4973305780581,
+        "lat": 32.785326736246375
+      },
+      "scale": 1
+    },
+    {
+      "id": "s006",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 45.21690426072246,
+        "lat": 33.46099033699941
+      },
+      "scale": 1
+    },
+    {
+      "id": "s007",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 44.87642377421202,
+        "lat": 34.12299499006839
+      },
+      "scale": 2
+    },
+    {
+      "id": "s008",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 44.47723283945631,
+        "lat": 34.76872806552881
+      },
+      "scale": 1
+    },
+    {
+      "id": "s009",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 44.020906880701816,
+        "lat": 35.39564114993921
+      },
+      "scale": 1
+    },
+    {
+      "id": "s010",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 43.509246808032245,
+        "lat": 36.001260103764764
+      },
+      "scale": 1
+    },
+    {
+      "id": "s011",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 42.94427190999916,
+        "lat": 36.5831948256757
+      },
+      "scale": 2
+    },
+    {
+      "id": "s012",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 42.328211884412624,
+        "lat": 37.139148685185326
+      },
+      "scale": 1
+    },
+    {
+      "id": "s013",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 41.66349803874259,
+        "lat": 37.666927586401314
+      },
+      "scale": 1
+    },
+    {
+      "id": "s014",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 40.95275369485902,
+        "lat": 38.16444862711981
+      },
+      "scale": 1
+    },
+    {
+      "id": "s015",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 40.198783835979036,
+        "lat": 38.62974831908884
+      },
+      "scale": 2
+    },
+    {
+      "id": "s016",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 39.404564036679574,
+        "lat": 39.06099033699941
+      },
+      "scale": 1
+    },
+    {
+      "id": "s017",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 38.573228719663945,
+        "lat": 39.456472765622564
+      },
+      "scale": 1
+    },
+    {
+      "id": "s018",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 37.70805878562744,
+        "lat": 39.81463481649127
+      },
+      "scale": 1
+    },
+    {
+      "id": "s019",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 36.812468665041166,
+        "lat": 40.134062987619416
+      },
+      "scale": 2
+    },
+    {
+      "id": "s020",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 35.88999284295485,
+        "lat": 40.41349664194841
+      },
+      "scale": 1
+    },
+    {
+      "id": "s021",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 34.94427190999916,
+        "lat": 40.65183298250572
+      },
+      "scale": 1
+    },
+    {
+      "id": "s022",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 33.97903819463768,
+        "lat": 40.84813140464067
+      },
+      "scale": 1
+    },
+    {
+      "id": "s023",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 32.9981010333716,
+        "lat": 41.00161720816131
+      },
+      "scale": 2
+    },
+    {
+      "id": "s024",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 32.00533173702887,
+        "lat": 41.111684654722154
+      },
+      "scale": 1
+    },
+    {
+      "id": "s025",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 31.004648312469016,
+        "lat": 41.177899358396644
+      },
+      "scale": 1
+    },
+    {
+      "id": "s026",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 30,
+        "lat": 41.2
+      },
+      "scale": 1
+    },
+    {
+      "id": "s027",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 28.995351687530984,
+        "lat": 41.177899358396644
+      },
+      "scale": 2
+    },
+    {
+      "id": "s028",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 27.994668262971132,
+        "lat": 41.111684654722154
+      },
+      "scale": 1
+    },
+    {
+      "id": "s029",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 27.001898966628403,
+        "lat": 41.00161720816131
+      },
+      "scale": 1
+    },
+    {
+      "id": "s030",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 26.020961805362326,
+        "lat": 40.84813140464067
+      },
+      "scale": 1
+    },
+    {
+      "id": "s031",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 25.05572809000084,
+        "lat": 40.651832982505724
+      },
+      "scale": 2
+    },
+    {
+      "id": "s032",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 24.110007157045153,
+        "lat": 40.41349664194841
+      },
+      "scale": 1
+    },
+    {
+      "id": "s033",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 23.187531334958837,
+        "lat": 40.134062987619416
+      },
+      "scale": 1
+    },
+    {
+      "id": "s034",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 22.291941214372553,
+        "lat": 39.81463481649127
+      },
+      "scale": 1
+    },
+    {
+      "id": "s035",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 21.426771280336048,
+        "lat": 39.456472765622564
+      },
+      "scale": 2
+    },
+    {
+      "id": "s036",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 20.595435963320433,
+        "lat": 39.06099033699941
+      },
+      "scale": 1
+    },
+    {
+      "id": "s037",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 19.801216164020964,
+        "lat": 38.62974831908884
+      },
+      "scale": 1
+    },
+    {
+      "id": "s038",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 19.04724630514098,
+        "lat": 38.16444862711981
+      },
+      "scale": 1
+    },
+    {
+      "id": "s039",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 18.33650196125742,
+        "lat": 37.666927586401314
+      },
+      "scale": 2
+    },
+    {
+      "id": "s040",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 17.671788115587376,
+        "lat": 37.139148685185326
+      },
+      "scale": 1
+    },
+    {
+      "id": "s041",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 17.05572809000084,
+        "lat": 36.5831948256757
+      },
+      "scale": 1
+    },
+    {
+      "id": "s042",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 16.490753191967762,
+        "lat": 36.001260103764764
+      },
+      "scale": 1
+    },
+    {
+      "id": "s043",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 15.979093119298184,
+        "lat": 35.395641149939216
+      },
+      "scale": 2
+    },
+    {
+      "id": "s044",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 15.52276716054369,
+        "lat": 34.76872806552882
+      },
+      "scale": 1
+    },
+    {
+      "id": "s045",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 15.123576225787978,
+        "lat": 34.12299499006839
+      },
+      "scale": 1
+    },
+    {
+      "id": "s046",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 14.783095739277544,
+        "lat": 33.46099033699941
+      },
+      "scale": 1
+    },
+    {
+      "id": "s047",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 14.502669421941903,
+        "lat": 32.785326736246375
+      },
+      "scale": 2
+    },
+    {
+      "id": "s048",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 14.283403988340982,
+        "lat": 32.09867072336012
+      },
+      "scale": 1
+    },
+    {
+      "id": "s049",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 14.126164778968356,
+        "lat": 31.40373221592021
+      },
+      "scale": 1
+    },
+    {
+      "id": "s050",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 14.031572345147655,
+        "lat": 30.703253818728314
+      },
+      "scale": 1
+    },
+    {
+      "id": "s051",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 14,
+        "lat": 30
+      },
+      "scale": 2
+    },
+    {
+      "id": "s052",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 14.031572345147655,
+        "lat": 29.29674618127169
+      },
+      "scale": 1
+    },
+    {
+      "id": "s053",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 14.126164778968354,
+        "lat": 28.596267784079792
+      },
+      "scale": 1
+    },
+    {
+      "id": "s054",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 14.283403988340982,
+        "lat": 27.90132927663988
+      },
+      "scale": 1
+    },
+    {
+      "id": "s055",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 14.502669421941903,
+        "lat": 27.214673263753625
+      },
+      "scale": 2
+    },
+    {
+      "id": "s056",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 14.783095739277544,
+        "lat": 26.539009663000584
+      },
+      "scale": 1
+    },
+    {
+      "id": "s057",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 15.12357622578798,
+        "lat": 25.877005009931604
+      },
+      "scale": 1
+    },
+    {
+      "id": "s058",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 15.522767160543685,
+        "lat": 25.23127193447119
+      },
+      "scale": 1
+    },
+    {
+      "id": "s059",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 15.97909311929818,
+        "lat": 24.60435885006079
+      },
+      "scale": 2
+    },
+    {
+      "id": "s060",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 16.490753191967755,
+        "lat": 23.99873989623524
+      },
+      "scale": 1
+    },
+    {
+      "id": "s061",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 17.05572809000084,
+        "lat": 23.416805174324303
+      },
+      "scale": 1
+    },
+    {
+      "id": "s062",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 17.671788115587372,
+        "lat": 22.860851314814678
+      },
+      "scale": 1
+    },
+    {
+      "id": "s063",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 18.336501961257415,
+        "lat": 22.333072413598686
+      },
+      "scale": 2
+    },
+    {
+      "id": "s064",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 19.047246305140977,
+        "lat": 21.835551372880193
+      },
+      "scale": 1
+    },
+    {
+      "id": "s065",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 19.801216164020968,
+        "lat": 21.37025168091116
+      },
+      "scale": 1
+    },
+    {
+      "id": "s066",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 20.595435963320426,
+        "lat": 20.93900966300059
+      },
+      "scale": 1
+    },
+    {
+      "id": "s067",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 21.42677128033606,
+        "lat": 20.54352723437743
+      },
+      "scale": 2
+    },
+    {
+      "id": "s068",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 22.291941214372557,
+        "lat": 20.18536518350873
+      },
+      "scale": 1
+    },
+    {
+      "id": "s069",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 23.187531334958845,
+        "lat": 19.865937012380577
+      },
+      "scale": 1
+    },
+    {
+      "id": "s070",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 24.110007157045143,
+        "lat": 19.586503358051587
+      },
+      "scale": 1
+    },
+    {
+      "id": "s071",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 25.05572809000084,
+        "lat": 19.348167017494283
+      },
+      "scale": 2
+    },
+    {
+      "id": "s072",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 26.020961805362315,
+        "lat": 19.151868595359332
+      },
+      "scale": 1
+    },
+    {
+      "id": "s073",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 27.001898966628406,
+        "lat": 18.998382791838687
+      },
+      "scale": 1
+    },
+    {
+      "id": "s074",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 27.994668262971125,
+        "lat": 18.88831534527785
+      },
+      "scale": 1
+    },
+    {
+      "id": "s075",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 28.995351687530988,
+        "lat": 18.82210064160336
+      },
+      "scale": 2
+    },
+    {
+      "id": "s076",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 29.999999999999996,
+        "lat": 18.8
+      },
+      "scale": 1
+    },
+    {
+      "id": "s077",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 31.004648312469005,
+        "lat": 18.82210064160336
+      },
+      "scale": 1
+    },
+    {
+      "id": "s078",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 32.00533173702887,
+        "lat": 18.888315345277846
+      },
+      "scale": 1
+    },
+    {
+      "id": "s079",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 32.99810103337159,
+        "lat": 18.998382791838687
+      },
+      "scale": 2
+    },
+    {
+      "id": "s080",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 33.97903819463768,
+        "lat": 19.151868595359332
+      },
+      "scale": 1
+    },
+    {
+      "id": "s081",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 34.94427190999916,
+        "lat": 19.34816701749428
+      },
+      "scale": 1
+    },
+    {
+      "id": "s082",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 35.889992842954854,
+        "lat": 19.586503358051587
+      },
+      "scale": 1
+    },
+    {
+      "id": "s083",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 36.81246866504115,
+        "lat": 19.865937012380577
+      },
+      "scale": 2
+    },
+    {
+      "id": "s084",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 37.708058785627436,
+        "lat": 20.185365183508726
+      },
+      "scale": 1
+    },
+    {
+      "id": "s085",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 38.57322871966394,
+        "lat": 20.54352723437743
+      },
+      "scale": 1
+    },
+    {
+      "id": "s086",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 39.40456403667957,
+        "lat": 20.93900966300059
+      },
+      "scale": 1
+    },
+    {
+      "id": "s087",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 40.19878383597903,
+        "lat": 21.370251680911156
+      },
+      "scale": 2
+    },
+    {
+      "id": "s088",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 40.95275369485902,
+        "lat": 21.83555137288019
+      },
+      "scale": 1
+    },
+    {
+      "id": "s089",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 41.66349803874258,
+        "lat": 22.333072413598686
+      },
+      "scale": 1
+    },
+    {
+      "id": "s090",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 42.32821188441263,
+        "lat": 22.860851314814678
+      },
+      "scale": 1
+    },
+    {
+      "id": "s091",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 42.94427190999916,
+        "lat": 23.4168051743243
+      },
+      "scale": 2
+    },
+    {
+      "id": "s092",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 43.509246808032245,
+        "lat": 23.998739896235243
+      },
+      "scale": 1
+    },
+    {
+      "id": "s093",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 44.020906880701816,
+        "lat": 24.604358850060787
+      },
+      "scale": 1
+    },
+    {
+      "id": "s094",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 44.47723283945631,
+        "lat": 25.23127193447119
+      },
+      "scale": 1
+    },
+    {
+      "id": "s095",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 44.876423774212014,
+        "lat": 25.8770050099316
+      },
+      "scale": 2
+    },
+    {
+      "id": "s096",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 45.21690426072246,
+        "lat": 26.539009663000588
+      },
+      "scale": 1
+    },
+    {
+      "id": "s097",
+      "kind": "marker",
+      "assetId": "static.marker",
+      "side": "neutral",
+      "position": {
+        "lon": 45.4973305780581,
+        "lat": 27.21467326375362
+      },
+      "scale": 1
+    },
+    {
+      "id": "s098",
+      "kind": "structure",
+      "assetId": "static.structure",
+      "side": "neutral",
+      "position": {
+        "lon": 45.71659601165902,
+        "lat": 27.901329276639885
+      },
+      "scale": 1
+    },
+    {
+      "id": "s099",
+      "kind": "zone",
+      "assetId": "static.zone",
+      "side": "neutral",
+      "position": {
+        "lon": 45.87383522103164,
+        "lat": 28.59626778407979
+      },
+      "scale": 2
+    },
+    {
+      "id": "s100",
+      "kind": "label",
+      "assetId": "static.label",
+      "side": "neutral",
+      "position": {
+        "lon": 45.96842765485235,
+        "lat": 29.29674618127169
+      },
+      "scale": 1
+    }
+  ],
+  "tracks": [
+    {
+      "id": "path.u01",
+      "targetId": "u01",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 40,
+            "lat": 30
+          },
+          {
+            "lon": 32.23098396412041,
+            "lat": 31.887757444800684
+          }
+        ],
+        "startTick": 120,
+        "endTick": 600,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u02",
+      "targetId": "u02",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 39.921147013144775,
+            "lat": 30.87733263495013
+          },
+          {
+            "lon": 31.87539378242649,
+            "lat": 32.068603417479935
+          }
+        ],
+        "startTick": 126,
+        "endTick": 606,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u03",
+      "targetId": "u03",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 39.68583161128631,
+            "lat": 31.740829210153983
+          },
+          {
+            "lon": 31.490227520477752,
+            "lat": 32.216826278541745
+          }
+        ],
+        "startTick": 132,
+        "endTick": 612,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u04",
+      "targetId": "u04",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 39.297764858882516,
+            "lat": 32.57687186879274
+          },
+          {
+            "lon": 31.081559480312315,
+            "lat": 32.33008846492313
+          }
+        ],
+        "startTick": 138,
+        "endTick": 618,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u05",
+      "targetId": "u05",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 38.76306680043864,
+            "lat": 33.372275718712004
+          },
+          {
+            "lon": 30.655834601050035,
+            "lat": 32.406603764285286
+          }
+        ],
+        "startTick": 144,
+        "endTick": 624,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u06",
+      "targetId": "u06",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 38.09016994374947,
+            "lat": 34.11449676604731
+          },
+          {
+            "lon": 30.219766818352596,
+            "lat": 32.445165484649266
+          }
+        ],
+        "startTick": 150,
+        "endTick": 630,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u07",
+      "targetId": "u07",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 37.28968627421412,
+            "lat": 34.79182974150082
+          },
+          {
+            "lon": 29.780233181647404,
+            "lat": 32.445165484649266
+          }
+        ],
+        "startTick": 156,
+        "endTick": 636,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u08",
+      "targetId": "u08",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 36.374239897486895,
+            "lat": 35.39359269943053
+          },
+          {
+            "lon": 29.34416539894996,
+            "lat": 32.406603764285286
+          }
+        ],
+        "startTick": 162,
+        "endTick": 642,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u09",
+      "targetId": "u09",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 35.35826794978996,
+            "lat": 35.91029547851411
+          },
+          {
+            "lon": 28.918440519687685,
+            "lat": 32.33008846492313
+          }
+        ],
+        "startTick": 168,
+        "endTick": 648,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u10",
+      "targetId": "u10",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 34.257792915650725,
+            "lat": 36.333789367262135
+          },
+          {
+            "lon": 28.509772479522244,
+            "lat": 32.216826278541745
+          }
+        ],
+        "startTick": 174,
+        "endTick": 654,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u11",
+      "targetId": "u11",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 33.09016994374947,
+            "lat": 36.657395614066075
+          },
+          {
+            "lon": 28.12460621757351,
+            "lat": 32.068603417479935
+          }
+        ],
+        "startTick": 180,
+        "endTick": 660,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u12",
+      "targetId": "u12",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 31.87381314585725,
+            "lat": 36.87601075510082
+          },
+          {
+            "lon": 27.769016035879588,
+            "lat": 31.887757444800684
+          }
+        ],
+        "startTick": 186,
+        "endTick": 666,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u13",
+      "targetId": "u13",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 30.627905195293135,
+            "lat": 36.9861870989979
+          },
+          {
+            "lon": 27.44860980402506,
+            "lat": 31.677140409525286
+          }
+        ],
+        "startTick": 192,
+        "endTick": 672,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u14",
+      "targetId": "u14",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 29.372094804706865,
+            "lat": 36.9861870989979
+          },
+          {
+            "lon": 27.168440519687685,
+            "lat": 31.44007386811656
+          }
+        ],
+        "startTick": 198,
+        "endTick": 678,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u15",
+      "targetId": "u15",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 28.12618685414275,
+            "lat": 36.87601075510082
+          },
+          {
+            "lon": 26.932926619846477,
+            "lat": 31.180296501549204
+          }
+        ],
+        "startTick": 204,
+        "endTick": 684,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u16",
+      "targetId": "u16",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 26.909830056250527,
+            "lat": 36.657395614066075
+          },
+          {
+            "lon": 26.74578229939112,
+            "lat": 30.90190515407746
+          }
+        ],
+        "startTick": 210,
+        "endTick": 690,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u17",
+      "targetId": "u17",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 25.742207084349275,
+            "lat": 36.333789367262135
+          },
+          {
+            "lon": 26.609958936049793,
+            "lat": 30.609290223553895
+          }
+        ],
+        "startTick": 216,
+        "endTick": 696,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u18",
+      "targetId": "u18",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 24.64173205021003,
+            "lat": 35.9102954785141
+          },
+          {
+            "lon": 26.52759854539933,
+            "lat": 30.307066422232545
+          }
+        ],
+        "startTick": 222,
+        "endTick": 702,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u19",
+      "targetId": "u19",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 23.6257601025131,
+            "lat": 35.39359269943053
+          },
+          {
+            "lon": 26.5,
+            "lat": 30
+          }
+        ],
+        "startTick": 228,
+        "endTick": 708,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u20",
+      "targetId": "u20",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 22.710313725785888,
+            "lat": 34.79182974150082
+          },
+          {
+            "lon": 26.52759854539933,
+            "lat": 29.692933577767455
+          }
+        ],
+        "startTick": 234,
+        "endTick": 714,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u21",
+      "targetId": "u21",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 21.909830056250527,
+            "lat": 34.11449676604731
+          },
+          {
+            "lon": 26.609958936049793,
+            "lat": 29.390709776446105
+          }
+        ],
+        "startTick": 240,
+        "endTick": 720,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u22",
+      "targetId": "u22",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 21.236933199561363,
+            "lat": 33.37227571871201
+          },
+          {
+            "lon": 26.74578229939112,
+            "lat": 29.09809484592254
+          }
+        ],
+        "startTick": 246,
+        "endTick": 726,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u23",
+      "targetId": "u23",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 20.702235141117487,
+            "lat": 32.57687186879275
+          },
+          {
+            "lon": 26.932926619846477,
+            "lat": 28.8197034984508
+          }
+        ],
+        "startTick": 252,
+        "endTick": 732,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u24",
+      "targetId": "u24",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 20.31416838871369,
+            "lat": 31.740829210153983
+          },
+          {
+            "lon": 27.168440519687685,
+            "lat": 28.55992613188344
+          }
+        ],
+        "startTick": 258,
+        "endTick": 738,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u25",
+      "targetId": "u25",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 20.078852986855225,
+            "lat": 30.877332634950132
+          },
+          {
+            "lon": 27.44860980402506,
+            "lat": 28.322859590474714
+          }
+        ],
+        "startTick": 264,
+        "endTick": 744,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u26",
+      "targetId": "u26",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 20,
+            "lat": 30
+          },
+          {
+            "lon": 27.769016035879588,
+            "lat": 28.112242555199316
+          }
+        ],
+        "startTick": 270,
+        "endTick": 750,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u27",
+      "targetId": "u27",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 20.07885298685522,
+            "lat": 29.12266736504987
+          },
+          {
+            "lon": 28.124606217573515,
+            "lat": 27.931396582520062
+          }
+        ],
+        "startTick": 276,
+        "endTick": 756,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u28",
+      "targetId": "u28",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 20.31416838871369,
+            "lat": 28.259170789846014
+          },
+          {
+            "lon": 28.509772479522248,
+            "lat": 27.78317372145825
+          }
+        ],
+        "startTick": 282,
+        "endTick": 762,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u29",
+      "targetId": "u29",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 20.702235141117487,
+            "lat": 27.423128131207253
+          },
+          {
+            "lon": 28.918440519687685,
+            "lat": 27.669911535076874
+          }
+        ],
+        "startTick": 288,
+        "endTick": 768,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u30",
+      "targetId": "u30",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 21.236933199561363,
+            "lat": 26.627724281287996
+          },
+          {
+            "lon": 29.344165398949965,
+            "lat": 27.593396235714714
+          }
+        ],
+        "startTick": 294,
+        "endTick": 774,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u31",
+      "targetId": "u31",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 21.909830056250527,
+            "lat": 25.88550323395269
+          },
+          {
+            "lon": 29.780233181647404,
+            "lat": 27.554834515350734
+          }
+        ],
+        "startTick": 300,
+        "endTick": 780,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u32",
+      "targetId": "u32",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 22.710313725785884,
+            "lat": 25.20817025849918
+          },
+          {
+            "lon": 30.219766818352596,
+            "lat": 27.554834515350734
+          }
+        ],
+        "startTick": 306,
+        "endTick": 786,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u33",
+      "targetId": "u33",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 23.625760102513105,
+            "lat": 24.606407300569476
+          },
+          {
+            "lon": 30.655834601050035,
+            "lat": 27.593396235714714
+          }
+        ],
+        "startTick": 312,
+        "endTick": 792,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u34",
+      "targetId": "u34",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 24.641732050210038,
+            "lat": 24.089704521485892
+          },
+          {
+            "lon": 31.081559480312315,
+            "lat": 27.669911535076874
+          }
+        ],
+        "startTick": 318,
+        "endTick": 798,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u35",
+      "targetId": "u35",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 25.74220708434928,
+            "lat": 23.66621063273786
+          },
+          {
+            "lon": 31.490227520477752,
+            "lat": 27.78317372145825
+          }
+        ],
+        "startTick": 324,
+        "endTick": 804,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u36",
+      "targetId": "u36",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 26.909830056250524,
+            "lat": 23.342604385933925
+          },
+          {
+            "lon": 31.875393782426485,
+            "lat": 27.931396582520062
+          }
+        ],
+        "startTick": 330,
+        "endTick": 810,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u37",
+      "targetId": "u37",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 28.126186854142755,
+            "lat": 23.123989244899178
+          },
+          {
+            "lon": 32.23098396412041,
+            "lat": 28.112242555199316
+          }
+        ],
+        "startTick": 336,
+        "endTick": 816,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u38",
+      "targetId": "u38",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 29.37209480470687,
+            "lat": 23.013812901002098
+          },
+          {
+            "lon": 32.55139019597494,
+            "lat": 28.322859590474714
+          }
+        ],
+        "startTick": 342,
+        "endTick": 822,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u39",
+      "targetId": "u39",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 30.627905195293128,
+            "lat": 23.013812901002098
+          },
+          {
+            "lon": 32.831559480312315,
+            "lat": 28.55992613188344
+          }
+        ],
+        "startTick": 348,
+        "endTick": 828,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u40",
+      "targetId": "u40",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 31.87381314585724,
+            "lat": 23.123989244899178
+          },
+          {
+            "lon": 33.06707338015352,
+            "lat": 28.8197034984508
+          }
+        ],
+        "startTick": 354,
+        "endTick": 834,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u41",
+      "targetId": "u41",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 33.09016994374947,
+            "lat": 23.342604385933925
+          },
+          {
+            "lon": 33.254217700608876,
+            "lat": 29.09809484592254
+          }
+        ],
+        "startTick": 360,
+        "endTick": 840,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u42",
+      "targetId": "u42",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 34.25779291565072,
+            "lat": 23.66621063273786
+          },
+          {
+            "lon": 33.39004106395021,
+            "lat": 29.390709776446105
+          }
+        ],
+        "startTick": 366,
+        "endTick": 846,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u43",
+      "targetId": "u43",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 35.35826794978996,
+            "lat": 24.089704521485892
+          },
+          {
+            "lon": 33.47240145460067,
+            "lat": 29.692933577767455
+          }
+        ],
+        "startTick": 372,
+        "endTick": 852,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u44",
+      "targetId": "u44",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 36.374239897486895,
+            "lat": 24.606407300569472
+          },
+          {
+            "lon": 33.5,
+            "lat": 30
+          }
+        ],
+        "startTick": 378,
+        "endTick": 858,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u45",
+      "targetId": "u45",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 37.28968627421411,
+            "lat": 25.208170258499177
+          },
+          {
+            "lon": 33.47240145460067,
+            "lat": 30.307066422232545
+          }
+        ],
+        "startTick": 384,
+        "endTick": 864,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u46",
+      "targetId": "u46",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 38.09016994374947,
+            "lat": 25.885503233952686
+          },
+          {
+            "lon": 33.39004106395021,
+            "lat": 30.609290223553895
+          }
+        ],
+        "startTick": 390,
+        "endTick": 870,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u47",
+      "targetId": "u47",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 38.76306680043864,
+            "lat": 26.627724281287993
+          },
+          {
+            "lon": 33.254217700608876,
+            "lat": 30.90190515407746
+          }
+        ],
+        "startTick": 396,
+        "endTick": 876,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u48",
+      "targetId": "u48",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 39.29776485888251,
+            "lat": 27.42312813120725
+          },
+          {
+            "lon": 33.06707338015352,
+            "lat": 31.180296501549204
+          }
+        ],
+        "startTick": 402,
+        "endTick": 882,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u49",
+      "targetId": "u49",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 39.68583161128631,
+            "lat": 28.259170789846014
+          },
+          {
+            "lon": 32.831559480312315,
+            "lat": 31.44007386811656
+          }
+        ],
+        "startTick": 408,
+        "endTick": 888,
+        "easing": "easeInOut"
+      }
+    },
+    {
+      "id": "path.u50",
+      "targetId": "u50",
+      "property": "position",
+      "path": {
+        "points": [
+          {
+            "lon": 39.921147013144775,
+            "lat": 29.122667365049868
+          },
+          {
+            "lon": 32.55139019597494,
+            "lat": 31.67714040952529
+          }
+        ],
+        "startTick": 414,
+        "endTick": 894,
+        "easing": "easeInOut"
+      }
+    }
+  ],
+  "triggers": [
+    {
+      "id": "t.01",
+      "when": {
+        "tick": 90
+      }
+    },
+    {
+      "id": "t.02",
+      "when": {
+        "tick": 174
+      }
+    },
+    {
+      "id": "t.03",
+      "when": {
+        "tick": 258
+      }
+    },
+    {
+      "id": "t.04",
+      "when": {
+        "tick": 342
+      }
+    },
+    {
+      "id": "t.05",
+      "when": {
+        "tick": 426
+      }
+    },
+    {
+      "id": "t.06",
+      "when": {
+        "tick": 510
+      }
+    },
+    {
+      "id": "t.07",
+      "when": {
+        "tick": 594
+      }
+    },
+    {
+      "id": "t.08",
+      "when": {
+        "tick": 678
+      }
+    },
+    {
+      "id": "t.09",
+      "when": {
+        "tick": 762
+      }
+    },
+    {
+      "id": "t.10",
+      "when": {
+        "tick": 846
+      }
+    },
+    {
+      "id": "t.11",
+      "when": {
+        "tick": 930
+      }
+    },
+    {
+      "id": "t.12",
+      "when": {
+        "tick": 1014
+      }
+    },
+    {
+      "id": "t.13",
+      "when": {
+        "tick": 1098
+      }
+    },
+    {
+      "id": "t.14",
+      "when": {
+        "tick": 1182
+      }
+    },
+    {
+      "id": "t.15",
+      "when": {
+        "tick": 1266
+      }
+    },
+    {
+      "id": "t.16",
+      "when": {
+        "tick": 1350
+      }
+    },
+    {
+      "id": "t.17",
+      "when": {
+        "tick": 1434
+      }
+    },
+    {
+      "id": "t.18",
+      "when": {
+        "tick": 1518
+      }
+    },
+    {
+      "id": "t.19",
+      "when": {
+        "tick": 1602
+      }
+    },
+    {
+      "id": "t.20",
+      "when": {
+        "tick": 1686
+      }
+    }
+  ],
+  "effects": [
+    {
+      "id": "boom.01",
+      "kind": "fireball",
+      "at": {
+        "tick": 90
+      },
+      "position": {
+        "lon": 33.52671151375484,
+        "lat": 33.39787137637478
+      },
+      "intensity": 0.6
+    },
+    {
+      "id": "boom.02",
+      "kind": "fireball",
+      "at": {
+        "tick": 174
+      },
+      "position": {
+        "lon": 31.854101966249686,
+        "lat": 33.99443736843965
+      },
+      "intensity": 0.7
+    },
+    {
+      "id": "boom.03",
+      "kind": "fireball",
+      "at": {
+        "tick": 258
+      },
+      "position": {
+        "lon": 30,
+        "lat": 34.2
+      },
+      "intensity": 0.8
+    },
+    {
+      "id": "boom.04",
+      "kind": "fireball",
+      "at": {
+        "tick": 342
+      },
+      "position": {
+        "lon": 28.145898033750317,
+        "lat": 33.99443736843965
+      },
+      "intensity": 0.9
+    },
+    {
+      "id": "boom.05",
+      "kind": "fireball",
+      "at": {
+        "tick": 426
+      },
+      "position": {
+        "lon": 26.47328848624516,
+        "lat": 33.39787137637478
+      },
+      "intensity": 0.6
+    },
+    {
+      "id": "boom.06",
+      "kind": "fireball",
+      "at": {
+        "tick": 510
+      },
+      "position": {
+        "lon": 25.145898033750317,
+        "lat": 32.46869805962839
+      },
+      "intensity": 0.7
+    },
+    {
+      "id": "boom.07",
+      "kind": "fireball",
+      "at": {
+        "tick": 594
+      },
+      "position": {
+        "lon": 24.293660902229078,
+        "lat": 31.29787137637478
+      },
+      "intensity": 0.8
+    },
+    {
+      "id": "boom.08",
+      "kind": "fireball",
+      "at": {
+        "tick": 678
+      },
+      "position": {
+        "lon": 24,
+        "lat": 30
+      },
+      "intensity": 0.9
+    },
+    {
+      "id": "boom.09",
+      "kind": "fireball",
+      "at": {
+        "tick": 762
+      },
+      "position": {
+        "lon": 24.293660902229078,
+        "lat": 28.70212862362522
+      },
+      "intensity": 0.6
+    },
+    {
+      "id": "boom.10",
+      "kind": "fireball",
+      "at": {
+        "tick": 846
+      },
+      "position": {
+        "lon": 25.145898033750314,
+        "lat": 27.531301940371613
+      },
+      "intensity": 0.7
+    },
+    {
+      "id": "boom.11",
+      "kind": "fireball",
+      "at": {
+        "tick": 930
+      },
+      "position": {
+        "lon": 26.47328848624516,
+        "lat": 26.602128623625223
+      },
+      "intensity": 0.8
+    },
+    {
+      "id": "boom.12",
+      "kind": "fireball",
+      "at": {
+        "tick": 1014
+      },
+      "position": {
+        "lon": 28.145898033750314,
+        "lat": 26.005562631560355
+      },
+      "intensity": 0.9
+    },
+    {
+      "id": "boom.13",
+      "kind": "fireball",
+      "at": {
+        "tick": 1098
+      },
+      "position": {
+        "lon": 30,
+        "lat": 25.8
+      },
+      "intensity": 0.6
+    },
+    {
+      "id": "boom.14",
+      "kind": "fireball",
+      "at": {
+        "tick": 1182
+      },
+      "position": {
+        "lon": 31.854101966249683,
+        "lat": 26.005562631560355
+      },
+      "intensity": 0.7
+    },
+    {
+      "id": "boom.15",
+      "kind": "fireball",
+      "at": {
+        "tick": 1266
+      },
+      "position": {
+        "lon": 33.52671151375484,
+        "lat": 26.60212862362522
+      },
+      "intensity": 0.8
+    },
+    {
+      "id": "boom.16",
+      "kind": "fireball",
+      "at": {
+        "tick": 1350
+      },
+      "position": {
+        "lon": 34.85410196624969,
+        "lat": 27.531301940371613
+      },
+      "intensity": 0.9
+    },
+    {
+      "id": "boom.17",
+      "kind": "fireball",
+      "at": {
+        "tick": 1434
+      },
+      "position": {
+        "lon": 35.70633909777092,
+        "lat": 28.70212862362522
+      },
+      "intensity": 0.6
+    },
+    {
+      "id": "boom.18",
+      "kind": "fireball",
+      "at": {
+        "tick": 1518
+      },
+      "position": {
+        "lon": 36,
+        "lat": 30
+      },
+      "intensity": 0.7
+    },
+    {
+      "id": "boom.19",
+      "kind": "fireball",
+      "at": {
+        "tick": 1602
+      },
+      "position": {
+        "lon": 35.70633909777092,
+        "lat": 31.29787137637478
+      },
+      "intensity": 0.8
+    },
+    {
+      "id": "boom.20",
+      "kind": "fireball",
+      "at": {
+        "tick": 1686
+      },
+      "position": {
+        "lon": 34.85410196624969,
+        "lat": 32.46869805962839
+      },
+      "intensity": 0.9
+    }
+  ],
+  "cues": [
+    {
+      "id": "cue.01",
+      "when": {
+        "tick": 90
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.02",
+      "when": {
+        "tick": 174
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.03",
+      "when": {
+        "tick": 258
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.04",
+      "when": {
+        "tick": 342
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.05",
+      "when": {
+        "tick": 426
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.06",
+      "when": {
+        "tick": 510
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.07",
+      "when": {
+        "tick": 594
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.08",
+      "when": {
+        "tick": 678
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.09",
+      "when": {
+        "tick": 762
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.10",
+      "when": {
+        "tick": 846
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.11",
+      "when": {
+        "tick": 930
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.12",
+      "when": {
+        "tick": 1014
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.13",
+      "when": {
+        "tick": 1098
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.14",
+      "when": {
+        "tick": 1182
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.15",
+      "when": {
+        "tick": 1266
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.16",
+      "when": {
+        "tick": 1350
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.17",
+      "when": {
+        "tick": 1434
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.18",
+      "when": {
+        "tick": 1518
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.19",
+      "when": {
+        "tick": 1602
+      },
+      "clipId": "weapons/explosion_01",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "cue.20",
+      "when": {
+        "tick": 1686
+      },
+      "clipId": "weapons/explosion_02",
+      "gain": 0.8,
+      "pan": 0
+    }
+  ],
+  "camera": [
+    {
+      "tick": 0,
+      "lon": 30,
+      "lat": 30,
+      "zoom": 1.2,
+      "easing": "easeInOut"
+    },
+    {
+      "tick": 900,
+      "lon": 32,
+      "lat": 31.5,
+      "zoom": 2,
+      "easing": "easeInOut"
+    },
+    {
+      "tick": 1799,
+      "lon": 29,
+      "lat": 29,
+      "zoom": 1.5,
+      "easing": "linear"
+    }
+  ],
+  "variables": {
+    "speed": 1,
+    "label": "bench"
+  }
+}

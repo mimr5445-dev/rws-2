@@ -1,0 +1,46 @@
+{
+  "format": "studio.symbols/1",
+  "note": "لكل فئة شكل مغلق مميز، واللون مساعد لا يحمل المعنى وحده (S3.6).",
+  "files": [
+    {
+      "id": "symbol.unit",
+      "file": "unit.svg",
+      "kind": "unit",
+      "label": "وحدة عسكرية",
+      "color": "#da3d3d",
+      "licence": "أصل أصلي داخل المشروع (CC0)"
+    },
+    {
+      "id": "symbol.marker",
+      "file": "marker.svg",
+      "kind": "marker",
+      "label": "علامة هدف",
+      "color": "#f2c14e",
+      "licence": "أصل أصلي داخل المشروع (CC0)"
+    },
+    {
+      "id": "symbol.structure",
+      "file": "structure.svg",
+      "kind": "structure",
+      "label": "منشأة",
+      "color": "#4a90d9",
+      "licence": "أصل أصلي داخل المشروع (CC0)"
+    },
+    {
+      "id": "symbol.zone",
+      "file": "zone.svg",
+      "kind": "zone",
+      "label": "منطقة",
+      "color": "#2f9e8f",
+      "licence": "أصل أصلي داخل المشروع (CC0)"
+    },
+    {
+      "id": "symbol.label",
+      "file": "label.svg",
+      "kind": "label",
+      "label": "تعليق نصي",
+      "color": "#cbd5e1",
+      "licence": "أصل أصلي داخل المشروع (CC0)"
+    }
+  ]
+}

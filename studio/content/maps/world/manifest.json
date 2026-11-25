@@ -1,0 +1,21 @@
+{
+  "format": "studio.map/1",
+  "file": "map.bin.json",
+  "sha256": "67a3d2cd0e82c91718c8f179a196ec1d98f95b9f059b96701d25efe399499b1d",
+  "bytes": 88239,
+  "countries": 177,
+  "points": 11076,
+  "projection": {
+    "kind": "equirectangular",
+    "worldWidth": 8192,
+    "worldHeight": 4096,
+    "quantization": 1
+  },
+  "source": {
+    "name": "world-atlas",
+    "version": "2.x",
+    "file": "countries-110m.json",
+    "upstream": "Natural Earth (public domain)",
+    "licence": "ISC (Michael Bostock)"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "format": "studio.scenes/1",
+  "files": [
+    {
+      "file": "small-scene.project.json",
+      "sha256": "be8b086f5aa667944924ddf2bbc983fe2cc5263aa6d100dbccf8b1bf5b0a37fd",
+      "bytes": 2613,
+      "entities": 4,
+      "tracks": 2,
+      "triggers": 4,
+      "durationTicks": 180,
+      "licence": "أصل أصلي داخل المشروع (CC0)"
+    }
+  ]
+}
