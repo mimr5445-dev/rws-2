@@ -1,3 +1,2 @@
-// تحميل الأصول والتحقق من البصمات والتراخيص (المرحلة 12).
-// هيكل المرحلة 00: الملف موجود، والتنفيذ في مرحلته المعلنة.
-export {};
+export { decodeMap, loadWorldMap, sha256HexOf } from './mapData';
+export type { MapData, MapManifest, MapProjection, RawCountry, RawMap } from './mapData';

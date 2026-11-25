@@ -53,20 +53,28 @@ export async function checkLicenses() {
 
   for (const file of files) {
     const relative = path.relative(contentDir, file);
+    // سجل الأصل يُقرأ من مجلد الأصل نفسه (مجموعات متداخلة مثل maps/world) ثم من جذر المجموعة.
     const group = relative.split(path.sep)[0] ?? '';
-    const groupDir = path.join(contentDir, group);
-    let text = knownText.get(groupDir);
+    const dirs = [path.dirname(file), path.join(contentDir, group)];
+    const cacheKey = dirs.join('|');
+    let text = knownText.get(cacheKey);
     if (text === undefined) {
       const chunks = [];
-      for (const name of ['manifest.json', 'LICENSES.md', 'SHA256SUMS.txt']) {
-        try {
-          chunks.push(await readFile(path.join(groupDir, name), 'utf8'));
-        } catch {
-          // الملف غير موجود: يُفحص لاحقاً عبر محتوى المجموعة.
+      const seen = new Set();
+      for (const dir of dirs) {
+        for (const name of ['manifest.json', 'LICENSES.md', 'SHA256SUMS.txt']) {
+          try {
+            const body = await readFile(path.join(dir, name), 'utf8');
+            if (seen.has(body)) continue;
+            seen.add(body);
+            chunks.push(body);
+          } catch {
+            // الملف غير موجود في هذا المستوى: يُفحص المستوى التالي.
+          }
         }
       }
       text = chunks.join('\n');
-      knownText.set(groupDir, text);
+      knownText.set(cacheKey, text);
     }
     if (!text.includes(path.basename(file))) {
       violations.push({

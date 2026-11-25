@@ -35,7 +35,9 @@ export type ProjectIssues = { path: (string | number)[]; message: string }[];
  * تحقق عبر الحقول: المعرّفات فريدة، الأزمنة داخل المدة، وكل مرجع يشير إلى موجود.
  * (PRODUCT_SPEC §6، قواعد التحقق)
  */
-export function collectProjectIssues(project: z.infer<z.ZodObject<typeof ProjectShape>>): ProjectIssues {
+export function collectProjectIssues(
+  project: z.infer<z.ZodObject<typeof ProjectShape>>,
+): ProjectIssues {
   const issues: ProjectIssues = [];
   const add = (path: (string | number)[], message: string) => issues.push({ path, message });
 
@@ -69,7 +71,8 @@ export function collectProjectIssues(project: z.infer<z.ZodObject<typeof Project
         add(['entities', index, 'despawnTick'], 'despawnTick يجب أن يكون بعد spawnTick');
       }
     }
-    if (entity.despawnTick !== undefined) inRange(entity.despawnTick, ['entities', index, 'despawnTick']);
+    if (entity.despawnTick !== undefined)
+      inRange(entity.despawnTick, ['entities', index, 'despawnTick']);
   });
 
   project.tracks.forEach((track, index) => {
@@ -102,7 +105,9 @@ export function collectProjectIssues(project: z.infer<z.ZodObject<typeof Project
     else checkAfter(when.after, [...path, 'after']);
   };
 
-  project.triggers.forEach((trigger, index) => checkWhen(trigger.when, ['triggers', index, 'when']));
+  project.triggers.forEach((trigger, index) =>
+    checkWhen(trigger.when, ['triggers', index, 'when']),
+  );
   project.effects.forEach((effect, index) => checkWhen(effect.at, ['effects', index, 'at']));
   project.cues.forEach((cue, index) => checkWhen(cue.when, ['cues', index, 'when']));
 
@@ -120,7 +125,9 @@ export function collectProjectIssues(project: z.infer<z.ZodObject<typeof Project
 }
 
 /** كشف الدورات في رسم شروط after بين المشغّلات. */
-export function findAfterCycles(triggers: { id: string; when: { tick: number } | { after: string } }[]): string[][] {
+export function findAfterCycles(
+  triggers: { id: string; when: { tick: number } | { after: string } }[],
+): string[][] {
   const edges = new Map<string, string[]>();
   for (const trigger of triggers) {
     if (!('after' in trigger.when)) continue;

@@ -5,6 +5,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // content/ يُقدَّم كما هو: الخريطة والأصوات والمخططات تُحمَّل من مسارات ثابتة.
+  publicDir: 'content',
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

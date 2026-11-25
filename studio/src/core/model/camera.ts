@@ -1,8 +1,8 @@
 import { z } from 'zod';
+import { MAX_ZOOM, MIN_ZOOM } from '../camera/limits';
 import { EasingSchema, LatSchema, LonSchema, TickSchema } from './primitives';
 
-export const MIN_ZOOM = 0.25;
-export const MAX_ZOOM = 4;
+export { MAX_ZOOM, MIN_ZOOM };
 
 export const CameraKeyframeSchema = z.strictObject({
   tick: TickSchema,

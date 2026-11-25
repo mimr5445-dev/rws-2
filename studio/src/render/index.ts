@@ -1,3 +1,6 @@
-// طبقة الرسم (Pixi) تقرأ الحالة ولا تكتب فيها (المرحلة 02).
-// هيكل المرحلة 00: الملف موجود، والتنفيذ في مرحلته المعلنة.
-export {};
+export { EXPORT_HIDDEN_LAYERS, LAYER_ORDER, layerIndex } from './layers';
+export type { LayerName } from './layers';
+export { buildRenderPlan, deepFreeze } from './plan';
+export type { CountryDraw, MapSnapshot, RenderPlan } from './plan';
+export { frameStats, resetFrameSampling, startFrameSampling, stopFrameSampling } from './perf';
+export type { FrameStats } from './perf';

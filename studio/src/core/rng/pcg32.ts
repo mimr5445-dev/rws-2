@@ -24,7 +24,7 @@ export class Pcg32 {
   nextUint32(): number {
     const oldState = this.state;
     this.state = (oldState * MULTIPLIER + this.inc) & MASK_64;
-    const xorshifted = ((oldState >> 18n) ^ oldState) >> 27n & 0xffffffffn;
+    const xorshifted = (((oldState >> 18n) ^ oldState) >> 27n) & 0xffffffffn;
     const rotation = oldState >> 59n;
     const rotated =
       ((xorshifted >> rotation) | (xorshifted << ((32n - rotation) & 31n))) & 0xffffffffn;

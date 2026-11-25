@@ -9,16 +9,24 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       provider: 'v8',
-      include: ['src/core/**/*.ts'],
-      exclude: ['src/core/**/index.ts'],
+      include: [
+        'src/core/**/*.ts',
+        'src/content/**/*.ts',
+        'src/render/plan.ts',
+        'src/render/layers.ts',
+        'src/render/perf.ts',
+      ],
+      // ملفات التجميع وإدخال الخريطة (fetch/crypto) تُغطّى في e2e لا في الوحدة.
+      exclude: ['src/**/index.ts'],
       reporter: ['text', 'json-summary'],
       reportsDirectory: 'coverage',
-      // العتبات المقيسة في المرحلة 01 (docs/forge/QUALITY.md): 90% أسطر، 88.2% عبارات.
+      // العتبات المقيسة في المرحلة 02 (docs/forge/QUALITY.md): 91.71% أسطر، 90.17% عبارات.
+      // تُرفع بعد كل مرحلة إلى أقل من المقيس بهامش أمان صغير.
       thresholds: {
-        lines: 88,
-        statements: 86,
-        functions: 82,
-        branches: 74,
+        lines: 90,
+        statements: 89,
+        functions: 86,
+        branches: 78,
       },
     },
   },

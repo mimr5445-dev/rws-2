@@ -46,7 +46,8 @@ export function moveEntity(entityId: string, from: Position, to: Position): Comm
   return {
     id: `moveEntity:${entityId}`,
     do: (project) => replaceEntity(project, { ...requireEntity(project, entityId), position: to }),
-    undo: (project) => replaceEntity(project, { ...requireEntity(project, entityId), position: from }),
+    undo: (project) =>
+      replaceEntity(project, { ...requireEntity(project, entityId), position: from }),
   };
 }
 

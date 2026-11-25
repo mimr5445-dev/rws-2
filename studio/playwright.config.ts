@@ -14,9 +14,16 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
+    // SwiftShader يضمن توفر WebGL في بيئة CI بلا GPU (Pixi.js 8).
     {
       name: 'desktop-1280x800',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        launchOptions: {
+          args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+        },
+      },
     },
     {
       name: 'mobile-390x844',
@@ -25,6 +32,9 @@ export default defineConfig({
         viewport: { width: 390, height: 844 },
         isMobile: true,
         hasTouch: true,
+        launchOptions: {
+          args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+        },
       },
     },
   ],

@@ -40,6 +40,13 @@ export const en: Record<keyof ArDictionary, string> = {
   'map.placeholder': 'Map and preview area',
   'map.hint': 'The map is built in phase 2. This is the final layout shell.',
   'map.zoomIn': 'Zoom in',
+  'map.loading': 'Loading the map…',
+  'map.error': 'The map failed to load',
+  'map.selectedCountry': 'Selected country',
+  'map.noSelection': 'No country selected',
+  'map.instructions': 'Drag to pan, scroll or pinch to zoom, click to select a country.',
+  'map.ready': 'Map ready',
+
   'map.zoomOut': 'Zoom out',
   'map.fit': 'Fit',
 

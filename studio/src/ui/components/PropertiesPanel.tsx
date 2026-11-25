@@ -1,3 +1,4 @@
+import { useEditorStore } from '@/state';
 import { useI18n } from '../useI18n';
 import { Glyph } from './Glyph';
 
@@ -7,6 +8,8 @@ interface PropertiesPanelProps {
 
 export function PropertiesPanel({ className }: PropertiesPanelProps) {
   const { t } = useI18n();
+  const selectedCountryName = useEditorStore((state) => state.selectedCountryName);
+  const selectedCountryId = useEditorStore((state) => state.selectedCountryId);
 
   return (
     <aside
@@ -19,11 +22,22 @@ export function PropertiesPanel({ className }: PropertiesPanelProps) {
           {t('properties.title')}
         </h2>
       </div>
-      <div className="flex min-h-0 flex-1 items-center justify-center p-4">
-        <p className="max-w-[26ch] text-center text-xs leading-relaxed text-mist-400">
-          {t('properties.empty')}
-        </p>
-      </div>
+
+      {selectedCountryName ? (
+        <div className="space-y-2 p-3">
+          <p className="text-[11px] text-mist-400">{t('map.selectedCountry')}</p>
+          <p className="text-sm font-semibold text-mist-200" data-testid="inspector-country">
+            {selectedCountryName}
+          </p>
+          <p className="tnum text-[11px] text-mist-400">#{selectedCountryId}</p>
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 items-center justify-center p-4">
+          <p className="max-w-[26ch] text-center text-xs leading-relaxed text-mist-400">
+            {t('properties.empty')}
+          </p>
+        </div>
+      )}
     </aside>
   );
 }

@@ -3,5 +3,8 @@ dist
 playwright-report
 test-results
 content/schema
+content/maps/world/map.bin.json
+content/maps/world/manifest.json
 docs/forge/shots
+coverage
 package-lock.json
