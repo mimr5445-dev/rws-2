@@ -31,6 +31,7 @@ jobs:
       - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm test
+      - run: npm run test:coverage
       - run: npm run build
       - run: npm run check
       - name: Upload build output

@@ -1,3 +1,10 @@
-// الأوامر do/undo وسجل التراجع (المرحلة 01، S1.5).
-// هيكل المرحلة 00: الملف موجود، والتنفيذ في مرحلته المعلنة.
-export {};
+export { History, HistoryError } from './history';
+export type { Command } from './types';
+export {
+  addEffect,
+  addEntity,
+  moveEntity,
+  removeEffect,
+  removeEntity,
+  setEntityScale,
+} from './builtins';

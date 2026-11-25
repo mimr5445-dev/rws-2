@@ -1,3 +1,6 @@
-// نواة نقية: لا تستورد React ولا Pixi ولا DOM. تُملأ في المرحلتين 01 و03.
-// هيكل المرحلة 00: الملف موجود، والتنفيذ في مرحلته المعلنة.
-export {};
+// نواة نقية: لا تستورد React ولا Pixi ولا DOM (يفرضه eslint-plugin-boundaries).
+export * from './commands';
+export * from './hash';
+export * from './model';
+export * from './rng';
+export * from './time';

@@ -16,7 +16,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "schema:generate": "tsx scripts/gen-json-schema.mts",
+    "fixture:generate": "tsx scripts/gen-bench-fixture.mts",
+    "golden:rng": "tsx scripts/gen-rng-golden.mts",
+    "hash:report": "tsx scripts/hash-report.mts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "idb": "^8.0.4",
@@ -35,6 +40,7 @@
     "@types/react": "^19.3.3",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
+    "@vitest/coverage-v8": "^5.1.2",
     "axe-core": "^4.14.1",
     "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",
@@ -43,6 +49,7 @@
     "globals": "^17.14.0",
     "prettier": "^3.10.1",
     "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.74.0",
     "vite": "^8.3.8",

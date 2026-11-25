@@ -1,9 +1,16 @@
 #!/usr/bin/env node
-// فحص واحد يجمع حراس المرحلة: الحتمية والتراخيص. تُضاف فحوص المراحل اللاحقة هنا.
+/**
+ * فحص واحد يجمع حراس المشروع: الحتمية، ثبات البصمة بين عمليات، التراخيص، القفل.
+ * تُضاف فحوص المراحل اللاحقة إلى هذا الملف.
+ */
+import { execFile } from 'node:child_process';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { promisify } from 'node:util';
+import { scanCore } from './check-determinism.mjs';
 
+const run = promisify(execFile);
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 async function walk(dir, filter) {
@@ -26,44 +33,21 @@ async function walk(dir, filter) {
   return out;
 }
 
-const FORBIDDEN = [
-  { pattern: /\bMath\.random\b/g, label: 'Math.random' },
-  { pattern: /\bDate\b/g, label: 'Date' },
-  { pattern: /\bperformance\.now\b/g, label: 'performance.now' },
-  { pattern: /\bsetTimeout\b/g, label: 'setTimeout' },
-  { pattern: /\bsetInterval\b/g, label: 'setInterval' },
-];
-
-const ALLOW_MARKER = 'determinism-allow:';
-
-export async function checkDeterminism() {
-  const files = await walk(path.join(ROOT, 'src/core'), (file) => /\.(ts|tsx)$/.test(file));
-  const violations = [];
-  for (const file of files) {
-    const lines = (await readFile(file, 'utf8')).split('\n');
-    lines.forEach((line, index) => {
-      if (line.includes(ALLOW_MARKER)) return;
-      for (const rule of FORBIDDEN) {
-        rule.pattern.lastIndex = 0;
-        if (rule.pattern.test(line)) {
-          violations.push({
-            file: path.relative(ROOT, file),
-            line: index + 1,
-            label: rule.label,
-            snippet: line.trim().slice(0, 120),
-          });
-        }
-      }
-    });
-  }
-  return { files: files.length, violations };
-}
-
-const CONTENT_META = new Set(['manifest.json', 'LICENSES.md', 'SHA256SUMS.txt', '.gitkeep']);
+const CONTENT_META = new Set([
+  'manifest.json',
+  'LICENSES.md',
+  'SHA256SUMS.txt',
+  '.gitkeep',
+  'README.md',
+]);
 
 export async function checkLicenses() {
   const contentDir = path.join(ROOT, 'content');
-  const files = await walk(contentDir, (file) => !CONTENT_META.has(path.basename(file)));
+  const files = await walk(
+    contentDir,
+    (file) =>
+      !CONTENT_META.has(path.basename(file)) && !file.includes(`${path.sep}schema${path.sep}`),
+  );
   const violations = [];
   const knownText = new Map();
 
@@ -84,8 +68,7 @@ export async function checkLicenses() {
       text = chunks.join('\n');
       knownText.set(groupDir, text);
     }
-    const base = path.basename(file);
-    if (!text.includes(base)) {
+    if (!text.includes(path.basename(file))) {
       violations.push({
         file: path.relative(ROOT, file),
         reason: 'لا يوجد سجل ترخيص أو بصمة لهذا الأصل',
@@ -95,18 +78,46 @@ export async function checkLicenses() {
   return { files: files.length, violations };
 }
 
+/** البصمة نفسها في ثلاث عمليات منفصلة: الحتمية لا تعتمد على حالة العملية. */
+async function checkHashStability(runs = 3) {
+  const results = [];
+  for (let index = 0; index < runs; index += 1) {
+    const { stdout } = await run('npx', ['tsx', 'scripts/hash-report.mts'], {
+      cwd: ROOT,
+      env: { ...process.env, TZ: index === 0 ? 'UTC' : 'Pacific/Kiritimati' },
+    });
+    results.push(stdout.trim());
+  }
+  const unique = new Set(results);
+  return { runs, results, stable: unique.size === 1 };
+}
+
 async function main() {
   let failed = false;
 
-  const determinism = await checkDeterminism();
+  const determinism = await scanCore(ROOT);
   if (determinism.violations.length === 0) {
     console.log(`✓ الحتمية: لا مخالفات في ${determinism.files} ملفاً داخل src/core`);
   } else {
     failed = true;
     console.error('✗ الحتمية: مخالفات في src/core');
-    for (const v of determinism.violations) {
-      console.error(`  - ${v.file}:${v.line} [${v.label}] ${v.snippet}`);
+    for (const violation of determinism.violations) {
+      console.error(
+        `  - ${violation.file}:${violation.line} [${violation.label}] ${violation.snippet}`,
+      );
     }
+  }
+
+  const hashes = await checkHashStability(3);
+  if (hashes.stable) {
+    const parsed = JSON.parse(hashes.results[0] ?? '{}');
+    console.log(
+      `✓ البصمة: متطابقة في ${hashes.runs} عمليات (${parsed.short ?? '?'} — ${parsed.entities ?? '?'} كياناً)`,
+    );
+  } else {
+    failed = true;
+    console.error('✗ البصمة: نتائج مختلفة بين العمليات');
+    for (const result of hashes.results) console.error(`  - ${result}`);
   }
 
   const licenses = await checkLicenses();
@@ -115,8 +126,8 @@ async function main() {
   } else {
     failed = true;
     console.error('✗ التراخيص: أصول بلا سجل');
-    for (const v of licenses.violations) {
-      console.error(`  - ${v.file}: ${v.reason}`);
+    for (const violation of licenses.violations) {
+      console.error(`  - ${violation.file}: ${violation.reason}`);
     }
   }
 
@@ -125,7 +136,7 @@ async function main() {
     .then(() => true)
     .catch(() => false);
   if (lockExists) {
-    console.log(`✓ القفل: package-lock.json ملتصق بالإصدار ${pkg.version ?? '-'}`);
+    console.log(`✓ القفل: package-lock.json موقوف على الإصدار ${pkg.version ?? '-'}`);
   } else {
     failed = true;
     console.error('✗ القفل: package-lock.json مفقود');
@@ -140,6 +151,4 @@ async function main() {
 
 const isEntryPoint =
   process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.filename);
-if (isEntryPoint) {
-  await main();
-}
+if (isEntryPoint) await main();
