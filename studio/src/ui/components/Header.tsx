@@ -42,10 +42,9 @@ export function Header() {
           type="button"
           onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
           aria-label={t('a11y.language')}
-          className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg border border-ink-700 px-2 text-xs text-mist-300 hover:border-ink-600 hover:text-mist-200"
+          className="min-h-11 min-w-11 rounded-lg border border-ink-700 px-3 text-xs font-semibold text-mist-300 hover:border-ink-600 hover:text-mist-200"
         >
-          <Glyph name="language" className="size-4" />
-          <span className="font-semibold">{language === 'ar' ? 'EN' : 'ع'}</span>
+          {language === 'ar' ? 'English' : 'العربية'}
         </button>
       </div>
     </header>

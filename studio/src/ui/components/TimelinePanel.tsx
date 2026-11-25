@@ -51,7 +51,7 @@ export function TimelinePanel({ className }: TimelinePanelProps) {
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 w-px bg-signal-500"
-          style={{ insetInlineStart: `calc(5rem + ${progress}% * 0.62)` }}
+          style={{ insetInlineStart: `calc(6.25rem + (100% - 7rem) * ${progress / 100})` }}
         >
           <span className="absolute -top-0 -translate-x-1/2 rounded-sm bg-signal-500 px-1 text-[9px] font-bold text-ink-950">
             ▾

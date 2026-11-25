@@ -36,9 +36,9 @@ export function App() {
 
       <main id="main" aria-label={t('a11y.main')} className="flex min-h-0 flex-1 flex-col">
         <div className="flex min-h-0 flex-1">
-          <LibraryPanel className="hidden w-[280px] shrink-0 border-e md:flex" />
-          <MapStage className="min-w-0 flex-1" />
-          <PropertiesPanel className="hidden w-[320px] shrink-0 border-s md:flex" />
+          <LibraryPanel className="hidden w-[280px] shrink-0 border-s md:order-3 md:flex" />
+          <MapStage className="min-w-0 flex-1 md:order-2" />
+          <PropertiesPanel className="hidden w-[320px] shrink-0 border-e md:order-1 md:flex" />
         </div>
 
         <TimelinePanel className="hidden h-[220px] shrink-0 md:flex" />
