@@ -57,6 +57,13 @@ test('المشهد الصغير: ثلاث وحدات ثم علامة تظهر ب
   const final = await page.evaluate(() => window.__studioDebug?.scene() ?? null);
   expect(final).toMatchObject({ tick: 120, entities: 4 });
 
+  // الكيانات المرسومة فعلياً داخل الإطار (لا مجرد موجودة في المتجر):
+  // الوحدة u1 وصلت إلى الدمام، والعلامة ظهرت هناك عند tick 120.
+  const stats = await page.evaluate(() => window.__studioDebug?.renderStats() ?? null);
+  expect(stats).not.toBeNull();
+  expect(stats!.layers).toBe(9);
+  expect(stats!.entities).toBeGreaterThanOrEqual(2);
+
   await page.screenshot({
     path: path.join(SHOT_DIR, `${testInfo.project.name}-scene-t120.png`),
     fullPage: false,

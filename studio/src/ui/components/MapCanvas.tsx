@@ -19,6 +19,7 @@ interface DebugApi {
   loadDemoScene: () => Promise<{ entities: number; events: number; durationTicks: number }>;
   setTick: (tick: number) => { tick: number; entities: number };
   scene: () => { tick: number; entities: number; events: number } | null;
+  renderStats: () => { layers: number; countries: number; entities: number } | null;
 }
 
 const TAP_MAX_MS = 450;
@@ -215,6 +216,7 @@ export function MapCanvas({ className }: MapCanvasProps) {
           ? { tick: scene.tick, entities: scene.entities.length, events: scene.events.length }
           : null;
       },
+      renderStats: () => rendererRef.current?.stats ?? null,
       selectAtCenter: () => {
         const state = useEditorStore.getState();
         pickCountry({ x: state.viewport.width / 2, y: state.viewport.height / 2 });

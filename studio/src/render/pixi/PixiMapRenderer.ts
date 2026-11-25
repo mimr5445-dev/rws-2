@@ -39,6 +39,7 @@ export class PixiMapRenderer {
   private viewport: Viewport = { width: 1, height: 1 };
   private camera: Camera = fitWorld({ width: 1, height: 1 });
   private selectedCountryId: string | null = null;
+  private drawnEntities = 0;
   private borderRebuildZoom = 0;
   private destroyed = false;
 
@@ -305,16 +306,28 @@ export class PixiMapRenderer {
       this.viewport,
     );
 
+    // طبقات الكيانات تعيش خارج `world` لتبقى شجرة الطبقات معبّرة، فتحتاج التحويل نفسه.
+    for (const name of ['units', 'structures'] as const) {
+      const layer = this.layers.get(name);
+      layer?.position.set(plan.transform.offsetX, plan.transform.offsetY);
+      layer?.scale.set(plan.transform.scale);
+    }
+
     this.world.scale.set(plan.transform.scale);
     this.world.position.set(plan.transform.offsetX, plan.transform.offsetY);
     this.rebuildBorders(camera.zoom);
     this.drawSelection();
     this.drawEntities(plan.entities);
+    this.drawnEntities = plan.entities.length;
     this.app.render();
   }
 
-  get stats(): { layers: number; countries: number } {
-    return { layers: this.layers.size, countries: this.countries.length };
+  get stats(): { layers: number; countries: number; entities: number } {
+    return {
+      layers: this.layers.size,
+      countries: this.countries.length,
+      entities: this.drawnEntities,
+    };
   }
 
   destroy(): void {

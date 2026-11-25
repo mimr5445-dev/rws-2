@@ -10,6 +10,7 @@ export interface DebugApi {
   loadDemoScene: () => Promise<{ entities: number; events: number; durationTicks: number }>;
   setTick: (tick: number) => { tick: number; entities: number };
   scene: () => { tick: number; entities: number; events: number } | null;
+  renderStats: () => { layers: number; countries: number; entities: number } | null;
 }
 
 declare global {
