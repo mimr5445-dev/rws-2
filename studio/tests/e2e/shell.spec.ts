@@ -103,8 +103,10 @@ test('ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5)', 
   if (!viewport) throw new Error('لا يوجد مقاس نافذة');
 
   const boxes = async () => ({
-    library: await page.getByRole('complementary', { name: 'مكتبة الأصول' }).boundingBox(),
-    inspector: await page.getByRole('complementary', { name: 'الخصائص' }).boundingBox(),
+    library: await page.getByRole('complementary', { name: 'المكتبة', exact: true }).boundingBox(),
+    inspector: await page
+      .getByRole('complementary', { name: 'الخصائص', exact: true })
+      .boundingBox(),
   });
 
   const arabic = await boxes();
@@ -123,8 +125,10 @@ test('ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5)', 
   await page.waitForTimeout(200);
 
   const english = {
-    library: await page.getByRole('complementary', { name: 'Asset library' }).boundingBox(),
-    inspector: await page.getByRole('complementary', { name: 'Properties' }).boundingBox(),
+    library: await page.getByRole('complementary', { name: 'Library', exact: true }).boundingBox(),
+    inspector: await page
+      .getByRole('complementary', { name: 'Properties', exact: true })
+      .boundingBox(),
   };
   if (english.library && english.inspector) {
     // بالإنجليزية: المكتبة على اليسار.
