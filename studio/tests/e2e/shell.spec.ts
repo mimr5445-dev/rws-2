@@ -91,3 +91,47 @@ interface AxeResult {
     nodes: { target: string[] }[];
   }[];
 }
+
+test('ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.startsWith('mobile'), 'الألواح الجانبية لسطح المكتب فقط');
+
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error('لا يوجد مقاس نافذة');
+
+  const boxes = async () => ({
+    library: await page.getByRole('complementary', { name: 'مكتبة الأصول' }).boundingBox(),
+    inspector: await page.getByRole('complementary', { name: 'الخصائص' }).boundingBox(),
+  });
+
+  const arabic = await boxes();
+  expect(arabic.library, 'لوحة المكتبة ظاهرة').not.toBeNull();
+  expect(arabic.inspector).not.toBeNull();
+  if (arabic.library && arabic.inspector) {
+    // بالعربية: المكتبة على اليمين (حافتها اليمنى عند حد الشاشة).
+    expect(Math.abs(arabic.library.x + arabic.library.width - viewport.width)).toBeLessThanOrEqual(
+      2,
+    );
+    expect(Math.abs(arabic.inspector.x)).toBeLessThanOrEqual(2);
+    expect(arabic.library.x).toBeGreaterThan(arabic.inspector.x);
+  }
+
+  await page.getByRole('button', { name: 'تغيير اللغة' }).click();
+  await page.waitForTimeout(200);
+
+  const english = {
+    library: await page.getByRole('complementary', { name: 'Asset library' }).boundingBox(),
+    inspector: await page.getByRole('complementary', { name: 'Properties' }).boundingBox(),
+  };
+  if (english.library && english.inspector) {
+    // بالإنجليزية: المكتبة على اليسار.
+    expect(Math.abs(english.library.x)).toBeLessThanOrEqual(2);
+    expect(
+      Math.abs(english.inspector.x + english.inspector.width - viewport.width),
+    ).toBeLessThanOrEqual(2);
+    expect(english.library.x).toBeLessThan(english.inspector.x);
+  }
+});

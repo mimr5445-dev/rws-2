@@ -46,3 +46,25 @@
 @utility tnum {
   font-variant-numeric: tabular-nums;
 }
+
+/*
+  شبكة المحرر: المناطق المسمّاة تأتي من src/ui/layout/areas.ts عبر متغيرات CSS.
+  الحاوية تُثبَّت على ltr حتى يكون ترتيب الأعمدة فيزيائياً وصريحاً،
+  وكل منطقة تعيد ضبط اتجاهها من اللغة.
+*/
+.studio-grid {
+  display: grid;
+  grid-template-areas: 'canvas';
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  direction: ltr;
+  min-height: 0;
+}
+
+@media (min-width: 48rem) {
+  .studio-grid {
+    grid-template-areas: var(--areas-desktop);
+    grid-template-columns: var(--cols-desktop);
+    grid-template-rows: var(--rows-desktop);
+  }
+}
