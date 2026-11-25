@@ -210,7 +210,9 @@ export function MapCanvas({ className }: MapCanvasProps) {
       data-testid="map-canvas"
       data-map-ready={useEditorStore((state) => state.mapReady) ? 'true' : 'false'}
       data-zoom={cameraState.zoom.toFixed(4)}
-      className={`relative touch-none select-none ${className ?? ''}`}
+      // لا نضع `relative` مع `absolute` هنا: تعارض أدوات Tailwind يحسمه ترتيب
+      // التوليد لا ترتيب الأصناف، وقد يجعل الحاوية في التدفق بارتفاع صفر.
+      className={`absolute inset-0 touch-none select-none ${className ?? ''}`}
     />
   );
 }

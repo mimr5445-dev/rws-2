@@ -59,9 +59,14 @@ test('الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفح
   await expect(canvas.locator('canvas')).toHaveCount(1);
   await expect(page.getByTestId('selected-country')).toHaveText(/لم تُختَر دولة|No country/);
 
+  // الحاوية المطلقة يجب أن تملأ منطقة الخريطة فعلياً (انحدار سابق: ارتفاع 1px)
+  const stage = page.getByTestId('map-stage');
+  const stageBox = await stage.boundingBox();
   const box = await canvas.boundingBox();
-  expect(box?.width ?? 0).toBeGreaterThan(200);
-  expect(box?.height ?? 0).toBeGreaterThan(200);
+  expect(stageBox?.width ?? 0).toBeGreaterThan(200);
+  expect(stageBox?.height ?? 0).toBeGreaterThan(200);
+  expect(box?.width ?? 0).toBeGreaterThan((stageBox?.width ?? 0) - 2);
+  expect(box?.height ?? 0).toBeGreaterThan((stageBox?.height ?? 0) - 2);
 
   await page.screenshot({
     path: path.join(SHOT_DIR, `${testInfo.project.name}-map.png`),
@@ -127,6 +132,8 @@ test('النقر على المحيط يلغي الاختيار', async ({ page }
 
 test('قياس الإطارات يُسجّل معدلاً واقعياً', async ({ page }, testInfo) => {
   await openMap(page);
+  // نتجاهل إطارات الإحماء (تهيئة Pixi والنسيج) ونقيس الحالة المستقرة فقط.
+  await page.waitForTimeout(1200);
   await page.evaluate(() => window.__studioDebug?.resetFrames());
   await page.waitForTimeout(1500);
 

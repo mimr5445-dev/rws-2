@@ -25,9 +25,10 @@ export function MapStage({ className }: MapStageProps) {
   return (
     <section
       aria-label={t('a11y.mainMap')}
+      data-testid="map-stage"
       className={`relative min-h-0 overflow-hidden bg-ink-950 ${className ?? ''}`}
     >
-      <MapCanvas className="absolute inset-0" />
+      <MapCanvas />
 
       {!mapReady && !mapError && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
