@@ -5,12 +5,12 @@
 
 Running 6 tests using 1 worker
 
-  ✓  1 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (813ms)
-  ✓  2 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (884ms)
+  ✓  1 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (868ms)
+  ✓  2 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (906ms)
   ✘  3 [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) (30.1s)
   ✘  4 [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) (retry #1) (30.1s)
-  ✓  5 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (959ms)
-  ✓  6 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (865ms)
+  ✓  5 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (991ms)
+  ✓  6 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (850ms)
   -  7 [mobile-390x844] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5)
 
 
