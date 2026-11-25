@@ -5,106 +5,53 @@
 
 Running 16 tests using 1 worker
 
-  ✘   1 [desktop-1280x800] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة (1.0s)
-  ✘   2 [desktop-1280x800] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة (retry #1) (1.0s)
-  ✓   3 [desktop-1280x800] › tests/e2e/map.spec.ts:73:1 › أدوات التكبير تغيّر الزوم وتعيده بالملاءمة (1.4s)
-  ✘   4 [desktop-1280x800] › tests/e2e/map.spec.ts:89:1 › النقر على السعودية يختارها ويحدّث الشريط (11.0s)
-  ✘   5 [desktop-1280x800] › tests/e2e/map.spec.ts:89:1 › النقر على السعودية يختارها ويحدّث الشريط (retry #1) (11.4s)
-  ✓   6 [desktop-1280x800] › tests/e2e/map.spec.ts:116:1 › النقر على المحيط يلغي الاختيار (1.0s)
-[perf] desktop-1280x800 {"frames":75,"meanMs":20.223,"p95Ms":16.7,"minMs":16.6,"maxMs":283.4}
-  ✓   7 [desktop-1280x800] › tests/e2e/map.spec.ts:128:1 › قياس الإطارات يُسجّل معدلاً واقعياً (2.3s)
-  ✓   8 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (1.7s)
-  ✓   9 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (879ms)
-  ✓  10 [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) (1.4s)
-  ✘  11 [mobile-390x844] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة (953ms)
-  ✘  12 [mobile-390x844] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة (retry #1) (942ms)
-  ✓  13 [mobile-390x844] › tests/e2e/map.spec.ts:73:1 › أدوات التكبير تغيّر الزوم وتعيده بالملاءمة (1.1s)
-  ✘  14 [mobile-390x844] › tests/e2e/map.spec.ts:89:1 › النقر على السعودية يختارها ويحدّث الشريط (10.9s)
-  ✘  15 [mobile-390x844] › tests/e2e/map.spec.ts:89:1 › النقر على السعودية يختارها ويحدّث الشريط (retry #1) (11.0s)
-  ✓  16 [mobile-390x844] › tests/e2e/map.spec.ts:116:1 › النقر على المحيط يلغي الاختيار (952ms)
-[perf] mobile-390x844 {"frames":83,"meanMs":18.272,"p95Ms":16.8,"minMs":16.6,"maxMs":150}
-  ✓  17 [mobile-390x844] › tests/e2e/map.spec.ts:128:1 › قياس الإطارات يُسجّل معدلاً واقعياً (2.2s)
-  ✓  18 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (1.7s)
-  ✓  19 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (1.2s)
-  -  20 [mobile-390x844] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5)
+  ✓   1 [desktop-1280x800] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة (3.8s)
+  ✓   2 [desktop-1280x800] › tests/e2e/map.spec.ts:78:1 › أدوات التكبير تغيّر الزوم وتعيده بالملاءمة (4.3s)
+  ✘   3 [desktop-1280x800] › tests/e2e/map.spec.ts:94:1 › النقر على السعودية يختارها ويحدّث الشريط (13.3s)
+  ✘   4 [desktop-1280x800] › tests/e2e/map.spec.ts:94:1 › النقر على السعودية يختارها ويحدّث الشريط (retry #1) (11.5s)
+  ✘   5 [desktop-1280x800] › tests/e2e/map.spec.ts:121:1 › النقر على المحيط يلغي الاختيار (6.5s)
+  ✘   6 [desktop-1280x800] › tests/e2e/map.spec.ts:121:1 › النقر على المحيط يلغي الاختيار (retry #1) (6.5s)
+[perf] desktop-1280x800 {"frames":18,"meanMs":85.178,"p95Ms":133.3,"minMs":16.7,"maxMs":133.3}
+  ✓   7 [desktop-1280x800] › tests/e2e/map.spec.ts:133:1 › قياس الإطارات يُسجّل معدلاً واقعياً (4.4s)
+  ✓   8 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (3.8s)
+  ✓   9 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (4.2s)
+  ✓  10 [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) (2.7s)
+  ✓  11 [mobile-390x844] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة (3.0s)
+  ✓  12 [mobile-390x844] › tests/e2e/map.spec.ts:78:1 › أدوات التكبير تغيّر الزوم وتعيده بالملاءمة (4.5s)
+  ✘  13 [mobile-390x844] › tests/e2e/map.spec.ts:94:1 › النقر على السعودية يختارها ويحدّث الشريط (11.4s)
+  ✘  14 [mobile-390x844] › tests/e2e/map.spec.ts:94:1 › النقر على السعودية يختارها ويحدّث الشريط (retry #1) (11.8s)
+  ✓  15 [mobile-390x844] › tests/e2e/map.spec.ts:121:1 › النقر على المحيط يلغي الاختيار (1.5s)
+[perf] mobile-390x844 {"frames":38,"meanMs":39.474,"p95Ms":116.7,"minMs":16.6,"maxMs":150.1}
+  ✓  16 [mobile-390x844] › tests/e2e/map.spec.ts:133:1 › قياس الإطارات يُسجّل معدلاً واقعياً (5.0s)
+  ✓  17 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (4.5s)
+  ✓  18 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (4.2s)
+  -  19 [mobile-390x844] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5)
 
 
-  1) [desktop-1280x800] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة ───
-
-    Error: expect(received).toBeGreaterThan(expected)
-
-    Expected: > 200
-    Received:   1
-
-      62 |   const box = await canvas.boundingBox();
-      63 |   expect(box?.width ?? 0).toBeGreaterThan(200);
-    > 64 |   expect(box?.height ?? 0).toBeGreaterThan(200);
-         |                            ^
-      65 |
-      66 |   await page.screenshot({
-      67 |     path: path.join(SHOT_DIR, `${testInfo.project.name}-map.png`),
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:64:28
-
-    Error Context: test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-desktop-1280x800/error-context.md
-
-    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-desktop-1280x800/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-desktop-1280x800/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
-
-    Error: expect(received).toBeGreaterThan(expected)
-
-    Expected: > 200
-    Received:   1
-
-      62 |   const box = await canvas.boundingBox();
-      63 |   expect(box?.width ?? 0).toBeGreaterThan(200);
-    > 64 |   expect(box?.height ?? 0).toBeGreaterThan(200);
-         |                            ^
-      65 |
-      66 |   await page.screenshot({
-      67 |     path: path.join(SHOT_DIR, `${testInfo.project.name}-map.png`),
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:64:28
-
-    Error Context: test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-desktop-1280x800-retry1/error-context.md
-
-    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-desktop-1280x800-retry1/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-desktop-1280x800-retry1/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-  2) [desktop-1280x800] › tests/e2e/map.spec.ts:89:1 › النقر على السعودية يختارها ويحدّث الشريط ────
+  1) [desktop-1280x800] › tests/e2e/map.spec.ts:94:1 › النقر على السعودية يختارها ويحدّث الشريط ────
 
     Error: expect(locator).toHaveText(expected) failed
 
     Locator:  getByTestId('selected-country')
     Expected: "Saudi Arabia"
-    Received: "لم تُختَر دولة"
+    Received: "Canada"
     Timeout:  10000ms
 
     Call log:
       - Expect "toHaveText" getByTestId('selected-country') with timeout 10000ms
       - waiting for getByTestId('selected-country')
-        24 × locator resolved to <p data-testid="selected-country" class="pointer-events-none absolute top-3 start-3 rounded-lg bg-ink-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-mist-200 backdrop-blur">لم تُختَر دولة</p>
-           - unexpected value "لم تُختَر دولة"
+        24 × locator resolved to <p data-testid="selected-country" class="pointer-events-none absolute top-3 start-3 rounded-lg bg-ink-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-mist-200 backdrop-blur">Canada</p>
+           - unexpected value "Canada"
 
 
-       98 |   await tapCenter(page, mobile, box!);
-       99 |
-    > 100 |   await expect(page.getByTestId('selected-country')).toHaveText('Saudi Arabia', {
+      103 |   await tapCenter(page, mobile, box!);
+      104 |
+    > 105 |   await expect(page.getByTestId('selected-country')).toHaveText('Saudi Arabia', {
           |                                                      ^
-      101 |     timeout: 10_000,
-      102 |   });
-      103 |
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:100:54
+      106 |     timeout: 10_000,
+      107 |   });
+      108 |
+        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:105:54
 
     Error Context: test-results/map-النقر-على-السعودية-يختارها-ويحدّث-الشريط-desktop-1280x800/error-context.md
 
@@ -122,24 +69,24 @@ Running 16 tests using 1 worker
 
     Locator:  getByTestId('selected-country')
     Expected: "Saudi Arabia"
-    Received: "لم تُختَر دولة"
+    Received: "Canada"
     Timeout:  10000ms
 
     Call log:
       - Expect "toHaveText" getByTestId('selected-country') with timeout 10000ms
       - waiting for getByTestId('selected-country')
-        24 × locator resolved to <p data-testid="selected-country" class="pointer-events-none absolute top-3 start-3 rounded-lg bg-ink-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-mist-200 backdrop-blur">لم تُختَر دولة</p>
-           - unexpected value "لم تُختَر دولة"
+        24 × locator resolved to <p data-testid="selected-country" class="pointer-events-none absolute top-3 start-3 rounded-lg bg-ink-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-mist-200 backdrop-blur">Canada</p>
+           - unexpected value "Canada"
 
 
-       98 |   await tapCenter(page, mobile, box!);
-       99 |
-    > 100 |   await expect(page.getByTestId('selected-country')).toHaveText('Saudi Arabia', {
+      103 |   await tapCenter(page, mobile, box!);
+      104 |
+    > 105 |   await expect(page.getByTestId('selected-country')).toHaveText('Saudi Arabia', {
           |                                                      ^
-      101 |     timeout: 10_000,
-      102 |   });
-      103 |
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:100:54
+      106 |     timeout: 10_000,
+      107 |   });
+      108 |
+        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:105:54
 
     Error Context: test-results/map-النقر-على-السعودية-يختارها-ويحدّث-الشريط-desktop-1280x800-retry1/error-context.md
 
@@ -151,59 +98,77 @@ Running 16 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  3) [mobile-390x844] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة ─────
+  2) [desktop-1280x800] › tests/e2e/map.spec.ts:121:1 › النقر على المحيط يلغي الاختيار ─────────────
 
-    Error: expect(received).toBeGreaterThan(expected)
+    Error: expect(locator).toHaveText(expected) failed
 
-    Expected: > 200
-    Received:   1
+    Locator: getByTestId('selected-country')
+    Expected pattern: /لم تُختَر دولة|No country/
+    Received string:  "Canada"
+    Timeout: 5000ms
 
-      62 |   const box = await canvas.boundingBox();
-      63 |   expect(box?.width ?? 0).toBeGreaterThan(200);
-    > 64 |   expect(box?.height ?? 0).toBeGreaterThan(200);
-         |                            ^
-      65 |
-      66 |   await page.screenshot({
-      67 |     path: path.join(SHOT_DIR, `${testInfo.project.name}-map.png`),
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:64:28
+    Call log:
+      - Expect "toHaveText" getByTestId('selected-country') with timeout 5000ms
+      - waiting for getByTestId('selected-country')
+        14 × locator resolved to <p data-testid="selected-country" class="pointer-events-none absolute top-3 start-3 rounded-lg bg-ink-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-mist-200 backdrop-blur">Canada</p>
+           - unexpected value "Canada"
 
-    Error Context: test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-mobile-390x844/error-context.md
+
+      128 |   await tapCenter(page, mobile, box!);
+      129 |
+    > 130 |   await expect(page.getByTestId('selected-country')).toHaveText(/لم تُختَر دولة|No country/);
+          |                                                      ^
+      131 | });
+      132 |
+      133 | test('قياس الإطارات يُسجّل معدلاً واقعياً', async ({ page }, testInfo) => {
+        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:130:54
+
+    Error Context: test-results/map-النقر-على-المحيط-يلغي-الاختيار-desktop-1280x800/error-context.md
 
     attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-mobile-390x844/trace.zip
+    test-results/map-النقر-على-المحيط-يلغي-الاختيار-desktop-1280x800/trace.zip
     Usage:
 
-        npx playwright show-trace test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-mobile-390x844/trace.zip
+        npx playwright show-trace test-results/map-النقر-على-المحيط-يلغي-الاختيار-desktop-1280x800/trace.zip
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
 
-    Error: expect(received).toBeGreaterThan(expected)
+    Error: expect(locator).toHaveText(expected) failed
 
-    Expected: > 200
-    Received:   1
+    Locator: getByTestId('selected-country')
+    Expected pattern: /لم تُختَر دولة|No country/
+    Received string:  "Canada"
+    Timeout: 5000ms
 
-      62 |   const box = await canvas.boundingBox();
-      63 |   expect(box?.width ?? 0).toBeGreaterThan(200);
-    > 64 |   expect(box?.height ?? 0).toBeGreaterThan(200);
-         |                            ^
-      65 |
-      66 |   await page.screenshot({
-      67 |     path: path.join(SHOT_DIR, `${testInfo.project.name}-map.png`),
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:64:28
+    Call log:
+      - Expect "toHaveText" getByTestId('selected-country') with timeout 5000ms
+      - waiting for getByTestId('selected-country')
+        14 × locator resolved to <p data-testid="selected-country" class="pointer-events-none absolute top-3 start-3 rounded-lg bg-ink-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-mist-200 backdrop-blur">Canada</p>
+           - unexpected value "Canada"
 
-    Error Context: test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-mobile-390x844-retry1/error-context.md
+
+      128 |   await tapCenter(page, mobile, box!);
+      129 |
+    > 130 |   await expect(page.getByTestId('selected-country')).toHaveText(/لم تُختَر دولة|No country/);
+          |                                                      ^
+      131 | });
+      132 |
+      133 | test('قياس الإطارات يُسجّل معدلاً واقعياً', async ({ page }, testInfo) => {
+        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:130:54
+
+    Error Context: test-results/map-النقر-على-المحيط-يلغي-الاختيار-desktop-1280x800-retry1/error-context.md
 
     attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-mobile-390x844-retry1/trace.zip
+    test-results/map-النقر-على-المحيط-يلغي-الاختيار-desktop-1280x800-retry1/trace.zip
     Usage:
 
-        npx playwright show-trace test-results/map-الخريطة-تُحمّل-وتصبح-جاهزة-بلا-أخطاء-صفحة-mobile-390x844-retry1/trace.zip
+        npx playwright show-trace test-results/map-النقر-على-المحيط-يلغي-الاختيار-desktop-1280x800-retry1/trace.zip
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  4) [mobile-390x844] › tests/e2e/map.spec.ts:89:1 › النقر على السعودية يختارها ويحدّث الشريط ──────
+  3) [mobile-390x844] › tests/e2e/map.spec.ts:94:1 › النقر على السعودية يختارها ويحدّث الشريط ──────
 
     Error: expect(locator).toHaveText(expected) failed
 
@@ -215,18 +180,18 @@ Running 16 tests using 1 worker
     Call log:
       - Expect "toHaveText" getByTestId('selected-country') with timeout 10000ms
       - waiting for getByTestId('selected-country')
-        24 × locator resolved to <p data-testid="selected-country" class="pointer-events-none absolute top-3 start-3 rounded-lg bg-ink-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-mist-200 backdrop-blur">لم تُختَر دولة</p>
+        18 × locator resolved to <p data-testid="selected-country" class="pointer-events-none absolute top-3 start-3 rounded-lg bg-ink-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-mist-200 backdrop-blur">لم تُختَر دولة</p>
            - unexpected value "لم تُختَر دولة"
 
 
-       98 |   await tapCenter(page, mobile, box!);
-       99 |
-    > 100 |   await expect(page.getByTestId('selected-country')).toHaveText('Saudi Arabia', {
+      103 |   await tapCenter(page, mobile, box!);
+      104 |
+    > 105 |   await expect(page.getByTestId('selected-country')).toHaveText('Saudi Arabia', {
           |                                                      ^
-      101 |     timeout: 10_000,
-      102 |   });
-      103 |
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:100:54
+      106 |     timeout: 10_000,
+      107 |   });
+      108 |
+        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:105:54
 
     Error Context: test-results/map-النقر-على-السعودية-يختارها-ويحدّث-الشريط-mobile-390x844/error-context.md
 
@@ -254,14 +219,14 @@ Running 16 tests using 1 worker
            - unexpected value "لم تُختَر دولة"
 
 
-       98 |   await tapCenter(page, mobile, box!);
-       99 |
-    > 100 |   await expect(page.getByTestId('selected-country')).toHaveText('Saudi Arabia', {
+      103 |   await tapCenter(page, mobile, box!);
+      104 |
+    > 105 |   await expect(page.getByTestId('selected-country')).toHaveText('Saudi Arabia', {
           |                                                      ^
-      101 |     timeout: 10_000,
-      102 |   });
-      103 |
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:100:54
+      106 |     timeout: 10_000,
+      107 |   });
+      108 |
+        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/map.spec.ts:105:54
 
     Error Context: test-results/map-النقر-على-السعودية-يختارها-ويحدّث-الشريط-mobile-390x844-retry1/error-context.md
 
@@ -273,10 +238,9 @@ Running 16 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  4 failed
-    [desktop-1280x800] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة ────
-    [desktop-1280x800] › tests/e2e/map.spec.ts:89:1 › النقر على السعودية يختارها ويحدّث الشريط ─────
-    [mobile-390x844] › tests/e2e/map.spec.ts:52:1 › الخريطة تُحمّل وتصبح جاهزة بلا أخطاء صفحة ──────
-    [mobile-390x844] › tests/e2e/map.spec.ts:89:1 › النقر على السعودية يختارها ويحدّث الشريط ───────
+  3 failed
+    [desktop-1280x800] › tests/e2e/map.spec.ts:94:1 › النقر على السعودية يختارها ويحدّث الشريط ─────
+    [desktop-1280x800] › tests/e2e/map.spec.ts:121:1 › النقر على المحيط يلغي الاختيار ──────────────
+    [mobile-390x844] › tests/e2e/map.spec.ts:94:1 › النقر على السعودية يختارها ويحدّث الشريط ───────
   1 skipped
-  11 passed (1.2m)
+  12 passed (2.1m)
