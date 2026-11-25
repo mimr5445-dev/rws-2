@@ -35,8 +35,6 @@ export function MapCanvas({ className }: MapCanvasProps) {
   const setViewport = useEditorStore((state) => state.setViewport);
   const setMapReady = useEditorStore((state) => state.setMapReady);
   const setMapError = useEditorStore((state) => state.setMapError);
-  const selectCountry = useEditorStore((state) => state.selectCountry);
-  const clearSelection = useEditorStore((state) => state.clearSelection);
 
   // تحميل الخريطة مرة واحدة + التحقق من البصمة
   useEffect(() => {
@@ -102,13 +100,16 @@ export function MapCanvas({ className }: MapCanvasProps) {
     rendererRef.current?.update(cameraState, selectedCountryId);
   }, [cameraState, viewport, selectedCountryId]);
 
+  // يقرأ الكاميرا والمقاس من المتجر لحظة النقر، لا من إغلاق الرسم الأول:
+  // الإغلاق يحمل كاميرا قديمة بعد أي تكبير أو تحريك، فيختار الدولة الخطأ.
   const pickCountry = (screen: ScreenPoint) => {
     const countries = countriesRef.current;
     if (!countries) return;
-    const world = screenToWorld(cameraState, viewport, screen);
+    const state = useEditorStore.getState();
+    const world = screenToWorld(state.camera, state.viewport, screen);
     const hit = hitTest(countries, world.x, world.y);
-    if (hit) selectCountry(hit.id, hit.name);
-    else clearSelection();
+    if (hit) state.selectCountry(hit.id, hit.name);
+    else state.clearSelection();
   };
 
   // إيماءات المؤشر: تحريك + قرص + نقرة اختيار
@@ -171,7 +172,6 @@ export function MapCanvas({ className }: MapCanvasProps) {
       host.removeEventListener('wheel', onWheel);
     };
     // pickCountry يقرأ من refs وحالة المتجر مباشرة، فلا حاجة لإعادة الربط
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setCamera]);
 
   // خطّاف تشخيص للاختبارات فقط، يُحذف من بناء الإنتاج
@@ -201,7 +201,6 @@ export function MapCanvas({ className }: MapCanvasProps) {
     return () => {
       delete (globalThis as unknown as { __studioDebug?: DebugApi }).__studioDebug;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setCamera]);
 
   return (

@@ -60,6 +60,18 @@ jobs:
           set -o pipefail
           mkdir -p docs/forge/reports
           npm run test:e2e 2>&1 | tee docs/forge/reports/e2e.log
+      - name: Collect failure context
+        # لقطات DOM لأخطاء Playwright تُدفع مع الأدلة كي تُقرأ بلا وصول إلى سجلات CI.
+        if: failure()
+        continue-on-error: true
+        run: |
+          mkdir -p docs/forge/reports/error-context
+          shopt -s nullglob
+          for file in test-results/*/error-context.md test-results/*/*/error-context.md; do
+            target="docs/forge/reports/error-context/$(printf '%s' "$file" | tr '/' '_')"
+            cp "$file" "$target"
+          done
+          ls -1 docs/forge/reports/error-context | head -20
       - name: Upload shell screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -75,26 +87,35 @@ jobs:
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
-          set -e
+          set -uo pipefail
           git config user.name "studio-ci"
           git config user.email "ci@studio.local"
+          # HTTP/1.1 يتفادى انقطاع الدفع (EOF) على شبكة Actions.
+          git config http.version HTTP/1.1
+          git config http.postBuffer 524288000
           git add -f docs/forge/shots docs/forge/reports
           if git diff --cached --quiet; then
             echo "لا تغيير في الأدلة."
             exit 0
           fi
-          git commit -m "ci: phase evidence (shots + e2e log) [skip ci]"
-          for attempt in 1 2 3; do
-            git fetch origin "$BRANCH"
-            git rebase "origin/$BRANCH" || git rebase --abort || true
+          git commit -m "ci: phase evidence (shots + e2e log) [skip ci]" --no-verify
+          status=1
+          for attempt in 1 2 3 4; do
+            git fetch origin "$BRANCH" || true
+            git rebase "origin/$BRANCH" || { git rebase --abort || true; }
             if git push origin "HEAD:$BRANCH"; then
               echo "دُفعت الأدلة في المحاولة $attempt"
-              exit 0
+              status=0
+              break
             fi
             sleep 5
           done
-          echo "تعذّر دفع الأدلة بعد ثلاث محاولات" >&2
-          exit 1
+          if [ "$status" -ne 0 ]; then
+            echo "تعذّر دفع الأدلة بعد أربع محاولات" >&2
+            git log --oneline -3 >&2
+            git status --porcelain=v1 >&2
+            exit 1
+          fi
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
