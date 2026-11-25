@@ -5,74 +5,12 @@
 
 Running 6 tests using 1 worker
 
-  ✓  1 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (868ms)
-  ✓  2 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (906ms)
-  ✘  3 [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) (30.1s)
-  ✘  4 [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) (retry #1) (30.1s)
-  ✓  5 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (991ms)
-  ✓  6 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (850ms)
-  -  7 [mobile-390x844] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5)
+  ✓  1 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (856ms)
+  ✓  2 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (849ms)
+  ✓  3 [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) (878ms)
+  ✓  4 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (992ms)
+  ✓  5 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (819ms)
+  -  6 [mobile-390x844] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5)
 
-
-  1) [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) ─
-
-    Test timeout of 30000ms exceeded.
-
-    Error: locator.boundingBox: Test timeout of 30000ms exceeded.
-    Call log:
-      - waiting for getByRole('complementary', { name: 'مكتبة الأصول' })
-
-
-      104 |
-      105 |   const boxes = async () => ({
-    > 106 |     library: await page.getByRole('complementary', { name: 'مكتبة الأصول' }).boundingBox(),
-          |                                                                              ^
-      107 |     inspector: await page.getByRole('complementary', { name: 'الخصائص' }).boundingBox(),
-      108 |   });
-      109 |
-        at boxes (/home/runner/work/rws-2/rws-2/studio/tests/e2e/shell.spec.ts:106:78)
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/shell.spec.ts:110:24
-
-    Error Context: test-results/shell-ترتيب-الأعمدة-يتبع-اللغة-فيزيائياً-S0-5--desktop-1280x800/error-context.md
-
-    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/shell-ترتيب-الأعمدة-يتبع-اللغة-فيزيائياً-S0-5--desktop-1280x800/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/shell-ترتيب-الأعمدة-يتبع-اللغة-فيزيائياً-S0-5--desktop-1280x800/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
-
-    Test timeout of 30000ms exceeded.
-
-    Error: locator.boundingBox: Test timeout of 30000ms exceeded.
-    Call log:
-      - waiting for getByRole('complementary', { name: 'مكتبة الأصول' })
-
-
-      104 |
-      105 |   const boxes = async () => ({
-    > 106 |     library: await page.getByRole('complementary', { name: 'مكتبة الأصول' }).boundingBox(),
-          |                                                                              ^
-      107 |     inspector: await page.getByRole('complementary', { name: 'الخصائص' }).boundingBox(),
-      108 |   });
-      109 |
-        at boxes (/home/runner/work/rws-2/rws-2/studio/tests/e2e/shell.spec.ts:106:78)
-        at /home/runner/work/rws-2/rws-2/studio/tests/e2e/shell.spec.ts:110:24
-
-    Error Context: test-results/shell-ترتيب-الأعمدة-يتبع-اللغة-فيزيائياً-S0-5--desktop-1280x800-retry1/error-context.md
-
-    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/shell-ترتيب-الأعمدة-يتبع-اللغة-فيزيائياً-S0-5--desktop-1280x800-retry1/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/shell-ترتيب-الأعمدة-يتبع-اللغة-فيزيائياً-S0-5--desktop-1280x800-retry1/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-  1 failed
-    [desktop-1280x800] › tests/e2e/shell.spec.ts:95:1 › ترتيب الأعمدة يتبع اللغة فيزيائياً (S0.5) ──
   1 skipped
-  4 passed (1.1m)
+  5 passed (6.8s)
