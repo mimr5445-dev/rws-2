@@ -68,8 +68,10 @@ test('صدفة التخطيط: بلا تمرير أفقي، واتجاه صحي�
 });
 
 test('مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل', async ({ page }) => {
-  await clearSettings(page);
+  // لا نستخدم clearSettings هنا: addInitScript يعمل مع كل تنقّل ويُفقد الحفظ عند إعادة التحميل.
   await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
 
   const toggle = page.getByRole('button', { name: 'تغيير اللغة' });
   await toggle.click();

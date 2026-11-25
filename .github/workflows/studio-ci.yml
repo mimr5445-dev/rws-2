@@ -43,6 +43,8 @@ jobs:
   e2e:
     name: E2E (Playwright 390x844 + 1280x800, axe)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,7 +54,11 @@ jobs:
           cache-dependency-path: studio/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Run e2e and capture log
+        run: |
+          set -o pipefail
+          mkdir -p docs/forge/reports
+          npm run test:e2e 2>&1 | tee docs/forge/reports/e2e.log
       - name: Upload shell screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -61,6 +67,19 @@ jobs:
           path: studio/docs/forge/shots
           if-no-files-found: warn
           retention-days: 14
+      - name: Publish evidence back to branch
+        # اللقطات وسجل الاختبار تُدفع إلى الفرع ليقرأها الوكيل والمستخدم، مع [skip ci] لمنع الحلقة.
+        if: always()
+        run: |
+          git config user.name "studio-ci"
+          git config user.email "ci@studio.local"
+          git add -f docs/forge/shots docs/forge/reports
+          if git diff --cached --quiet; then
+            echo "لا تغيير في الأدلة."
+            exit 0
+          fi
+          git commit -m "ci: phase evidence (shots + e2e log) [skip ci]"
+          git push origin "HEAD:${{ github.ref_name }}"
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
