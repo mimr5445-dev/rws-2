@@ -5,9 +5,9 @@
 
 Running 4 tests using 1 worker
 
-  ✓  1 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (812ms)
-  ✓  2 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (857ms)
-  ✓  3 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (967ms)
-  ✓  4 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (819ms)
+  ✓  1 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (704ms)
+  ✓  2 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (668ms)
+  ✓  3 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (745ms)
+  ✓  4 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (641ms)
 
-  4 passed (5.9s)
+  4 passed (5.1s)
