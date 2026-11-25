@@ -3,11 +3,13 @@
   "files": [
     {
       "file": "small-scene.project.json",
-      "sha256": "be8b086f5aa667944924ddf2bbc983fe2cc5263aa6d100dbccf8b1bf5b0a37fd",
-      "bytes": 2613,
+      "sha256": "353803fedc8d09250893a600c86103215614be2ec775533d6c1ce6b9d245d246",
+      "bytes": 3146,
       "entities": 4,
       "tracks": 2,
       "triggers": 4,
+      "cues": 2,
+      "effects": 1,
       "durationTicks": 180,
       "licence": "أصل أصلي داخل المشروع (CC0)"
     }

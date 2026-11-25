@@ -11,6 +11,16 @@ export interface DebugApi {
   setTick: (tick: number) => { tick: number; entities: number };
   scene: () => { tick: number; entities: number; events: number } | null;
   renderStats: () => { layers: number; countries: number; entities: number } | null;
+  loadAudio: () => Promise<{ ready: boolean; error: string | null; sounds: number }>;
+  playAudio: (fromTick?: number) => Promise<readonly { id: string; delay: number }[]>;
+  stopAudio: () => void;
+  audioPlan: (tick: number) => readonly { id: string; delay: number }[];
+  bounceAudio: () => Promise<{
+    frameCount: number;
+    peak: number;
+    onsetSample: number;
+    durationSeconds: number;
+  }>;
 }
 
 declare global {

@@ -88,8 +88,20 @@ const project = {
     { id: 't3', when: { after: 't2.done' } },
     { id: 't0', when: { tick: 60 } },
   ],
-  effects: [],
-  cues: [],
+  effects: [
+    {
+      id: 'e1',
+      kind: 'fireball',
+      at: { tick: 130 },
+      position: DAMMAM,
+      intensity: 0.8,
+      soundClipId: 'sound.boom',
+    },
+  ],
+  cues: [
+    { id: 'c1', when: { after: 'u1.arrived' }, clipId: 'sound.arrive', gain: 0.8, pan: 0 },
+    { id: 'c2', when: { tick: 60 }, clipId: 'sound.click', gain: 0.5, pan: -0.5 },
+  ],
   camera: [
     { tick: 0, lon: 46.6753, lat: 24.7136, zoom: 1, easing: 'easeInOut' },
     { tick: 120, lon: 50.1033, lat: 26.4207, zoom: 1.4, easing: 'easeInOut' },
@@ -115,6 +127,8 @@ await writeFile(
           entities: project.entities.length,
           tracks: project.tracks.length,
           triggers: project.triggers.length,
+          cues: project.cues.length,
+          effects: project.effects.length,
           durationTicks: project.durationTicks,
           licence: 'أصل أصلي داخل المشروع (CC0)',
         },
@@ -127,7 +141,7 @@ await writeFile(
 );
 
 console.log(
-  `✓ content/scenes/small-scene.project.json — ${project.entities.length} كياناً، ${project.tracks.length} مساراً، ${project.triggers.length} مشغّلاً`,
+  `✓ content/scenes/small-scene.project.json — ${project.entities.length} كياناً، ${project.tracks.length} مساراً، ${project.triggers.length} مشغّلاً، ${project.cues.length} cue`,
 );
 console.log(`✓ البصمة: ${sha256}`);
 process.exit(0);
