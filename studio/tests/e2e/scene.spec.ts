@@ -35,7 +35,7 @@ test('المشهد الصغير: ثلاث وحدات ثم علامة تظهر ب
   expect(loaded!.durationTicks).toBe(180);
   expect(loaded!.events).toBeGreaterThanOrEqual(5);
 
-  await page.evaluate(() => window.__studioDebug?.centerOn(48.4, 25.6, 2.4));
+  await page.evaluate(() => window.__studioDebug?.centerOn(48.2, 25.0, 3));
   await expect(page.getByTestId('selected-country')).toBeVisible();
 
   const before = await page.evaluate(() => window.__studioDebug?.scene() ?? null);
@@ -43,6 +43,14 @@ test('المشهد الصغير: ثلاث وحدات ثم علامة تظهر ب
 
   await page.screenshot({
     path: path.join(SHOT_DIR, `${testInfo.project.name}-scene-t0.png`),
+    fullPage: false,
+  });
+
+  // tick 60: الوحدة u1 في منتصف المسار بين الرياض والدمام.
+  const middle = await page.evaluate(() => window.__studioDebug?.setTick(60) ?? null);
+  expect(middle).toEqual({ tick: 60, entities: 3 });
+  await page.screenshot({
+    path: path.join(SHOT_DIR, `${testInfo.project.name}-scene-t60.png`),
     fullPage: false,
   });
 
