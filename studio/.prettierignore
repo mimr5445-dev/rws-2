@@ -1,0 +1,7 @@
+node_modules
+dist
+playwright-report
+test-results
+content/schema
+docs/forge/shots
+package-lock.json

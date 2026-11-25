@@ -1,0 +1,78 @@
+// كل نصوص الواجهة العربية. المفاتيح مسطّحة بنمط "مجال.مفتاح" ويجب أن تطابق en.ts حرفاً بحرف.
+export const ar = {
+  'app.name': 'استوديو',
+  'app.tagline': 'استوديو الرسوم المتحركة التحليلية فوق الخرائط',
+  'app.version': 'الإصدار',
+  'app.skipToContent': 'انتقل إلى المحتوى',
+
+  'panel.library': 'المكتبة',
+  'panel.properties': 'الخصائص',
+  'panel.timeline': 'الشريط الزمني',
+  'panel.map': 'المعاينة',
+
+  'library.title': 'مكتبة الأصول',
+  'library.search': 'بحث في الأصول',
+  'library.all': 'الكل',
+  'library.units': 'وحدات',
+  'library.markers': 'علامات',
+  'library.structures': 'منشآت',
+  'library.zones': 'مناطق',
+  'library.labels': 'نصوص',
+  'library.empty': 'المكتبة فارغة مؤقتاً. تُحمَّل الأصول في المرحلة 12.',
+
+  'properties.title': 'الخصائص',
+  'properties.empty': 'اختر عنصراً على الخريطة أو في الشريط الزمني لعرض خصائصه.',
+
+  'timeline.tracks': 'المسارات',
+  'timeline.title': 'الشريط الزمني',
+  'timeline.empty': 'لا توجد مسارات. أضف كياناً على الخريطة للبدء.',
+  'timeline.toggle': 'إظهار أو طي الشريط الزمني',
+
+  'transport.play': 'تشغيل',
+  'transport.pause': 'إيقاف مؤقت',
+  'transport.stop': 'إيقاف',
+  'transport.rewind': 'إلى البداية',
+  'transport.currentTime': 'الزمن الحالي',
+  'transport.duration': 'المدة',
+
+  'map.placeholder': 'منطقة الخريطة والمعاينة',
+  'map.hint': 'تُبنى الخريطة في المرحلة 02. هذه صدفة التخطيط النهائية.',
+  'map.zoomIn': 'تكبير',
+  'map.zoomOut': 'تصغير',
+  'map.fit': 'ملاءمة',
+
+  'project.title': 'المشروع',
+  'project.untitled': 'مشروع بلا عنوان',
+  'project.new': 'مشروع جديد',
+  'project.open': 'فتح',
+  'project.export': 'تصدير',
+  'project.list': 'قائمة المشاريع',
+
+  'settings.title': 'الإعدادات',
+  'settings.language': 'اللغة',
+  'settings.arabic': 'العربية',
+  'settings.english': 'الإنجليزية',
+  'settings.numbers': 'الأرقام',
+  'settings.numbersLatn': 'هندية غربية (0-9)',
+  'settings.numbersArab': 'هندية مشرقية (٠-٩)',
+  'settings.quality': 'جودة المعاينة',
+  'settings.qualityLow': 'منخفضة',
+  'settings.qualityMedium': 'متوسطة',
+  'settings.qualityHigh': 'عالية',
+
+  'status.ready': 'جاهز',
+  'status.offline': 'يعمل دون اتصال',
+  'status.autosave': 'حفظ تلقائي',
+
+  'a11y.openLibrary': 'فتح المكتبة',
+  'a11y.closeLibrary': 'إغلاق المكتبة',
+  'a11y.openProperties': 'فتح الخصائص',
+  'a11y.closeProperties': 'إغلاق الخصائص',
+  'a11y.mainMap': 'خريطة المعاينة',
+  'a11y.language': 'تغيير اللغة',
+  'a11y.main': 'المحتوى الرئيسي',
+  'a11y.nav': 'التنقل',
+  'a11y.zoom': 'أدوات الكاميرا',
+} as const;
+
+export type ArDictionary = typeof ar;
