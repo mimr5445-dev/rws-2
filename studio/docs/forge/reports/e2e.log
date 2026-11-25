@@ -1,0 +1,13 @@
+
+> studio@0.1.0 test:e2e
+> playwright test
+
+
+Running 4 tests using 1 worker
+
+  ✓  1 [desktop-1280x800] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (649ms)
+  ✓  2 [desktop-1280x800] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (683ms)
+  ✓  3 [mobile-390x844] › tests/e2e/shell.spec.ts:24:1 › صدفة التخطيط: بلا تمرير أفقي، واتجاه صحيح، وaxe نظيف (729ms)
+  ✓  4 [mobile-390x844] › tests/e2e/shell.spec.ts:70:1 › مفتاح اللغة يعمل ويُحفظ بعد إعادة التحميل (652ms)
+
+  4 passed (4.7s)
