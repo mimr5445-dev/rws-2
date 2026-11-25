@@ -70,8 +70,12 @@ jobs:
           retention-days: 14
       - name: Publish evidence back to branch
         # اللقطات وسجل الاختبار تُدفع إلى الفرع ليقرأها الوكيل والمستخدم، مع [skip ci] لمنع الحلقة.
+        # يُعاد التأسيس على آخر الفرع لأن دفعات بشرية قد تصل أثناء تشغيل CI.
         if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
         run: |
+          set -e
           git config user.name "studio-ci"
           git config user.email "ci@studio.local"
           git add -f docs/forge/shots docs/forge/reports
@@ -80,7 +84,17 @@ jobs:
             exit 0
           fi
           git commit -m "ci: phase evidence (shots + e2e log) [skip ci]"
-          git push origin "HEAD:${{ github.ref_name }}"
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            git rebase "origin/$BRANCH" || git rebase --abort || true
+            if git push origin "HEAD:$BRANCH"; then
+              echo "دُفعت الأدلة في المحاولة $attempt"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "تعذّر دفع الأدلة بعد ثلاث محاولات" >&2
+          exit 1
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
