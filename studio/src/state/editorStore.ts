@@ -1,4 +1,7 @@
 import { fitWorld, zoomByStep, type Camera, type Viewport } from '@/core/camera';
+import type { ScheduledSound, SoundCatalog } from '@/core/audio';
+import type { AudioPreview } from '@/core/audio';
+import type { Project } from '@/core/model/project';
 import type { EntityState, SimEvent } from '@/core/sim';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -21,6 +24,27 @@ export interface SceneState {
   readonly events: readonly SimEvent[];
 }
 
+export interface AudioState {
+  readonly ready: boolean;
+  readonly error: string | null;
+  readonly sounds: number;
+  readonly playing: boolean;
+}
+
+/**
+ * موارد صوتية غير قابلة للتسلسل (AudioContext والجدول) تعيش خارج المتجر،
+ * والمتجر يحمل حالتها الظاهرة فقط.
+ */
+interface AudioRuntime {
+  catalog: SoundCatalog;
+  schedule: readonly ScheduledSound[];
+  preview: AudioPreview;
+  context: AudioContext;
+  sink: { stopAll(): void; resume?: () => Promise<void> };
+}
+
+let audioRuntime: AudioRuntime | null = null;
+
 interface EditorUiState extends Settings {
   sheet: SheetKind | null;
   camera: Camera;
@@ -30,6 +54,18 @@ interface EditorUiState extends Settings {
   selectedCountryId: string | null;
   selectedCountryName: string | null;
   scene: SceneState | null;
+  sceneProject: Project | null;
+  audio: AudioState;
+  loadAudio: () => Promise<AudioState>;
+  playAudio: (fromTick?: number) => Promise<readonly { id: string; delay: number }[]>;
+  stopAudio: () => void;
+  bounceAudio: () => Promise<{
+    frameCount: number;
+    peak: number;
+    onsetSample: number;
+    durationSeconds: number;
+  }>;
+  audioPlan: (tick: number) => readonly { id: string; delay: number }[];
   /** مصدر حساب حالة الكيانات عند أي tick (دالة نقية من مشروع محمّل). */
   sceneSource: ((tick: number) => readonly EntityState[]) | null;
   sceneError: string | null;
@@ -63,7 +99,7 @@ interface EditorUiState extends Settings {
  */
 export const useEditorStore = create<EditorUiState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       language: 'ar',
       digitStyle: 'arab',
       previewQuality: 'medium',
@@ -75,8 +111,10 @@ export const useEditorStore = create<EditorUiState>()(
       selectedCountryId: null,
       selectedCountryName: null,
       scene: null,
+      sceneProject: null,
       sceneSource: null,
       sceneError: null,
+      audio: { ready: false, error: null, sounds: 0, playing: false },
       setCamera: (camera) => set({ camera }),
       setViewport: (viewport) => set({ viewport, camera: fitWorld(viewport) }),
       setMapReady: (mapReady) => set({ mapReady }),
@@ -94,6 +132,7 @@ export const useEditorStore = create<EditorUiState>()(
               entities: scene.entitiesAt(0),
               events: scene.events,
             },
+            sceneProject: scene.project,
             sceneSource: scene.entitiesAt,
             sceneError: null,
           });
@@ -105,14 +144,107 @@ export const useEditorStore = create<EditorUiState>()(
         set((state) => {
           if (!state.scene) return {};
           const clamped = Math.max(0, Math.min(state.scene.durationTicks, Math.round(tick)));
-          return {
+          const next = {
             scene: {
               ...state.scene,
               tick: clamped,
               entities: state.sceneSource ? state.sceneSource(clamped) : state.scene.entities,
             },
+            currentTick: clamped,
           };
+          // أثناء التشغيل: كل قفزة تُعيد جدولة الصوت من جديد (لا مؤقتات ولا انحراف).
+          if (state.isPlaying && audioRuntime) {
+            audioRuntime.preview.seek(audioRuntime.schedule, clamped);
+          }
+          return next;
         }),
+      loadAudio: async () => {
+        try {
+          const [{ loadSoundCatalog }, { buildSchedule, AudioPreview: Preview }, webAudio] =
+            await Promise.all([
+              import('@/content/sounds'),
+              import('@/core/audio'),
+              import('@/render/audio/webAudio'),
+            ]);
+          const catalog = await loadSoundCatalog();
+          const project = get().sceneProject;
+          const schedule = project ? buildSchedule(project) : [];
+          const Context = window.AudioContext;
+          let context: AudioContext;
+          try {
+            context = new Context({ sampleRate: 48_000 });
+          } catch {
+            // بعض المتصفحات ترفض فرض 48 ك.هز: نكمل بمعدل الجهاز والكتالوج يُعاد تشكيله.
+            context = new Context();
+          }
+          const sink = new webAudio.WebAudioSink(context, catalog);
+          audioRuntime = {
+            catalog,
+            schedule,
+            context,
+            sink,
+            preview: new Preview(sink.clock, sink),
+          };
+          set({
+            audio: { ready: true, error: null, sounds: catalog.clips.size, playing: false },
+          });
+        } catch (error: unknown) {
+          set({
+            audio: {
+              ready: false,
+              error: error instanceof Error ? error.message : 'خطأ صوتي غير معروف',
+              sounds: 0,
+              playing: false,
+            },
+          });
+        }
+        return get().audio;
+      },
+      playAudio: async (fromTick) => {
+        const runtime = audioRuntime;
+        if (!runtime) return [];
+        await runtime.sink.resume?.();
+        const plan = runtime.preview.play(runtime.schedule, fromTick ?? get().scene?.tick ?? 0);
+        set({ audio: { ...get().audio, playing: true } });
+        return plan.map((item) => ({ id: item.id, delay: Number(item.delay.toFixed(6)) }));
+      },
+      stopAudio: () => {
+        audioRuntime?.preview.stop();
+        set({ audio: { ...get().audio, playing: false } });
+      },
+      bounceAudio: async () => {
+        const runtime = audioRuntime;
+        if (!runtime) throw new Error('الكتالوج الصوتي غير محمّل');
+        const { bounceOffline } = await import('@/render/audio/webAudio');
+        const durationTicks = get().scene?.durationTicks ?? 0;
+        const result = await bounceOffline(
+          runtime.catalog,
+          runtime.schedule.map((sound) => ({
+            clipId: sound.clipId,
+            sample: sound.sample,
+            gain: sound.gain,
+            pan: sound.pan,
+          })),
+          durationTicks,
+        );
+        return {
+          frameCount: result.frameCount,
+          peak: Number(result.peak.toFixed(6)),
+          onsetSample: result.onsetSample,
+          durationSeconds: result.durationSeconds,
+        };
+      },
+      audioPlan: (tick) => {
+        const runtime = audioRuntime;
+        if (!runtime) return [];
+        const rate = 60;
+        return runtime.schedule
+          .filter((sound) => sound.tick >= tick)
+          .map((sound) => ({
+            id: sound.id,
+            delay: Number(((sound.tick - tick) / rate).toFixed(6)),
+          }));
+      },
       zoomIn: () => set((state) => ({ camera: zoomByStep(state.camera, state.viewport, 1) })),
       zoomOut: () => set((state) => ({ camera: zoomByStep(state.camera, state.viewport, -1) })),
       fitMap: () => set((state) => ({ camera: fitWorld(state.viewport) })),
@@ -125,8 +257,18 @@ export const useEditorStore = create<EditorUiState>()(
       openSheet: (sheet) => set({ sheet }),
       closeSheet: () => set({ sheet: null }),
       toggleTimeline: () => set((state) => ({ timelineCollapsed: !state.timelineCollapsed })),
-      togglePlayback: () => set((state) => ({ isPlaying: !state.isPlaying })),
-      rewind: () => set({ currentTick: 0, isPlaying: false }),
+      togglePlayback: () => {
+        const state = get();
+        const next = !state.isPlaying;
+        set({ isPlaying: next });
+        if (next) void get().playAudio(state.scene?.tick ?? state.currentTick);
+        else get().stopAudio();
+      },
+      rewind: () => {
+        get().stopAudio();
+        set({ currentTick: 0, isPlaying: false });
+        get().setTick(0);
+      },
     }),
     {
       name: 'studio.settings',

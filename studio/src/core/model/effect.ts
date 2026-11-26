@@ -20,5 +20,7 @@ export const EffectSchema = z.strictObject({
   at: WhenSchema,
   position: PositionSchema,
   intensity: z.number().min(0).max(1),
+  /** الصوت المنبعث من المؤثر (S4.1): حقل صريح لا خاصية مخفية في المشغّل. */
+  soundClipId: z.string().min(1).max(128).optional(),
 });
 export type Effect = z.infer<typeof EffectSchema>;

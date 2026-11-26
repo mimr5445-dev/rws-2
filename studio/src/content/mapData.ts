@@ -69,7 +69,11 @@ export function decodeMap(raw: RawMap): MapData {
 }
 
 export async function sha256HexOf(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return sha256HexOfBytes(new TextEncoder().encode(text));
+}
+
+export async function sha256HexOfBytes(bytes: Uint8Array): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new Uint8Array(bytes));
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');

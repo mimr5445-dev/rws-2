@@ -20,6 +20,16 @@ interface DebugApi {
   setTick: (tick: number) => { tick: number; entities: number };
   scene: () => { tick: number; entities: number; events: number } | null;
   renderStats: () => { layers: number; countries: number; entities: number } | null;
+  loadAudio: () => Promise<{ ready: boolean; error: string | null; sounds: number }>;
+  playAudio: (fromTick?: number) => Promise<readonly { id: string; delay: number }[]>;
+  stopAudio: () => void;
+  audioPlan: (tick: number) => readonly { id: string; delay: number }[];
+  bounceAudio: () => Promise<{
+    frameCount: number;
+    peak: number;
+    onsetSample: number;
+    durationSeconds: number;
+  }>;
 }
 
 const TAP_MAX_MS = 450;
@@ -217,6 +227,14 @@ export function MapCanvas({ className }: MapCanvasProps) {
           : null;
       },
       renderStats: () => rendererRef.current?.stats ?? null,
+      loadAudio: async () => {
+        const audio = await useEditorStore.getState().loadAudio();
+        return { ready: audio.ready, error: audio.error, sounds: audio.sounds };
+      },
+      playAudio: (fromTick) => useEditorStore.getState().playAudio(fromTick),
+      stopAudio: () => useEditorStore.getState().stopAudio(),
+      audioPlan: (tick) => useEditorStore.getState().audioPlan(tick),
+      bounceAudio: () => useEditorStore.getState().bounceAudio(),
       selectAtCenter: () => {
         const state = useEditorStore.getState();
         pickCountry({ x: state.viewport.width / 2, y: state.viewport.height / 2 });

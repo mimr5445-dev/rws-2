@@ -1,0 +1,66 @@
+{
+  "format": "studio.sounds/1",
+  "masterGain": 0.9,
+  "files": [
+    {
+      "id": "sound.click",
+      "file": "click.wav",
+      "label": "نقرة قصيرة",
+      "kind": "effect",
+      "sha256": "d312d03e5cba3373c02d502c350ca56695ba39522696fcfb4fa32a7a0bbdae69",
+      "bytes": 4844,
+      "sampleRate": 48000,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "durationSamples": 2400,
+      "durationSeconds": 0.05,
+      "defaultGain": 0.5,
+      "licence": "أصل أصلي داخل المشروع (CC0) — موجة مُصنَّعة رياضياً"
+    },
+    {
+      "id": "sound.chime",
+      "file": "chime.wav",
+      "label": "جرس مزدوج",
+      "kind": "effect",
+      "sha256": "3240b36ed4b8106a1b213b1d34df05776d80a4430d3dc58dace7334803e47a47",
+      "bytes": 43244,
+      "sampleRate": 48000,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "durationSamples": 21600,
+      "durationSeconds": 0.45,
+      "defaultGain": 0.6,
+      "licence": "أصل أصلي داخل المشروع (CC0) — موجة مُصنَّعة رياضياً"
+    },
+    {
+      "id": "sound.boom",
+      "file": "boom.wav",
+      "label": "انفجار منخفض",
+      "kind": "effect",
+      "sha256": "95e87fdf76aa76621b85684bcd97df8f0ffb21763895b695da9189121c5c2d3f",
+      "bytes": 67244,
+      "sampleRate": 48000,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "durationSamples": 33600,
+      "durationSeconds": 0.7,
+      "defaultGain": 0.7,
+      "licence": "أصل أصلي داخل المشروع (CC0) — موجة مُصنَّعة رياضياً"
+    },
+    {
+      "id": "sound.arrive",
+      "file": "arrive.wav",
+      "label": "وصول",
+      "kind": "effect",
+      "sha256": "dc595f2bfecaa1125dc0b76736a255153fed457665c2f0446aae2b425fe00690",
+      "bytes": 28844,
+      "sampleRate": 48000,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "durationSamples": 14400,
+      "durationSeconds": 0.3,
+      "defaultGain": 0.55,
+      "licence": "أصل أصلي داخل المشروع (CC0) — موجة مُصنَّعة رياضياً"
+    }
+  ]
+}

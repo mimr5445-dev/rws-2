@@ -127,8 +127,41 @@
       }
     }
   ],
-  "effects": [],
-  "cues": [],
+  "effects": [
+    {
+      "id": "e1",
+      "kind": "fireball",
+      "at": {
+        "tick": 130
+      },
+      "position": {
+        "lon": 50.1033,
+        "lat": 26.4207
+      },
+      "intensity": 0.8,
+      "soundClipId": "sound.boom"
+    }
+  ],
+  "cues": [
+    {
+      "id": "c1",
+      "when": {
+        "after": "u1.arrived"
+      },
+      "clipId": "sound.arrive",
+      "gain": 0.8,
+      "pan": 0
+    },
+    {
+      "id": "c2",
+      "when": {
+        "tick": 60
+      },
+      "clipId": "sound.click",
+      "gain": 0.5,
+      "pan": -0.5
+    }
+  ],
   "camera": [
     {
       "tick": 0,
